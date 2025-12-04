@@ -13,6 +13,12 @@
 - [Ideen & Verbesserungen](#ideen--verbesserungen)
 - [Learnings](#learnings)
 
+**Weitere Dokumente:**
+
+- [REQUIREMENTS.md](./REQUIREMENTS.md) – Detaillierte Anforderungen, Meilensteine, Test-Spezifikationen
+- [ARCHITECTURE.md](./ARCHITECTURE.md) – System-Architektur, Schemas, Docker-Konfiguration
+- [PROJECT_PLAN.md](./PROJECT_PLAN.md) – Zeitplan und Must-Have Features
+
 ---
 
 ## 🎯 Projekt-Tagebuch
@@ -90,9 +96,19 @@
 - [x] Meilensteine bereinigt (Duplikate entfernt)
 - [x] Requests README mit vollständiger Ordnerstruktur
 
+**Requirements-Dokumentation:**
+
+- [x] `docs/REQUIREMENTS.md` erstellt mit allen Schulanforderungen
+- [x] 10 Meilensteine mit Sub-Tasks definiert
+- [x] Alle Endpoints mit Test-Spezifikationen
+- [x] Bewertungskriterien (Anforderung 1-10) dokumentiert
+- [x] Pipeline-Anforderungen (M324) dokumentiert
+- [x] Datenbank-Strategie mit Begründungen
+
 **Neue Dateien erstellt:**
 
 - `docs/ARCHITECTURE.md`
+- `docs/REQUIREMENTS.md` ← **NEU: Detaillierte Anforderungen & Tests**
 - `docs/requests/examples/auth/POST_register.md`
 - `docs/requests/examples/auth/POST_login_customer.md`
 - `docs/requests/examples/auth/PUT_password.md`
