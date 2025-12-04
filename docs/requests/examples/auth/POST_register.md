@@ -96,14 +96,14 @@ curl -X POST "http://localhost:8080/auth/register" \
 
 ## Validation Rules
 
-| Field | Rules |
-|-------|-------|
-| `email` | Required, valid email format, unique |
-| `password` | Required, min 8 chars, 1 uppercase, 1 number |
-| `firstName` | Required, 2-50 chars |
-| `lastName` | Required, 2-50 chars |
-| `phone` | Optional, valid phone format |
-| `address` | Optional, can be added later |
+| Field       | Rules                                        |
+| ----------- | -------------------------------------------- |
+| `email`     | Required, valid email format, unique         |
+| `password`  | Required, min 8 chars, 1 uppercase, 1 number |
+| `firstName` | Required, 2-50 chars                         |
+| `lastName`  | Required, 2-50 chars                         |
+| `phone`     | Optional, valid phone format                 |
+| `address`   | Optional, can be added later                 |
 
 ---
 

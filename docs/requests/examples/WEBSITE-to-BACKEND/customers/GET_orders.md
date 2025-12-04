@@ -14,11 +14,11 @@ Authorization: Bearer <access-token>
 
 ### Query Parameters (optional)
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `page` | int | Seite (default: 0) |
-| `size` | int | Anzahl pro Seite (default: 10, max: 50) |
-| `status` | string | Filter nach Status |
+| Parameter | Type   | Description                             |
+| --------- | ------ | --------------------------------------- |
+| `page`    | int    | Seite (default: 0)                      |
+| `size`    | int    | Anzahl pro Seite (default: 10, max: 50) |
+| `status`  | string | Filter nach Status                      |
 
 ### Example
 
@@ -48,15 +48,15 @@ curl -X GET "http://localhost:8080/api/customers/me/orders?page=0&size=10" \
             "productName": "Margherita",
             "size": "L",
             "quantity": 2,
-            "totalPrice": 45.00
+            "totalPrice": 45.0
           },
           {
             "productName": "Cola",
             "quantity": 2,
-            "totalPrice": 8.00
+            "totalPrice": 8.0
           }
         ],
-        "totalAmount": 53.00,
+        "totalAmount": 53.0,
         "createdAt": "2025-12-03T19:30:00Z",
         "deliveredAt": "2025-12-03T20:15:00Z"
       },
@@ -70,10 +70,10 @@ curl -X GET "http://localhost:8080/api/customers/me/orders?page=0&size=10" \
             "productName": "Quattro Stagioni",
             "size": "M",
             "quantity": 1,
-            "totalPrice": 22.50
+            "totalPrice": 22.5
           }
         ],
-        "totalAmount": 22.50,
+        "totalAmount": 22.5,
         "createdAt": "2025-11-28T12:00:00Z"
       }
     ],

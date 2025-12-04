@@ -125,25 +125,25 @@ Diese Komponenten **MÜSSEN** implementiert werden, um das Projekt als abgeschlo
 
 ### Phase 3: Website (Kunden-Portal)
 
-| #     | Aufgabe                   | Beschreibung                   | Abhängigkeit | Status |
-| ----- | ------------------------- | ------------------------------ | ------------ | ------ |
-| 3.1   | **React Projekt Setup**   | Vite + React + TypeScript      | -            | ⬜     |
-| 3.2   | **Startseite**            | Restaurant-Info, Hero          | 3.1          | ⬜     |
-| 3.3   | **Produkt-Übersicht**     | Kategorien, Produktliste       | 2.2          | ⬜     |
-| 3.4   | **Produkt-Details**       | Einzelansicht, Extras, Grössen | 3.3          | ⬜     |
-| 3.5   | **Warenkorb**             | Sidebar oder eigene Seite      | 2.4          | ⬜     |
-| 3.6   | **Auth UI**               | Login & Registrierung          | 2.8          | ⬜     |
-| 3.6.1 | - Login-Seite             | Email + Passwort               | 3.6          | ⬜     |
-| 3.6.2 | - Registrierung           | Formular mit Validierung       | 3.6          | ⬜     |
-| 3.6.3 | - Token-Handling          | JWT speichern & refreshen      | 3.6          | ⬜     |
-| 3.7   | **Kundenprofil**          | Eigene Daten verwalten         | 2.9          | ⬜     |
-| 3.7.1 | - Profil bearbeiten       | Name, Telefon ändern           | 3.7          | ⬜     |
-| 3.7.2 | - Adressen verwalten      | Hinzufügen, Bearbeiten, Löschen| 3.7          | ⬜     |
-| 3.7.3 | - Bestellhistorie         | Vergangene Bestellungen        | 3.7          | ⬜     |
-| 3.8   | **Checkout**              | Adresse, Pickup/Delivery       | 2.3          | ⬜     |
-| 3.9   | **Zahlung**               | Zahlungsart wählen             | 2.5          | ⬜     |
-| 3.10  | **Bestellbestätigung**    | Danke-Seite mit Details        | 3.9          | ⬜     |
-| 3.11  | **Responsive Design**     | Mobile-First                   | 3.1-3.10     | ⬜     |
+| #     | Aufgabe                 | Beschreibung                    | Abhängigkeit | Status |
+| ----- | ----------------------- | ------------------------------- | ------------ | ------ |
+| 3.1   | **React Projekt Setup** | Vite + React + TypeScript       | -            | ⬜     |
+| 3.2   | **Startseite**          | Restaurant-Info, Hero           | 3.1          | ⬜     |
+| 3.3   | **Produkt-Übersicht**   | Kategorien, Produktliste        | 2.2          | ⬜     |
+| 3.4   | **Produkt-Details**     | Einzelansicht, Extras, Grössen  | 3.3          | ⬜     |
+| 3.5   | **Warenkorb**           | Sidebar oder eigene Seite       | 2.4          | ⬜     |
+| 3.6   | **Auth UI**             | Login & Registrierung           | 2.8          | ⬜     |
+| 3.6.1 | - Login-Seite           | Email + Passwort                | 3.6          | ⬜     |
+| 3.6.2 | - Registrierung         | Formular mit Validierung        | 3.6          | ⬜     |
+| 3.6.3 | - Token-Handling        | JWT speichern & refreshen       | 3.6          | ⬜     |
+| 3.7   | **Kundenprofil**        | Eigene Daten verwalten          | 2.9          | ⬜     |
+| 3.7.1 | - Profil bearbeiten     | Name, Telefon ändern            | 3.7          | ⬜     |
+| 3.7.2 | - Adressen verwalten    | Hinzufügen, Bearbeiten, Löschen | 3.7          | ⬜     |
+| 3.7.3 | - Bestellhistorie       | Vergangene Bestellungen         | 3.7          | ⬜     |
+| 3.8   | **Checkout**            | Adresse, Pickup/Delivery        | 2.3          | ⬜     |
+| 3.9   | **Zahlung**             | Zahlungsart wählen              | 2.5          | ⬜     |
+| 3.10  | **Bestellbestätigung**  | Danke-Seite mit Details         | 3.9          | ⬜     |
+| 3.11  | **Responsive Design**   | Mobile-First                    | 3.1-3.10     | ⬜     |
 
 **Definition of Done Phase 3:**
 

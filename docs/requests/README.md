@@ -46,36 +46,36 @@ Production:  https://api.restaurant.com/api
 
 ### 🔐 Authentifizierung
 
-| Methode | Endpoint               | Beschreibung                | Auth |
-| ------- | ---------------------- | --------------------------- | ---- |
-| POST    | `/auth/register`       | Kunden-Registrierung        | ❌   |
-| POST    | `/auth/login/customer` | Kunden-Login (Website)      | ❌   |
-| POST    | `/auth/login`          | Restaurant-Login (Client)   | ❌   |
-| POST    | `/auth/refresh`        | Token erneuern              | ❌   |
-| POST    | `/auth/logout`         | Logout                      | ✅   |
-| PUT     | `/auth/password`       | Passwort ändern (Restaurant)| ✅   |
+| Methode | Endpoint               | Beschreibung                 | Auth |
+| ------- | ---------------------- | ---------------------------- | ---- |
+| POST    | `/auth/register`       | Kunden-Registrierung         | ❌   |
+| POST    | `/auth/login/customer` | Kunden-Login (Website)       | ❌   |
+| POST    | `/auth/login`          | Restaurant-Login (Client)    | ❌   |
+| POST    | `/auth/refresh`        | Token erneuern               | ❌   |
+| POST    | `/auth/logout`         | Logout                       | ✅   |
+| PUT     | `/auth/password`       | Passwort ändern (Restaurant) | ✅   |
 
 ### Website → Backend (Kunden)
 
-| Methode | Endpoint                           | Beschreibung             | Auth |
-| ------- | ---------------------------------- | ------------------------ | ---- |
-| GET     | `/products`                        | Alle Produkte abrufen    | ❌   |
-| GET     | `/products/{id}`                   | Einzelnes Produkt        | ❌   |
-| GET     | `/products/category/{category}`    | Produkte nach Kategorie  | ❌   |
-| POST    | `/cart`                            | Warenkorb erstellen      | ❌   |
-| GET     | `/cart/{sessionId}`                | Warenkorb abrufen        | ❌   |
-| POST    | `/cart/{sessionId}/items`          | Item hinzufügen          | ❌   |
-| DELETE  | `/cart/{sessionId}/items/{itemId}` | Item entfernen           | ❌   |
-| GET     | `/customers/me`                    | Eigenes Profil abrufen   | ✅   |
-| PUT     | `/customers/me`                    | Profil aktualisieren     | ✅   |
-| PUT     | `/customers/me/password`           | Passwort ändern          | ✅   |
-| POST    | `/customers/me/addresses`          | Adresse hinzufügen       | ✅   |
-| GET     | `/customers/me/orders`             | Eigene Bestellhistorie   | ✅   |
-| POST    | `/orders`                          | Bestellung erstellen     | ❌*  |
-| GET     | `/orders/{id}`                     | Bestellstatus abrufen    | ❌   |
-| POST    | `/payments`                        | Zahlung durchführen      | ❌   |
+| Methode | Endpoint                           | Beschreibung            | Auth |
+| ------- | ---------------------------------- | ----------------------- | ---- |
+| GET     | `/products`                        | Alle Produkte abrufen   | ❌   |
+| GET     | `/products/{id}`                   | Einzelnes Produkt       | ❌   |
+| GET     | `/products/category/{category}`    | Produkte nach Kategorie | ❌   |
+| POST    | `/cart`                            | Warenkorb erstellen     | ❌   |
+| GET     | `/cart/{sessionId}`                | Warenkorb abrufen       | ❌   |
+| POST    | `/cart/{sessionId}/items`          | Item hinzufügen         | ❌   |
+| DELETE  | `/cart/{sessionId}/items/{itemId}` | Item entfernen          | ❌   |
+| GET     | `/customers/me`                    | Eigenes Profil abrufen  | ✅   |
+| PUT     | `/customers/me`                    | Profil aktualisieren    | ✅   |
+| PUT     | `/customers/me/password`           | Passwort ändern         | ✅   |
+| POST    | `/customers/me/addresses`          | Adresse hinzufügen      | ✅   |
+| GET     | `/customers/me/orders`             | Eigene Bestellhistorie  | ✅   |
+| POST    | `/orders`                          | Bestellung erstellen    | ❌\* |
+| GET     | `/orders/{id}`                     | Bestellstatus abrufen   | ❌   |
+| POST    | `/payments`                        | Zahlung durchführen     | ❌   |
 
-*Bestellung auch als Gast möglich, aber eingeloggte Kunden bekommen Bestellung im Profil gespeichert
+\*Bestellung auch als Gast möglich, aber eingeloggte Kunden bekommen Bestellung im Profil gespeichert
 
 ### Client → Backend (Restaurant) 🔒
 
