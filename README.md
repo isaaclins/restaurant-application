@@ -20,8 +20,24 @@
 
 ### 📚 Weitere Dokumentation
 
-- **[PROJECT_PLAN.md](./PROJECT_PLAN.md)** – Detaillierter Projektplan mit Must-Haves
-- **[DOCUMENTATION.md](./DOCUMENTATION.md)** – Entwicklungs-Tagebuch & Entscheidungen
+- **[PROJECT_PLAN.md](./docs/PROJECT_PLAN.md)** – Detaillierter Projektplan mit Must-Haves
+- **[DOCUMENTATION.md](./docs/DOCUMENTATION.md)** – Entwicklungs-Tagebuch & Entscheidungen
+
+---
+
+## 📁 Projektstruktur
+
+```
+restaurant-application/
+├── README.md                 # Diese Datei
+├── backend/                  # Spring Boot Backend Server
+├── website/                  # React Kunden-Portal
+├── client/                   # Electron Restaurant KDS App
+└── docs/                     # Dokumentation
+    ├── PROJECT_PLAN.md       # Projektplan & Must-Haves
+    ├── DOCUMENTATION.md      # Entwicklungs-Tagebuch
+    └── *.pdf                 # Aufgabenstellung
+```
 
 ---
 
