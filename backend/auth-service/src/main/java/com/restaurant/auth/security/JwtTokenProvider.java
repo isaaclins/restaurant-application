@@ -59,6 +59,25 @@ public class JwtTokenProvider {
                 .getPayload();
     }
 
+    public boolean isValidToken(String token) {
+        try {
+            validateToken(token);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public Long getUserId(String token) {
+        Claims claims = validateToken(token);
+        return claims.get("userId", Long.class);
+    }
+
+    public String getRole(String token) {
+        Claims claims = validateToken(token);
+        return claims.get("role", String.class);
+    }
+
     public String getEmailFromToken(String token) {
         return validateToken(token).getSubject();
     }

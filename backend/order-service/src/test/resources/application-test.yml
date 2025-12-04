@@ -1,0 +1,42 @@
+# Test configuration for Order Service
+spring:
+  application:
+    name: order-service-test
+
+  # H2 Database for testing
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+
+  # Disable Kafka for tests
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      auto-startup: false
+    producer:
+      properties:
+        max.block.ms: 100
+
+# Disable Eureka for tests
+eureka:
+  client:
+    enabled: false
+
+# Disable Feign discovery
+spring.cloud.openfeign.circuitbreaker.enabled: false
+
+# Logging
+logging:
+  level:
+    com.restaurant.order: DEBUG
+    org.springframework.kafka: OFF

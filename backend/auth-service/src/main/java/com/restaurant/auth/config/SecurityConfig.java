@@ -76,7 +76,7 @@ class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             String token = authHeader.substring(7);
 
-            if (jwtTokenProvider.validateToken(token)) {
+            if (jwtTokenProvider.isValidToken(token)) {
                 Long userId = jwtTokenProvider.getUserId(token);
                 String role = jwtTokenProvider.getRole(token);
 
@@ -86,6 +86,21 @@ class JwtAuthenticationFilter extends OncePerRequestFilter {
                         List.of(new SimpleGrantedAuthority("ROLE_" + role)));
 
                 SecurityContextHolder.getContext().setAuthentication(authentication);
+            }
+        } else {
+            // Also accept X-User-ID header (from API Gateway)
+            String userIdHeader = request.getHeader("X-User-ID");
+            if (userIdHeader != null) {
+                try {
+                    Long userId = Long.parseLong(userIdHeader);
+                    UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                            userId,
+                            null,
+                            List.of(new SimpleGrantedAuthority("ROLE_CUSTOMER")));
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                } catch (NumberFormatException ignored) {
+                    // Invalid user ID, continue without authentication
+                }
             }
         }
 

@@ -1,0 +1,23 @@
+# Test configuration for Cart Service
+spring:
+  application:
+    name: cart-service-test
+
+  # Mock Redis with embedded test configuration
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+# Disable Eureka for tests
+eureka:
+  client:
+    enabled: false
+
+# Disable Feign discovery
+spring.cloud.openfeign.circuitbreaker.enabled: false
+
+# Logging
+logging:
+  level:
+    com.restaurant.cart: DEBUG

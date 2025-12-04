@@ -1,0 +1,22 @@
+# Test configuration for API Gateway
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway-test
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: false
+
+# Disable Eureka for tests
+eureka:
+  client:
+    enabled: false
+
+# Logging
+logging:
+  level:
+    com.restaurant.gateway: DEBUG
