@@ -25,7 +25,7 @@ Ein **funktionierendes Restaurant-Bestellsystem** mit 3 Hauptkomponenten:
 │  • Warenkorb        │          │  • Status ändern    │
 │  • Bestellen        │          │  • Produkte pflegen │
 │  • Bezahlen         │          │  • Rechnungen       │
-│  • React/Vite       │          │  • Electron + React │
+│  • React/Vite       │          │  • Tauri + React    │
 └──────────┬──────────┘          └──────────┬──────────┘
            │                                │
            └────────────┬───────────────────┘
@@ -139,7 +139,7 @@ Diese Komponenten **MÜSSEN** implementiert werden, um das Projekt als abgeschlo
 
 | #     | Aufgabe                    | Beschreibung                  | Abhängigkeit | Status |
 | ----- | -------------------------- | ----------------------------- | ------------ | ------ |
-| 4.1   | **Electron Projekt Setup** | Electron + React              | -            | ⬜     |
+| 4.1   | **Tauri Projekt Setup**    | Tauri + React                 | -            | ⬜     |
 | 4.2   | **Order Dashboard**        | 3-Spalten Layout (Wireframe)  | 2.3          | ⬜     |
 | 4.2.1 | - Pickup Spalte            | Abholungen links              | 4.2          | ⬜     |
 | 4.2.2 | - Delivery Spalte          | Lieferungen mitte             | 4.2          | ⬜     |
@@ -237,7 +237,7 @@ Woche 2
 
 Woche 3
 ├── Website Checkout & Zahlung
-├── Restaurant Client Setup (Electron)
+├── Restaurant Client Setup (Tauri)
 └── KDS Order Dashboard
 
 Woche 4
@@ -288,12 +288,12 @@ GESAMT                       [█░░░░░░░░░] 5%
 
 ## 🔴 Risiken & Mitigation
 
-| Risiko               | Wahrscheinlichkeit | Impact | Mitigation                             |
-| -------------------- | ------------------ | ------ | -------------------------------------- |
-| Zeitknappheit        | Hoch               | Hoch   | Scope auf Must-Haves reduzieren        |
-| Electron Komplexität | Mittel             | Mittel | Einfaches Setup, React wiederverwenden |
-| Docker-Probleme      | Niedrig            | Hoch   | Lokale Entwicklung als Fallback        |
-| Real-time Updates    | Mittel             | Mittel | WebSocket oder Polling als Fallback    |
+| Risiko            | Wahrscheinlichkeit | Impact  | Mitigation                          |
+| ----------------- | ------------------ | ------- | ----------------------------------- |
+| Zeitknappheit     | Hoch               | Hoch    | Scope auf Must-Haves reduzieren     |
+| Tauri Komplexität | Niedrig            | Niedrig | Leichter als Electron, React UI     |
+| Docker-Probleme   | Niedrig            | Hoch    | Lokale Entwicklung als Fallback     |
+| Real-time Updates | Mittel             | Mittel  | WebSocket oder Polling als Fallback |
 
 ---
 

@@ -59,13 +59,49 @@
 
 #### 📝 Notizen
 
-- Projektabgabe: Mehrere Wochen mit wöchentlichen Updates
+- Projektabgabe: Juli 2025 – Viel Zeit, kein Stress
 - Fokus auf funktionierende Demo, nicht 100% Production-Ready
 - **Tauri** für Desktop-App (leicht, schnell, React für UI)
+- Mit AI-Unterstützung ~1 Woche Entwicklungszeit realistisch
 
 ---
 
-### Tag 2 – [DATUM]
+### Tag 2 – 04.12.2025 (Abends) | Dokumentation & Architektur-Sync
+
+#### ✅ Erfolge
+
+- [x] README.md komplett überarbeitet (fokussiert, keine Redundanz)
+- [x] ARCHITECTURE.md erstellt mit allen technischen Details
+- [x] Auth-Service und Login-Flow definiert
+- [x] JWT-basierte Authentifizierung dokumentiert
+- [x] Alle Electron-Referenzen zu Tauri geändert
+- [x] API-Endpoints mit Auth-Infos erweitert
+- [x] Rollen-System definiert (RESTAURANT_ADMIN, RESTAURANT_STAFF)
+
+#### ❌ Misserfolge / Herausforderungen
+
+- Dokumentation war inkonsistent (README vs. DOCUMENTATION)
+- Architektur war unklar (Monolith vs. Microservices)
+
+#### 💡 Ideen
+
+- Auth-Service als separater Microservice
+- Refresh Token Rotation für Sicherheit
+
+#### 🔍 Erkenntnisse
+
+- Full Microservices-Stack ist Pflicht (Kafka, Eureka, Gateway, Circuit Breaker)
+- Deadline Juli 2025 – entspannt planen
+- DOCUMENTATION.md ist "Source of Truth"
+
+#### 📝 Notizen
+
+- Nächster Schritt: Backend implementieren
+- Docker Compose Template ist in ARCHITECTURE.md bereit
+
+---
+
+### Tag 3 – [DATUM]
 
 #### ✅ Erfolge
 
@@ -138,11 +174,11 @@
 
 ---
 
-### Entscheidung 2: 3-Komponenten-Architektur
+### Entscheidung 2: Microservices mit 2 Clients
 
 **Datum**: 04.12.2025
 
-**Kontext**: Ursprünglich war eine reine Microservices-Architektur mit vielen einzelnen Services geplant. Nach Diskussion wurde klar, dass wir zwei unterschiedliche Clients brauchen.
+**Kontext**: Das System braucht zwei unterschiedliche Frontends für verschiedene Benutzergruppen.
 
 **Entscheidung**:
 
@@ -150,7 +186,7 @@
 ┌─────────────────────┐          ┌─────────────────────┐
 │      WEBSITE        │          │   RESTAURANT CLIENT │
 │  (Kunden-Portal)    │          │   (KDS Desktop App) │
-│     - React/Web     │          │   - Tauri + React   │
+│     - React/Vite    │          │   - Tauri + React   │
 │     - Bestellen     │          │   - Order Management│
 │     - Warenkorb     │          │   - Produkt-Editor  │
 │     - Bezahlen      │          │   - Rechnungen      │
@@ -160,22 +196,30 @@
                         │
                         ▼
               ┌─────────────────┐
-              │  BACKEND SERVER │
-              │  (Spring Boot)  │
-              └─────────────────┘
+              │   API GATEWAY   │
+              │ (Spring Cloud)  │
+              └────────┬────────┘
+                       │
+       ┌───────────────┼───────────────┐
+       ▼               ▼               ▼
+┌────────────┐  ┌────────────┐  ┌────────────┐
+│  Product   │  │   Cart     │  │   Order    │  ...
+│  Service   │  │  Service   │  │  Service   │
+└────────────┘  └────────────┘  └────────────┘
 ```
 
 **Begründung**:
 
 - Website für Kunden (Bestellungen)
 - Desktop App für Restaurant (Küchen-Display, Verwaltung)
-- Ein Backend bedient beide Clients
+- **Microservices-Backend** mit Gateway, Eureka, Kafka, Circuit Breaker
 - Restaurant hat volle Autonomie (keine Dev-Hilfe für Änderungen)
 
 **Alternativen erwägt**:
 
 - Mobile App für Restaurant (abgelehnt: Desktop besser für Küche)
 - Separate Admin-Website (abgelehnt: Desktop-App bietet bessere UX)
+- Monolithisches Backend (abgelehnt: Schulanforderung ist Microservices)
 
 ---
 
