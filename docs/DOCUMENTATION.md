@@ -64,44 +64,61 @@
 - **Tauri** für Desktop-App (leicht, schnell, React für UI)
 - Mit AI-Unterstützung ~1 Woche Entwicklungszeit realistisch
 
----
+#### Abend-Session (fortgesetzt)
 
-### Tag 2 – 04.12.2025 (Abends) | Dokumentation & Architektur-Sync
-
-#### ✅ Erfolge
+**Dokumentation & Architektur-Sync:**
 
 - [x] README.md komplett überarbeitet (fokussiert, keine Redundanz)
 - [x] ARCHITECTURE.md erstellt mit allen technischen Details
 - [x] Auth-Service und Login-Flow definiert
 - [x] JWT-basierte Authentifizierung dokumentiert
 - [x] Alle Electron-Referenzen zu Tauri geändert
-- [x] API-Endpoints mit Auth-Infos erweitert
-- [x] Rollen-System definiert (RESTAURANT_ADMIN, RESTAURANT_STAFF)
+- [x] Rollen-System definiert (RESTAURANT_ADMIN, RESTAURANT_STAFF, CUSTOMER)
 
-#### ❌ Misserfolge / Herausforderungen
+**Customer-Authentifizierung:**
 
-- Dokumentation war inkonsistent (README vs. DOCUMENTATION)
-- Architektur war unklar (Monolith vs. Microservices)
+- [x] Registrierung (`POST /api/auth/register`)
+- [x] Login (`POST /api/auth/login`)
+- [x] Profil-Management (`GET/PUT /api/customers/me`)
+- [x] Adressverwaltung (`POST /api/customers/me/addresses`)
+- [x] Bestellhistorie (`GET /api/customers/me/orders`)
+- [x] Passwort-Änderung für alle User-Typen
 
-#### 💡 Ideen
+**Konsistenz-Fixes:**
+
+- [x] PostgreSQL → MySQL in allen Dokumenten
+- [x] Meilensteine bereinigt (Duplikate entfernt)
+- [x] Requests README mit vollständiger Ordnerstruktur
+
+**Neue Dateien erstellt:**
+
+- `docs/ARCHITECTURE.md`
+- `docs/requests/examples/auth/POST_register.md`
+- `docs/requests/examples/auth/POST_login_customer.md`
+- `docs/requests/examples/auth/PUT_password.md`
+- `docs/requests/examples/WEBSITE-to-BACKEND/customers/GET_me.md`
+- `docs/requests/examples/WEBSITE-to-BACKEND/customers/PUT_me.md`
+- `docs/requests/examples/WEBSITE-to-BACKEND/customers/PUT_password.md`
+- `docs/requests/examples/WEBSITE-to-BACKEND/customers/POST_addresses.md`
+- `docs/requests/examples/WEBSITE-to-BACKEND/customers/GET_orders.md`
+
+#### 💡 Ideen (heute)
 
 - Auth-Service als separater Microservice
 - Refresh Token Rotation für Sicherheit
+- Cart mit Customer-ID für persistenten Warenkorb
+- Order History mit Wiederbestellen-Funktion
 
-#### 🔍 Erkenntnisse
+#### 🔍 Erkenntnisse (heute)
 
 - Full Microservices-Stack ist Pflicht (Kafka, Eureka, Gateway, Circuit Breaker)
-- Deadline Juli 2025 – entspannt planen
 - DOCUMENTATION.md ist "Source of Truth"
-
-#### 📝 Notizen
-
-- Nächster Schritt: Backend implementieren
-- Docker Compose Template ist in ARCHITECTURE.md bereit
+- "Viable Product" ≠ MVP – Auth ist notwendig für echten Produkteinsatz
+- Konsistenz-Checks nach grösseren Änderungen wichtig
 
 ---
 
-### Tag 3 – [DATUM]
+### Tag 2 – [DATUM]
 
 #### ✅ Erfolge
 
@@ -127,23 +144,17 @@
 
 ## 🏁 Meilensteine
 
-| #   | Meilenstein                         | Zieldatum  | Status | Notizen                     |
-| --- | ----------------------------------- | ---------- | ------ | --------------------------- |
-| 1   | Projektdefinition & Architektur     | 04.12.2025 | ✅     | README, Plan, Docs erstellt |
-| 2   | KDS Wireframe & Feature-Definition  | 04.12.2025 | ✅     | 3-Spalten Layout definiert  |
-| 3   | Infrastruktur (Docker, Backend)     | TBD        | ⬜     |                             |
-| 4   | Backend API (Orders, Products)      | TBD        | ⬜     |                             |
-| 5   | Website (Kunden-Portal)             | TBD        | ⬜     |                             |
-| 6   | Restaurant Client (KDS Desktop App) | TBD        | ⬜     |                             |
-| 7   | Integration & Testing               | TBD        | ⬜     |                             |
-| 8   | Endabgabe                           | TBD        | ⬜     |                             |
-| 4   | Warenkorb-Service                   | TBD        | ⬜     |                             |
-| 5   | Bestell-Service                     | TBD        | ⬜     |                             |
-| 6   | Zahlungs-Service (Mockup)           | TBD        | ⬜     |                             |
-| 7   | Frontend (React)                    | TBD        | ⬜     |                             |
-| 8   | Kafka Integration                   | TBD        | ⬜     |                             |
-| 9   | Circuit Breaker                     | TBD        | ⬜     |                             |
-| 10  | Endabgabe                           | TBD        | ⬜     |                             |
+| #   | Meilenstein                          | Zieldatum  | Status | Notizen                     |
+| --- | ------------------------------------ | ---------- | ------ | --------------------------- |
+| 1   | Projektdefinition & Architektur      | 04.12.2025 | ✅     | README, Plan, Docs erstellt |
+| 2   | KDS Wireframe & Feature-Definition   | 04.12.2025 | ✅     | 3-Spalten Layout definiert  |
+| 3   | API-Dokumentation & Auth-Flow        | 04.12.2025 | ✅     | 30+ Endpoints dokumentiert  |
+| 4   | Infrastruktur (Docker, MySQL, Kafka) | TBD        | ⬜     |                             |
+| 5   | Backend Microservices                | TBD        | ⬜     | Product, Cart, Order, Auth  |
+| 6   | Website (Kunden-Portal)              | TBD        | ⬜     |                             |
+| 7   | Restaurant Client (Tauri KDS App)    | TBD        | ⬜     |                             |
+| 8   | Integration & Testing                | TBD        | ⬜     |                             |
+| 9   | Endabgabe                            | Juli 2025  | ⬜     |                             |
 
 ---
 
@@ -157,7 +168,7 @@
 
 **Entscheidung**:
 
-- PostgreSQL für Produktkatalog und Bestellungen (strukturierte Daten)
+- MySQL für Produktkatalog, Bestellungen und Auth (strukturierte Daten)
 - Redis für Warenkorb (schnelle Zugriffe, TTL für Session-Ablauf)
 - H2 In-Memory für Zahlungs-Mockup
 
@@ -165,12 +176,14 @@
 
 - Service-Unabhängigkeit durch separate Datenbanken
 - Redis optimal für temporäre Session-Daten
-- PostgreSQL bietet ACID-Compliance für kritische Geschäftsdaten
+- MySQL bietet ACID-Compliance für kritische Geschäftsdaten
+- Entwickler-Erfahrung mit MySQL vorhanden
 
 **Alternativen erwägt**:
 
 - MongoDB für alle Services (abgelehnt: weniger Erfahrung im Team)
 - Shared Database (abgelehnt: verletzt Microservices-Prinzipien)
+- PostgreSQL (abgelehnt: keine Vorteile für unseren Use-Case)
 
 ---
 
@@ -317,28 +330,7 @@ docs/requests/
 
 ---
 
-### Entscheidung 6: MySQL statt PostgreSQL
-
-**Datum**: 04.12.2025
-
-**Kontext**: Welche relationale Datenbank für das Backend?
-
-**Entscheidung**: **MySQL**
-
-**Begründung**:
-
-- Entwickler-Präferenz und Erfahrung mit MySQL
-- Für einfache CRUD-Operationen gleich performant
-- Spring Boot unterstützt beide perfekt
-- Weniger Lernkurve = schnellere Entwicklung
-
-**Alternativen erwägt**:
-
-- PostgreSQL (abgelehnt: keine Vorteile für unseren Use-Case)
-
----
-
-### Entscheidung 7: [TITEL]
+### Entscheidung 6: [TITEL]
 
 **Datum**: [DATUM]
 

@@ -15,7 +15,8 @@ requests/
     │   ├── POST_login.md              # Restaurant-Login
     │   ├── POST_login_customer.md     # Kunden-Login
     │   ├── POST_refresh.md
-    │   └── POST_logout.md
+    │   ├── POST_logout.md
+    │   └── PUT_password.md            # Passwort ändern
     │
     ├── WEBSITE-to-BACKEND/            # Kunden-Portal Requests
     │   ├── products/                  # Produkt-bezogen
