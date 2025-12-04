@@ -1,0 +1,54 @@
+server:
+  port: ${PAYMENT_SERVICE_PORT:8084}
+
+spring:
+  application:
+    name: payment-service
+    
+  # H2 In-Memory for Payment Mockup (no real transactions)
+  datasource:
+    url: jdbc:h2:mem:paymentdb
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: 
+    
+  h2:
+    console:
+      enabled: ${H2_CONSOLE_ENABLED:true}
+      path: /h2-console
+      
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: ${SHOW_SQL:false}
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://${EUREKA_HOST:localhost}:${EUREKA_PORT:8761}/eureka/
+    fetch-registry: true
+    register-with-eureka: true
+  instance:
+    prefer-ip-address: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+logging:
+  level:
+    root: ${LOG_LEVEL:INFO}
+    com.restaurant.payment: DEBUG
+
+# Payment Mockup Configuration
+payment:
+  test:
+    decline-card: ${PAYMENT_TEST_DECLINE_CARD:4000000000000002}
