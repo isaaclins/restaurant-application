@@ -235,12 +235,14 @@
 
 **Kontext**: In welcher Reihenfolge entwickeln wir die Komponenten?
 
-**Entscheidung**: 
+**Entscheidung**:
+
 1. **Backend zuerst** – Logik ist objektiv (1+1=2)
 2. **Client (KDS) zweiter** – braucht funktionierende APIs
 3. **Website zuletzt** – UX/UI ist subjektiv, kann flexibel angepasst werden
 
 **API-Dokumentation Struktur**:
+
 ```
 docs/requests/
 ├── README.md                          # Endpoint-Übersicht
@@ -259,11 +261,13 @@ docs/requests/
 ```
 
 **Begründung**:
+
 - Backend-Logik ist der "Vertrag" für beide Clients
 - Dokumentierte APIs ermöglichen parallele Entwicklung
 - Frontend-Änderungen brechen keine Backend-Logik
 
 **Alternativen erwägt**:
+
 - Frontend-First (abgelehnt: API müsste nachträglich angepasst werden)
 - Parallele Entwicklung ohne Spec (abgelehnt: Inkonsistenzen wahrscheinlich)
 
