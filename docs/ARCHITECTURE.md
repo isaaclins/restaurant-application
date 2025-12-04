@@ -34,8 +34,8 @@
                                     │      │         │         │         │         │            │
                                     │      ▼         ▼         ▼         ▼         ▼            │
                                     │  ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐   │
-                                    │  │Postgres│ │Postgres│ │ Redis  │ │Postgres│ │  H2    │   │
-                                    │  │ :5434  │ │ :5432  │ │ :6379  │ │ :5433  │ │In-Mem  │   │
+                                    │  │ MySQL  │ │ MySQL  │ │ Redis  │ │ MySQL  │ │  H2    │   │
+                                    │  │ :3306  │ │ :3307  │ │ :6379  │ │ :3308  │ │In-Mem  │   │
                                     │  └────────┘ └────────┘ └────────┘ └────────┘ └────────┘   │
                                     │                                                            │
                                     │  ┌─────────────────────────────────────────────────────┐   │
@@ -57,10 +57,10 @@
 | ------------------- | ---- | ----------- | --------------------------------------- |
 | **API Gateway**     | 8080 | -           | Routing, Rate Limiting, Auth-Validation |
 | **Eureka Server**   | 8761 | -           | Service Discovery & Registry            |
-| **Auth Service**    | 8085 | PostgreSQL  | Authentifizierung & JWT                 |
-| **Product Service** | 8081 | PostgreSQL  | Produktkatalog CRUD                     |
+| **Auth Service**    | 8085 | MySQL       | Authentifizierung & JWT                 |
+| **Product Service** | 8081 | MySQL       | Produktkatalog CRUD                     |
 | **Cart Service**    | 8082 | Redis       | Warenkorb-Verwaltung                    |
-| **Order Service**   | 8083 | PostgreSQL  | Bestellungen & Status                   |
+| **Order Service**   | 8083 | MySQL       | Bestellungen & Status                   |
 | **Payment Service** | 8084 | H2 (Mockup) | Zahlungs-Simulation                     |
 
 ---
@@ -190,81 +190,111 @@ resilience4j:
 
 ## 💾 Datenbank-Schema
 
-### Product Service (PostgreSQL)
+### Product Service (MySQL)
 
 ```sql
 CREATE TABLE products (
-    id BIGSERIAL PRIMARY KEY,
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     description TEXT,
     price DECIMAL(10,2) NOT NULL,
     category VARCHAR(50) NOT NULL,
     image_url VARCHAR(500),
     available BOOLEAN DEFAULT true,
-    created_at TIMESTAMP DEFAULT NOW(),
-    updated_at TIMESTAMP DEFAULT NOW()
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
 CREATE TABLE product_sizes (
-    id BIGSERIAL PRIMARY KEY,
-    product_id BIGINT REFERENCES products(id),
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    product_id BIGINT NOT NULL,
     size_name VARCHAR(10) NOT NULL,
-    price_modifier DECIMAL(10,2) NOT NULL
+    price_modifier DECIMAL(10,2) NOT NULL,
+    FOREIGN KEY (product_id) REFERENCES products(id)
 );
 
 CREATE TABLE product_extras (
-    id BIGSERIAL PRIMARY KEY,
-    product_id BIGINT REFERENCES products(id),
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    product_id BIGINT NOT NULL,
     name VARCHAR(100) NOT NULL,
-    price DECIMAL(10,2) NOT NULL
+    price DECIMAL(10,2) NOT NULL,
+    FOREIGN KEY (product_id) REFERENCES products(id)
 );
 ```
 
-### Order Service (PostgreSQL)
+### Order Service (MySQL)
 
 ```sql
 CREATE TABLE orders (
-    id BIGSERIAL PRIMARY KEY,
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
     ticket_number VARCHAR(10) NOT NULL,
+    customer_id BIGINT,                 -- NULL for guest orders, references auth.customers(id)
     customer_name VARCHAR(255),
     customer_phone VARCHAR(50),
     customer_email VARCHAR(255),
-    order_type VARCHAR(20) NOT NULL, -- PICKUP, DELIVERY
-    status VARCHAR(30) NOT NULL,     -- NEW, PREPARING, READY, DELIVERED, CANCELLED
+    order_type VARCHAR(20) NOT NULL,    -- PICKUP, DELIVERY
+    status VARCHAR(30) NOT NULL,        -- NEW, PREPARING, READY, DELIVERED, CANCELLED
     total_amount DECIMAL(10,2) NOT NULL,
     delivery_address TEXT,
     notes TEXT,
-    created_at TIMESTAMP DEFAULT NOW(),
-    updated_at TIMESTAMP DEFAULT NOW()
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
 CREATE TABLE order_items (
-    id BIGSERIAL PRIMARY KEY,
-    order_id BIGINT REFERENCES orders(id),
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    order_id BIGINT NOT NULL,
     product_id BIGINT NOT NULL,
     product_name VARCHAR(255) NOT NULL,
     size VARCHAR(10),
     quantity INT NOT NULL,
     unit_price DECIMAL(10,2) NOT NULL,
-    extras JSONB
+    extras JSON,
+    FOREIGN KEY (order_id) REFERENCES orders(id)
 );
 ```
 
-### Auth Service (PostgreSQL)
+### Auth Service (MySQL)
 
 ```sql
+-- Restaurant Staff Users
 CREATE TABLE users (
-    id BIGSERIAL PRIMARY KEY,
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(100) UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
-    role VARCHAR(50) NOT NULL,
+    role VARCHAR(50) NOT NULL,          -- RESTAURANT_ADMIN, RESTAURANT_STAFF
     restaurant_id VARCHAR(100),
-    created_at TIMESTAMP DEFAULT NOW()
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Website Customers
+CREATE TABLE customers (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    first_name VARCHAR(100) NOT NULL,
+    last_name VARCHAR(100) NOT NULL,
+    phone VARCHAR(50),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE customer_addresses (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    customer_id BIGINT NOT NULL,
+    label VARCHAR(50),                  -- "Zuhause", "Arbeit"
+    street VARCHAR(255) NOT NULL,
+    city VARCHAR(100) NOT NULL,
+    postal_code VARCHAR(20) NOT NULL,
+    is_default BOOLEAN DEFAULT false,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE
 );
 
 CREATE TABLE refresh_tokens (
-    id BIGSERIAL PRIMARY KEY,
-    user_id BIGINT REFERENCES users(id),
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT,                     -- References users(id) OR customers(id)
+    user_type VARCHAR(20) NOT NULL,     -- 'STAFF' or 'CUSTOMER'
     token VARCHAR(500) NOT NULL,
     expires_at TIMESTAMP NOT NULL
 );
@@ -363,11 +393,11 @@ spring:
 
 ### Datenbanken
 
-| Datenbank  | Version | Service                |
-| ---------- | ------- | ---------------------- |
-| PostgreSQL | 15      | Products, Orders, Auth |
-| Redis      | 7       | Cart                   |
-| H2         | -       | Payment (Mockup)       |
+| Datenbank | Version | Service                |
+| --------- | ------- | ---------------------- |
+| MySQL     | 8       | Products, Orders, Auth |
+| Redis     | 7       | Cart                   |
+| H2        | -       | Payment (Mockup)       |
 
 ### Frontend
 
@@ -397,38 +427,41 @@ version: "3.8"
 
 services:
   # Databases
-  postgres-products:
-    image: postgres:15
+  mysql-products:
+    image: mysql:8
     environment:
-      POSTGRES_DB: products
-      POSTGRES_USER: app
-      POSTGRES_PASSWORD: secret
+      MYSQL_DATABASE: products
+      MYSQL_USER: app
+      MYSQL_PASSWORD: secret
+      MYSQL_ROOT_PASSWORD: rootsecret
     ports:
-      - "5432:5432"
+      - "3306:3306"
     volumes:
-      - postgres-products-data:/var/lib/postgresql/data
+      - mysql-products-data:/var/lib/mysql
 
-  postgres-orders:
-    image: postgres:15
+  mysql-orders:
+    image: mysql:8
     environment:
-      POSTGRES_DB: orders
-      POSTGRES_USER: app
-      POSTGRES_PASSWORD: secret
+      MYSQL_DATABASE: orders
+      MYSQL_USER: app
+      MYSQL_PASSWORD: secret
+      MYSQL_ROOT_PASSWORD: rootsecret
     ports:
-      - "5433:5432"
+      - "3307:3306"
     volumes:
-      - postgres-orders-data:/var/lib/postgresql/data
+      - mysql-orders-data:/var/lib/mysql
 
-  postgres-auth:
-    image: postgres:15
+  mysql-auth:
+    image: mysql:8
     environment:
-      POSTGRES_DB: auth
-      POSTGRES_USER: app
-      POSTGRES_PASSWORD: secret
+      MYSQL_DATABASE: auth
+      MYSQL_USER: app
+      MYSQL_PASSWORD: secret
+      MYSQL_ROOT_PASSWORD: rootsecret
     ports:
-      - "5434:5432"
+      - "3308:3306"
     volumes:
-      - postgres-auth-data:/var/lib/postgresql/data
+      - mysql-auth-data:/var/lib/mysql
 
   redis:
     image: redis:7
@@ -479,9 +512,11 @@ services:
       - "8085:8085"
     depends_on:
       - eureka-server
-      - postgres-auth
+      - mysql-auth
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-auth:5432/auth
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-auth:3306/auth
+      SPRING_DATASOURCE_USERNAME: app
+      SPRING_DATASOURCE_PASSWORD: secret
 
   product-service:
     build: ./backend/product-service
@@ -489,9 +524,11 @@ services:
       - "8081:8081"
     depends_on:
       - eureka-server
-      - postgres-products
+      - mysql-products
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-products:5432/products
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-products:3306/products
+      SPRING_DATASOURCE_USERNAME: app
+      SPRING_DATASOURCE_PASSWORD: secret
 
   cart-service:
     build: ./backend/cart-service
@@ -509,10 +546,12 @@ services:
       - "8083:8083"
     depends_on:
       - eureka-server
-      - postgres-orders
+      - mysql-orders
       - kafka
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-orders:5432/orders
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-orders:3306/orders
+      SPRING_DATASOURCE_USERNAME: app
+      SPRING_DATASOURCE_PASSWORD: secret
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
 
   payment-service:
@@ -526,9 +565,9 @@ services:
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
 
 volumes:
-  postgres-products-data:
-  postgres-orders-data:
-  postgres-auth-data:
+  mysql-products-data:
+  mysql-orders-data:
+  mysql-auth-data:
 ```
 
 ---
