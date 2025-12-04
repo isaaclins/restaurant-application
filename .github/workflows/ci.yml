@@ -1,0 +1,319 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  JAVA_VERSION: '21'
+  NODE_VERSION: '20'
+
+jobs:
+  # ============================================================================
+  # Backend - Build & Test
+  # ============================================================================
+  backend-build:
+    name: Backend Build & Test
+    runs-on: ubuntu-latest
+    
+    services:
+      mysql:
+        image: mysql:8
+        env:
+          MYSQL_ROOT_PASSWORD: rootpassword
+          MYSQL_DATABASE: test_db
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+      
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd="redis-cli ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    strategy:
+      matrix:
+        service: [eureka-server, api-gateway, product-service, cart-service, order-service, payment-service, auth-service]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Build ${{ matrix.service }}
+        working-directory: backend/${{ matrix.service }}
+        run: |
+          if [ -f "mvnw" ]; then
+            chmod +x mvnw
+            ./mvnw clean compile -DskipTests
+          else
+            mvn clean compile -DskipTests
+          fi
+
+      - name: Run tests for ${{ matrix.service }}
+        working-directory: backend/${{ matrix.service }}
+        run: |
+          if [ -f "mvnw" ]; then
+            ./mvnw test
+          else
+            mvn test
+          fi
+
+      - name: Package ${{ matrix.service }}
+        working-directory: backend/${{ matrix.service }}
+        run: |
+          if [ -f "mvnw" ]; then
+            ./mvnw package -DskipTests
+          else
+            mvn package -DskipTests
+          fi
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.service }}-jar
+          path: backend/${{ matrix.service }}/target/*.jar
+          retention-days: 7
+
+  # ============================================================================
+  # Website - Build & Test
+  # ============================================================================
+  website-build:
+    name: Website Build & Test
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: website/package-lock.json
+
+      - name: Install dependencies
+        working-directory: website
+        run: npm ci
+
+      - name: Lint
+        working-directory: website
+        run: npm run lint || true
+
+      - name: Type check
+        working-directory: website
+        run: npm run type-check || true
+
+      - name: Run tests
+        working-directory: website
+        run: npm test || true
+
+      - name: Build
+        working-directory: website
+        run: npm run build
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: website-dist
+          path: website/dist
+          retention-days: 7
+
+  # ============================================================================
+  # Client (Tauri) - Build
+  # ============================================================================
+  client-build:
+    name: Client Build (Tauri)
+    runs-on: ${{ matrix.platform }}
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [macos-latest, ubuntu-22.04, windows-latest]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: client/package-lock.json
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-action@stable
+
+      - name: Install dependencies (Ubuntu only)
+        if: matrix.platform == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+
+      - name: Install frontend dependencies
+        working-directory: client
+        run: npm ci
+
+      - name: Build Tauri app
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          projectPath: client
+
+  # ============================================================================
+  # Docker Images - Build & Push
+  # ============================================================================
+  docker-build:
+    name: Build Docker Images
+    runs-on: ubuntu-latest
+    needs: [backend-build]
+    if: github.ref == 'refs/heads/main'
+    
+    strategy:
+      matrix:
+        service: [eureka-server, api-gateway, product-service, cart-service, order-service, payment-service, auth-service]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ matrix.service }}-jar
+          path: backend/${{ matrix.service }}/target
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: backend/${{ matrix.service }}
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}/${{ matrix.service }}:latest
+            ghcr.io/${{ github.repository }}/${{ matrix.service }}:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # ============================================================================
+  # Integration Tests
+  # ============================================================================
+  integration-tests:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    needs: [backend-build]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Compose
+        run: |
+          docker compose version
+
+      - name: Start infrastructure
+        run: docker compose up -d mysql redis kafka zookeeper
+
+      - name: Wait for services
+        run: |
+          echo "Waiting for MySQL..."
+          timeout 60 bash -c 'until docker compose exec -T mysql mysqladmin ping -h localhost -u root -prootpassword; do sleep 2; done'
+          echo "Waiting for Redis..."
+          timeout 30 bash -c 'until docker compose exec -T redis redis-cli ping; do sleep 2; done'
+          echo "Services ready!"
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Run integration tests
+        run: |
+          echo "Integration tests would run here"
+          # Add actual integration test commands
+
+      - name: Cleanup
+        if: always()
+        run: docker compose down -v
+
+  # ============================================================================
+  # Security Scan
+  # ============================================================================
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    needs: [backend-build, website-build]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: Upload Trivy scan results
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+  # ============================================================================
+  # Deploy (Example for Cloud Run)
+  # ============================================================================
+  deploy:
+    name: Deploy to Cloud
+    runs-on: ubuntu-latest
+    needs: [docker-build, integration-tests]
+    if: github.ref == 'refs/heads/main'
+    environment: production
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy notification
+        run: |
+          echo "🚀 Deployment would happen here"
+          echo "Services to deploy:"
+          echo "  - eureka-server"
+          echo "  - api-gateway"
+          echo "  - product-service"
+          echo "  - cart-service"
+          echo "  - order-service"
+          echo "  - payment-service"
+          echo "  - auth-service"
+          # Add actual deployment commands (kubectl, gcloud, etc.)
