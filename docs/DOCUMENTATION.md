@@ -207,6 +207,7 @@
 **Entscheidung**: **Tauri** mit React Frontend
 
 **Begründung**:
+
 - Extrem leicht (~10MB vs ~150MB bei Electron)
 - Schnelle Performance durch Rust-Backend
 - React für UI = Code-Sharing mit Website möglich
@@ -214,6 +215,7 @@
 - 95% JavaScript, minimaler Rust-Code nötig
 
 **Alternativen erwägt**:
+
 - Electron (abgelehnt: zu schwer, RAM-hungrig)
 - Neutralino.js (abgelehnt: kleinere Community, weniger Features)
 - JavaFX (abgelehnt: altmodische UI, weniger modern)
