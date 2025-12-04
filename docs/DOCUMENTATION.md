@@ -43,7 +43,7 @@
 
 - Template soll generic sein für verschiedene Restaurant-Typen
 - Inspiration von bekannten Pizzeria-Bestellsystemen (Dieci)
-- **KDS mit Farbcodes** für Bestellstatus (Rot→Gelb→Grün)
+- **KDS mit Farbcodes** für Bestellstatus (Grün→Gelb→Rot: Neu→Zubereitung→Fertig)
 - **Volle Restaurant-Autonomie**: Keine Entwickler-Hilfe für Preisänderungen etc.
 - **Backend zuerst entwickeln** – Frontend ist UX/UI abhängig und subjektiv
 - API-Vertrag definieren bevor Implementation beginnt
@@ -273,7 +273,28 @@ docs/requests/
 
 ---
 
-### Entscheidung 6: [TITEL]
+### Entscheidung 6: MySQL statt PostgreSQL
+
+**Datum**: 04.12.2025
+
+**Kontext**: Welche relationale Datenbank für das Backend?
+
+**Entscheidung**: **MySQL**
+
+**Begründung**:
+
+- Entwickler-Präferenz und Erfahrung mit MySQL
+- Für einfache CRUD-Operationen gleich performant
+- Spring Boot unterstützt beide perfekt
+- Weniger Lernkurve = schnellere Entwicklung
+
+**Alternativen erwägt**:
+
+- PostgreSQL (abgelehnt: keine Vorteile für unseren Use-Case)
+
+---
+
+### Entscheidung 7: [TITEL]
 
 **Datum**: [DATUM]
 

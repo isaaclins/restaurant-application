@@ -37,8 +37,8 @@ Ein **funktionierendes Restaurant-Bestellsystem** mit 3 Hauptkomponenten:
               │  ─────────────────  │
               │   • Orders API      │
               │   • Products API    │
-              │   • Payments API    │
-              │   • PostgreSQL      │
+              │   • Payments API      │
+              │   • MySQL           │
               │   • Redis (Cache)   │
               └─────────────────────┘
 ```
@@ -67,7 +67,7 @@ Diese Komponenten **MÜSSEN** implementiert werden, um das Projekt als abgeschlo
 | #   | Aufgabe                  | Beschreibung                          | Abhängigkeit | Status |
 | --- | ------------------------ | ------------------------------------- | ------------ | ------ |
 | 1.1 | **Docker Compose Setup** | Basis docker-compose.yml mit Netzwerk | -            | ⬜     |
-| 1.2 | **PostgreSQL Container** | Datenbank für Produkte & Bestellungen | 1.1          | ⬜     |
+| 1.2 | **MySQL Container**      | Datenbank für Produkte & Bestellungen | 1.1          | ⬜     |
 | 1.3 | **Redis Container**      | Cache für Sessions/Warenkorb          | 1.1          | ⬜     |
 
 **Definition of Done Phase 1:**
@@ -109,7 +109,7 @@ Diese Komponenten **MÜSSEN** implementiert werden, um das Projekt als abgeschlo
 
 - Alle APIs funktionieren und sind dokumentiert
 - Postman Collection mit Beispiel-Requests
-- Daten persistieren in PostgreSQL
+- Daten persistieren in MySQL
 
 ---
 
@@ -144,7 +144,7 @@ Diese Komponenten **MÜSSEN** implementiert werden, um das Projekt als abgeschlo
 | 4.2.1 | - Pickup Spalte            | Abholungen links              | 4.2          | ⬜     |
 | 4.2.2 | - Delivery Spalte          | Lieferungen mitte             | 4.2          | ⬜     |
 | 4.2.3 | - Ticket Detail            | Ausgewählte Bestellung rechts | 4.2          | ⬜     |
-| 4.2.4 | - Farbcodes                | Rot→Gelb→Grün nach Zeit       | 4.2          | ⬜     |
+| 4.2.4 | - Farbcodes                | Grün→Gelb→Rot nach Status     | 4.2          | ⬜     |
 | 4.2.5 | - Timer                    | Zeit seit Bestellung          | 4.2          | ⬜     |
 | 4.2.6 | - Status ändern            | Click to advance status       | 4.2          | ⬜     |
 | 4.3   | **Neue Bestellung**        | Manuell erstellen (Walk-in)   | 2.3          | ⬜     |
