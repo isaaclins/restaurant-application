@@ -233,7 +233,96 @@
 
 ---
 
-### Tag 2 – [DATUM]
+### Tag 2 – 05.12.2025 | Test-Suite Implementation
+
+#### ✅ Erfolge
+
+- [x] **Comprehensive Tests** für alle Backend Services erstellt
+- [x] H2 In-Memory DB für Tests konfiguriert (wo nötig)
+- [x] Kafka/Redis/Feign für Tests gemockt
+- [x] Test-Profile (`application-test.yml`) für alle Services
+
+**Product Service Tests:**
+
+- `ProductControllerTest.java` – GET/POST/PUT/DELETE endpoints, Filter-Tests
+- `CategoryControllerTest.java` – CRUD, Reordering, Toggle Active
+- `application-test.yml` – H2 DB, Eureka disabled
+
+**Cart Service Tests:**
+
+- `CartControllerTest.java` – WebMvcTest mit MockBean für CartService
+- `CartServiceTest.java` – Unit Tests mit gemocktem Redis und ProductClient
+- `application-test.yml` – Eureka/Feign disabled
+
+**Order Service Tests:**
+
+- `OrderControllerTest.java` – Create, Status-Workflow, Filter-Tests
+- `application-test.yml` – H2 DB, Kafka disabled, Eureka disabled
+
+**Payment Service Tests:**
+
+- `PaymentControllerTest.java` – Success/Decline flows, Validation tests
+- `application-test.yml` – H2 DB, Test decline card konfiguriert
+
+**Auth Service Tests:**
+
+- `AuthControllerTest.java` – Register, Login, Password change, Profile
+- `application-test.yml` – H2 DB, JWT test secret
+
+**API Gateway Tests:**
+
+- `FallbackControllerTest.java` – Circuit Breaker fallbacks
+- `CorsConfigTest.java` – CORS configuration
+- `application-test.yml` – Discovery disabled
+
+#### 📁 Neue Test-Dateien
+
+**Product Service:**
+
+- `src/test/resources/application-test.yml`
+- `src/test/java/.../controller/ProductControllerTest.java`
+- `src/test/java/.../controller/CategoryControllerTest.java`
+
+**Cart Service:**
+
+- `src/test/resources/application-test.yml`
+- `src/test/java/.../controller/CartControllerTest.java`
+- `src/test/java/.../service/CartServiceTest.java`
+
+**Order Service:**
+
+- `src/test/resources/application-test.yml`
+- `src/test/java/.../controller/OrderControllerTest.java`
+- `pom.xml` – H2 dependency hinzugefügt
+
+**Payment Service:**
+
+- `src/test/resources/application-test.yml`
+- `src/test/java/.../controller/PaymentControllerTest.java`
+
+**Auth Service:**
+
+- `src/test/resources/application-test.yml`
+- `src/test/java/.../controller/AuthControllerTest.java`
+- `pom.xml` – H2 und spring-security-test hinzugefügt
+
+**API Gateway:**
+
+- `src/test/resources/application-test.yml`
+- `src/test/java/.../controller/FallbackControllerTest.java`
+- `src/test/java/.../config/CorsConfigTest.java`
+
+#### 🔍 Erkenntnisse
+
+- MockMvc für Controller-Integration Tests
+- `@WebFluxTest` für reaktive Gateway-Tests
+- `@MockBean` für Service-Layer Mocking
+- H2 ersetzt MySQL in Tests für Isolation
+- Kafka auto-startup: false für Test-Profile
+
+---
+
+### Tag 3 – [DATUM]
 
 #### ✅ Erfolge
 
