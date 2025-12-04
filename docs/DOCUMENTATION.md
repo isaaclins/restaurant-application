@@ -134,6 +134,94 @@
 
 ---
 
+### Tag 1 – 05.12.2025 | Backend Implementation (Nacht-Session)
+
+#### ✅ Erfolge
+
+- [x] **Docker Compose** erstellt mit MySQL, Redis, Kafka, Zookeeper, Kafka-UI
+- [x] **Eureka Server** implementiert (Service Discovery, Port 8761)
+- [x] **API Gateway** implementiert (Port 8080, CORS, Circuit Breaker, Routing)
+- [x] **Product Service** komplett (CRUD, Kategorien, Verfügbarkeit, Swagger)
+- [x] **Cart Service** komplett (Redis-basiert, Feign Client zu Products)
+- [x] **Order Service** komplett (Status-Workflow, Kafka Events, Kundenbestellungen)
+- [x] **Payment Service** komplett (H2 Mockup, Test-Karten für Fehler-Simulation)
+- [x] **Auth Service** komplett (JWT, BCrypt, Registrierung, Login, Passwort-Änderung)
+- [x] **GitHub Actions CI/CD Pipeline** erstellt (Build, Test, Docker, Security Scan)
+- [x] **Dockerfiles** für alle Services erstellt
+- [x] **Maven Wrapper** für alle Services generiert
+- [x] **start.sh** Script fertiggestellt
+
+**Refactoring (Hardcoding entfernt):**
+- [x] `.env` und `.env.example` erstellt für alle Credentials
+- [x] `docker-compose.yml` verwendet jetzt Umgebungsvariablen
+- [x] Alle `application.yml` aktualisiert (DB, Redis, Kafka, JWT, Ports)
+- [x] **Category von Enum zu Entity konvertiert** (dynamisch verwaltbar)
+- [x] CategoryController, CategoryService, CategoryRepository erstellt
+- [x] Product referenziert jetzt Category per Foreign Key
+- [x] Payment Test-Card konfigurierbar gemacht
+- [x] `.gitignore` erweitert
+
+**Neue Dokumentation:**
+- [x] `docs/ENVIRONMENT.md` – Alle Umgebungsvariablen dokumentiert
+- [x] `docs/CATEGORIES.md` – Category Management API dokumentiert
+
+#### 📁 Neue Dateien
+
+**Docker & Infrastructure:**
+- `docker-compose.yml`
+- `backend/init-db/01-init.sql`
+
+**Eureka Server:**
+- `backend/eureka-server/pom.xml`
+- `backend/eureka-server/src/.../EurekaServerApplication.java`
+- `backend/eureka-server/src/main/resources/application.yml`
+- `backend/eureka-server/Dockerfile`
+
+**API Gateway:**
+- `backend/api-gateway/pom.xml`
+- `backend/api-gateway/src/.../ApiGatewayApplication.java`
+- `backend/api-gateway/src/.../CorsConfig.java`
+- `backend/api-gateway/src/.../FallbackController.java`
+- `backend/api-gateway/src/main/resources/application.yml`
+- `backend/api-gateway/Dockerfile`
+
+**Product Service (11 Dateien):**
+- Vollständige CRUD-Implementation
+- **Category als Entity** (nicht mehr Enum!) mit eigenem CRUD
+- Swagger/OpenAPI Dokumentation
+- Exception Handling
+
+**Cart Service (9 Dateien):**
+- Redis-basierter Warenkorb
+- Feign Client für Product-Validierung
+- TTL für automatisches Löschen
+
+**Order Service (14 Dateien):**
+- Status-Workflow: PENDING → CONFIRMED → PREPARING → READY → COMPLETED
+- Kafka Event Publishing
+- Kundenbestellungen mit History
+
+**Payment Service (5 Dateien):**
+- H2 In-Memory Mockup
+- Test-Karten für Fehler-Simulation
+
+**Auth Service (14 Dateien):**
+- JWT Token Generation
+- BCrypt Password Hashing
+- Role-basierte Authentifizierung
+
+**CI/CD:**
+- `.github/workflows/ci.yml`
+
+#### 🔍 Erkenntnisse
+
+- Spring Boot 3.2.0 mit Java 21 funktioniert gut
+- Spring Cloud 2023.0.0 für Gateway/Eureka
+- Resilience4j für Circuit Breaker Pattern
+- Kafka für Event-driven Communication
+
+---
+
 ### Tag 2 – [DATUM]
 
 #### ✅ Erfolge
@@ -160,17 +248,17 @@
 
 ## 🏁 Meilensteine
 
-| #   | Meilenstein                          | Zieldatum  | Status | Notizen                     |
-| --- | ------------------------------------ | ---------- | ------ | --------------------------- |
-| 1   | Projektdefinition & Architektur      | 04.12.2025 | ✅     | README, Plan, Docs erstellt |
-| 2   | KDS Wireframe & Feature-Definition   | 04.12.2025 | ✅     | 3-Spalten Layout definiert  |
-| 3   | API-Dokumentation & Auth-Flow        | 04.12.2025 | ✅     | 30+ Endpoints dokumentiert  |
-| 4   | Infrastruktur (Docker, MySQL, Kafka) | TBD        | ⬜     |                             |
-| 5   | Backend Microservices                | TBD        | ⬜     | Product, Cart, Order, Auth  |
-| 6   | Website (Kunden-Portal)              | TBD        | ⬜     |                             |
-| 7   | Restaurant Client (Tauri KDS App)    | TBD        | ⬜     |                             |
-| 8   | Integration & Testing                | TBD        | ⬜     |                             |
-| 9   | Endabgabe                            | Juli 2025  | ⬜     |                             |
+| #   | Meilenstein                          | Zieldatum  | Status | Notizen                       |
+| --- | ------------------------------------ | ---------- | ------ | ----------------------------- |
+| 1   | Projektdefinition & Architektur      | 04.12.2025 | ✅     | README, Plan, Docs erstellt   |
+| 2   | KDS Wireframe & Feature-Definition   | 04.12.2025 | ✅     | 3-Spalten Layout definiert    |
+| 3   | API-Dokumentation & Auth-Flow        | 04.12.2025 | ✅     | 30+ Endpoints dokumentiert    |
+| 4   | Infrastruktur (Docker, MySQL, Kafka) | 05.12.2025 | ✅     | docker-compose.yml erstellt   |
+| 5   | Backend Microservices                | 05.12.2025 | ✅     | 7 Services implementiert      |
+| 6   | Website (Kunden-Portal)              | TBD        | ⬜     |                               |
+| 7   | Restaurant Client (Tauri KDS App)    | TBD        | ⬜     |                               |
+| 8   | Integration & Testing                | TBD        | ⬜     |                               |
+| 9   | Endabgabe                            | Juli 2025  | ⬜     |                               |
 
 ---
 
