@@ -1,2 +1,67 @@
+# =============================================================================
+# Restaurant Application - Git Ignore
+# =============================================================================
+
+# Environment Variables (NEVER commit!)
+.env
+.env.local
+.env.*.local
+
+# PDF Documents (assignment files)
 Practical Implementation v1.pdf
 Project Shop M321 M324.pdf
+
+# =============================================================================
+# Java / Maven
+# =============================================================================
+target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+.project
+.classpath
+.settings/
+*.swp
+*.swo
+.vscode/
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# =============================================================================
+# Node.js / React / Tauri
+# =============================================================================
+node_modules/
+dist/
+build/
+.next/
+out/
+
+# Tauri
+src-tauri/target/
+
+# =============================================================================
+# Docker
+# =============================================================================
+# Don't ignore docker-compose.yml, but ignore local overrides
+docker-compose.override.yml
+
+# =============================================================================
+# Misc
+# =============================================================================
+*.bak
+*.tmp
+*.temp
+coverage/
+.nyc_output/
