@@ -29,7 +29,7 @@ public class OrderController {
     @Operation(summary = "Create order", description = "Create a new order")
     public ResponseEntity<OrderResponse> createOrder(
             @Valid @RequestBody CreateOrderRequest request) {
-        
+
         OrderResponse order = orderService.createOrder(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(order);
     }
@@ -46,7 +46,7 @@ public class OrderController {
     public ResponseEntity<List<OrderResponse>> getAllOrders(
             @RequestParam(required = false) OrderStatus status,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
-        
+
         List<OrderResponse> orders = orderService.getAllOrders(status, date);
         return ResponseEntity.ok(orders);
     }
@@ -56,7 +56,7 @@ public class OrderController {
     public ResponseEntity<OrderResponse> updateStatus(
             @PathVariable Long id,
             @Valid @RequestBody UpdateStatusRequest request) {
-        
+
         OrderResponse order = orderService.updateStatus(id, request);
         return ResponseEntity.ok(order);
     }

@@ -34,21 +34,20 @@ public class PaymentController {
     @Operation(summary = "Process payment", description = "Process a payment (Mockup - always succeeds)")
     public ResponseEntity<PaymentResponse> processPayment(
             @Valid @RequestBody PaymentRequest request) {
-        
+
         log.info("Processing payment for order: {}", request.getOrderId());
-        
+
         // Simulate failure for test card (configurable)
         if (declineTestCard.equals(request.getCardNumber())) {
             return ResponseEntity.status(402).body(
-                PaymentResponse.builder()
-                    .paymentId("PAY-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase())
-                    .status("FAILED")
-                    .message("Card declined")
-                    .processedAt(LocalDateTime.now())
-                    .build()
-            );
+                    PaymentResponse.builder()
+                            .paymentId("PAY-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase())
+                            .status("FAILED")
+                            .message("Card declined")
+                            .processedAt(LocalDateTime.now())
+                            .build());
         }
-        
+
         // Simulate successful payment
         PaymentResponse response = PaymentResponse.builder()
                 .paymentId("PAY-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase())
@@ -58,9 +57,9 @@ public class PaymentController {
                 .amount(request.getAmount())
                 .processedAt(LocalDateTime.now())
                 .build();
-        
+
         log.info("Payment successful: {}", response.getPaymentId());
-        
+
         return ResponseEntity.ok(response);
     }
 
@@ -72,12 +71,11 @@ public class PaymentController {
     public ResponseEntity<PaymentResponse> getPaymentStatus(@PathVariable String id) {
         // Mockup - return static response
         return ResponseEntity.ok(
-            PaymentResponse.builder()
-                .paymentId(id)
-                .status("COMPLETED")
-                .message("Payment found")
-                .processedAt(LocalDateTime.now())
-                .build()
-        );
+                PaymentResponse.builder()
+                        .paymentId(id)
+                        .status("COMPLETED")
+                        .message("Payment found")
+                        .processedAt(LocalDateTime.now())
+                        .build());
     }
 }

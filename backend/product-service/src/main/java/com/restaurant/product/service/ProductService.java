@@ -70,10 +70,11 @@ public class ProductService {
         if (productRepository.existsByNameIgnoreCase(request.getName())) {
             throw new DuplicateProductException("Product with name '" + request.getName() + "' already exists");
         }
-        
+
         // Get category
         Category category = categoryRepository.findById(request.getCategoryId())
-                .orElseThrow(() -> new ResourceNotFoundException("Category not found with id: " + request.getCategoryId()));
+                .orElseThrow(
+                        () -> new ResourceNotFoundException("Category not found with id: " + request.getCategoryId()));
 
         Product product = Product.builder()
                 .name(request.getName())
@@ -86,7 +87,7 @@ public class ProductService {
 
         Product saved = productRepository.save(product);
         log.info("Created product: {}", saved.getId());
-        
+
         return ProductResponse.fromEntity(saved);
     }
 
@@ -109,7 +110,8 @@ public class ProductService {
         }
         if (request.getCategoryId() != null) {
             Category category = categoryRepository.findById(request.getCategoryId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Category not found with id: " + request.getCategoryId()));
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "Category not found with id: " + request.getCategoryId()));
             product.setCategory(category);
         }
         if (request.getAvailable() != null) {
@@ -121,7 +123,7 @@ public class ProductService {
 
         Product saved = productRepository.save(product);
         log.info("Updated product: {}", saved.getId());
-        
+
         return ProductResponse.fromEntity(saved);
     }
 
@@ -134,9 +136,9 @@ public class ProductService {
 
         product.setAvailable(request.getAvailable());
         Product saved = productRepository.save(product);
-        
+
         log.info("Updated availability for product {}: {}", id, request.getAvailable());
-        
+
         return ProductResponse.fromEntity(saved);
     }
 
@@ -147,7 +149,7 @@ public class ProductService {
         if (!productRepository.existsById(id)) {
             throw new ProductNotFoundException("Product not found with id: " + id);
         }
-        
+
         productRepository.deleteById(id);
         log.info("Deleted product: {}", id);
     }

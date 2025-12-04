@@ -54,7 +54,7 @@ public class CategoryService {
 
         Category category = new Category();
         mapRequestToEntity(request, category);
-        
+
         Category saved = categoryRepository.save(category);
         return mapToResponse(saved);
     }
@@ -65,7 +65,7 @@ public class CategoryService {
                 .orElseThrow(() -> new ResourceNotFoundException("Category not found with id: " + id));
 
         // Check if name is being changed and new name already exists
-        if (!category.getName().equalsIgnoreCase(request.getName()) 
+        if (!category.getName().equalsIgnoreCase(request.getName())
                 && categoryRepository.existsByNameIgnoreCase(request.getName())) {
             throw new IllegalArgumentException("Category with name '" + request.getName() + "' already exists");
         }
@@ -79,13 +79,14 @@ public class CategoryService {
     public void deleteCategory(Long id) {
         Category category = categoryRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Category not found with id: " + id));
-        
+
         // Check if category has products
         Long productCount = productRepository.countByCategoryId(id);
         if (productCount > 0) {
-            throw new IllegalStateException("Cannot delete category with " + productCount + " products. Move or delete products first.");
+            throw new IllegalStateException(
+                    "Cannot delete category with " + productCount + " products. Move or delete products first.");
         }
-        
+
         categoryRepository.delete(category);
     }
 
@@ -93,7 +94,7 @@ public class CategoryService {
     public CategoryResponse toggleCategoryActive(Long id) {
         Category category = categoryRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Category not found with id: " + id));
-        
+
         category.setIsActive(!category.getIsActive());
         Category saved = categoryRepository.save(category);
         return mapToResponseWithCount(saved);
@@ -130,8 +131,7 @@ public class CategoryService {
                 category.getIconUrl(),
                 category.getColorCode(),
                 category.getCreatedAt(),
-                category.getUpdatedAt()
-        );
+                category.getUpdatedAt());
     }
 
     private CategoryResponse mapToResponseWithCount(Category category) {

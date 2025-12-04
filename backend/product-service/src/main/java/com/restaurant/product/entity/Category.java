@@ -13,7 +13,8 @@ import java.time.LocalDateTime;
  * Category Entity - Dynamically manageable product categories
  * 
  * Categories can be created, updated, and deleted via the Restaurant Client.
- * Each category has a unique name, optional description, display order, and active status.
+ * Each category has a unique name, optional description, display order, and
+ * active status.
  */
 @Entity
 @Table(name = "categories")

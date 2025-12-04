@@ -28,7 +28,7 @@ public class CartController {
     @Operation(summary = "Get cart", description = "Get current shopping cart")
     public ResponseEntity<Cart> getCart(
             @RequestHeader("X-Session-ID") String sessionId) {
-        
+
         Cart cart = cartService.getCart(sessionId);
         return ResponseEntity.ok(cart);
     }
@@ -41,7 +41,7 @@ public class CartController {
     public ResponseEntity<Cart> addItem(
             @RequestHeader("X-Session-ID") String sessionId,
             @Valid @RequestBody AddToCartRequest request) {
-        
+
         Cart cart = cartService.addItem(sessionId, request);
         return ResponseEntity.ok(cart);
     }
@@ -54,7 +54,7 @@ public class CartController {
     public ResponseEntity<Cart> removeItem(
             @RequestHeader("X-Session-ID") String sessionId,
             @PathVariable Long productId) {
-        
+
         Cart cart = cartService.removeItem(sessionId, productId);
         return ResponseEntity.ok(cart);
     }
@@ -66,7 +66,7 @@ public class CartController {
     @Operation(summary = "Clear cart", description = "Remove all items from cart")
     public ResponseEntity<Void> clearCart(
             @RequestHeader("X-Session-ID") String sessionId) {
-        
+
         cartService.clearCart(sessionId);
         return ResponseEntity.noContent().build();
     }

@@ -50,7 +50,8 @@ public class OrderService {
                 .customerId(request.getCustomerId())
                 .deliveryStreet(request.getDeliveryAddress() != null ? request.getDeliveryAddress().getStreet() : null)
                 .deliveryCity(request.getDeliveryAddress() != null ? request.getDeliveryAddress().getCity() : null)
-                .deliveryPostalCode(request.getDeliveryAddress() != null ? request.getDeliveryAddress().getPostalCode() : null)
+                .deliveryPostalCode(
+                        request.getDeliveryAddress() != null ? request.getDeliveryAddress().getPostalCode() : null)
                 .orderType(request.getOrderType())
                 .paymentMethod(request.getPaymentMethod())
                 .notes(request.getNotes())

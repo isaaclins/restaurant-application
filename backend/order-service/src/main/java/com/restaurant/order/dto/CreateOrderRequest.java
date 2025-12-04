@@ -19,21 +19,21 @@ public class CreateOrderRequest {
 
     @NotBlank(message = "Customer name is required")
     private String customerName;
-    
+
     private String customerEmail;
     private String customerPhone;
     private Long customerId;
-    
+
     private AddressDTO deliveryAddress;
-    
+
     @NotNull(message = "Order type is required")
     private OrderType orderType;
-    
+
     private String paymentMethod;
     private String notes;
-    
+
     private List<OrderItemRequest> items;
-    
+
     @NotNull(message = "Total price is required")
     private BigDecimal totalPrice;
 }

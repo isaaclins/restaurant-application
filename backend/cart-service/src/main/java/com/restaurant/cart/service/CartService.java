@@ -22,7 +22,7 @@ public class CartService {
 
     private final RedisTemplate<String, Cart> redisTemplate;
     private final ProductClient productClient;
-    
+
     private static final String CART_PREFIX = "cart:";
     private static final long CART_TTL_HOURS = 24;
 
@@ -32,13 +32,13 @@ public class CartService {
     public Cart getCart(String sessionId) {
         String key = CART_PREFIX + sessionId;
         Cart cart = redisTemplate.opsForValue().get(key);
-        
+
         if (cart == null) {
             cart = Cart.builder()
                     .sessionId(sessionId)
                     .build();
         }
-        
+
         return cart;
     }
 
@@ -48,29 +48,29 @@ public class CartService {
     public Cart addItem(String sessionId, AddToCartRequest request) {
         // Validate product exists
         ProductDTO product = productClient.getProductById(request.getProductId());
-        
+
         if (product == null) {
             throw new IllegalArgumentException("Product not found: " + request.getProductId());
         }
-        
+
         if (!product.getAvailable()) {
             throw new IllegalArgumentException("Product is not available: " + product.getName());
         }
-        
+
         Cart cart = getCart(sessionId);
-        
+
         CartItem item = CartItem.builder()
                 .productId(product.getId())
                 .productName(product.getName())
                 .unitPrice(product.getPrice())
                 .quantity(request.getQuantity())
                 .build();
-        
+
         cart.addItem(item);
         saveCart(cart);
-        
+
         log.info("Added {} x {} to cart {}", request.getQuantity(), product.getName(), sessionId);
-        
+
         return cart;
     }
 
@@ -81,9 +81,9 @@ public class CartService {
         Cart cart = getCart(sessionId);
         cart.removeItem(productId);
         saveCart(cart);
-        
+
         log.info("Removed product {} from cart {}", productId, sessionId);
-        
+
         return cart;
     }
 
@@ -94,13 +94,13 @@ public class CartService {
         if (quantity <= 0) {
             return removeItem(sessionId, productId);
         }
-        
+
         Cart cart = getCart(sessionId);
         cart.updateItemQuantity(productId, quantity);
         saveCart(cart);
-        
+
         log.info("Updated quantity for product {} in cart {}: {}", productId, sessionId, quantity);
-        
+
         return cart;
     }
 

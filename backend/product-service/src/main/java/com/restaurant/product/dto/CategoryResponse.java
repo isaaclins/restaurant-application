@@ -22,9 +22,9 @@ public class CategoryResponse {
     private LocalDateTime updatedAt;
     private Long productCount;
 
-    public CategoryResponse(Long id, String name, String description, Integer displayOrder, 
-                           Boolean isActive, String iconUrl, String colorCode,
-                           LocalDateTime createdAt, LocalDateTime updatedAt) {
+    public CategoryResponse(Long id, String name, String description, Integer displayOrder,
+            Boolean isActive, String iconUrl, String colorCode,
+            LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.name = name;
         this.description = description;

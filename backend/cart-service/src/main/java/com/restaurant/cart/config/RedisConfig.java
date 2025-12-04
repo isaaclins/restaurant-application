@@ -18,13 +18,13 @@ public class RedisConfig {
     public RedisTemplate<String, Cart> redisTemplate(RedisConnectionFactory connectionFactory) {
         RedisTemplate<String, Cart> template = new RedisTemplate<>();
         template.setConnectionFactory(connectionFactory);
-        
+
         // Key serializer
         template.setKeySerializer(new StringRedisSerializer());
-        
+
         // Value serializer (JSON)
         template.setValueSerializer(new Jackson2JsonRedisSerializer<>(Cart.class));
-        
+
         template.afterPropertiesSet();
         return template;
     }

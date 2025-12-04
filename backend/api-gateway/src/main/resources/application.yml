@@ -21,7 +21,7 @@ spring:
               args:
                 name: productCircuitBreaker
                 fallbackUri: forward:/fallback/products
-                
+
         # Category Service (routed to Product Service)
         - id: category-service
           uri: lb://PRODUCT-SERVICE
@@ -32,7 +32,7 @@ spring:
               args:
                 name: categoryCircuitBreaker
                 fallbackUri: forward:/fallback/categories
-                
+
         # Cart Service
         - id: cart-service
           uri: lb://CART-SERVICE
@@ -43,7 +43,7 @@ spring:
               args:
                 name: cartCircuitBreaker
                 fallbackUri: forward:/fallback/cart
-                
+
         # Order Service
         - id: order-service
           uri: lb://ORDER-SERVICE
@@ -54,31 +54,31 @@ spring:
               args:
                 name: orderCircuitBreaker
                 fallbackUri: forward:/fallback/orders
-                
+
         # Payment Service
         - id: payment-service
           uri: lb://PAYMENT-SERVICE
           predicates:
             - Path=/api/payments/**
-            
+
         # Auth Service
         - id: auth-service
           uri: lb://AUTH-SERVICE
           predicates:
             - Path=/api/auth/**
-            
+
         # Customer endpoints (routed to Auth Service)
         - id: customer-service
           uri: lb://AUTH-SERVICE
           predicates:
             - Path=/api/customers/**
-            
+
         # Settings (routed to Product Service)
         - id: settings-service
           uri: lb://PRODUCT-SERVICE
           predicates:
             - Path=/api/settings/**
-            
+
         # Receipts (routed to Order Service)
         - id: receipts-service
           uri: lb://ORDER-SERVICE

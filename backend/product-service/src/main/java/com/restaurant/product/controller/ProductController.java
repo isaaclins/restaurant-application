@@ -34,14 +34,12 @@ public class ProductController {
     @GetMapping
     @Operation(summary = "Get all products", description = "Retrieve all products with optional filters")
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Products retrieved successfully")
+            @ApiResponse(responseCode = "200", description = "Products retrieved successfully")
     })
     public ResponseEntity<List<ProductResponse>> getAllProducts(
-            @Parameter(description = "Filter by category ID")
-            @RequestParam(required = false) Long categoryId,
-            @Parameter(description = "Filter by availability")
-            @RequestParam(required = false) Boolean available) {
-        
+            @Parameter(description = "Filter by category ID") @RequestParam(required = false) Long categoryId,
+            @Parameter(description = "Filter by availability") @RequestParam(required = false) Boolean available) {
+
         List<ProductResponse> products = productService.getAllProducts(categoryId, available);
         return ResponseEntity.ok(products);
     }
@@ -52,13 +50,12 @@ public class ProductController {
     @GetMapping("/{id}")
     @Operation(summary = "Get product by ID", description = "Retrieve a single product by its ID")
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Product found"),
-        @ApiResponse(responseCode = "404", description = "Product not found")
+            @ApiResponse(responseCode = "200", description = "Product found"),
+            @ApiResponse(responseCode = "404", description = "Product not found")
     })
     public ResponseEntity<ProductResponse> getProductById(
-            @Parameter(description = "Product ID")
-            @PathVariable Long id) {
-        
+            @Parameter(description = "Product ID") @PathVariable Long id) {
+
         ProductResponse product = productService.getProductById(id);
         return ResponseEntity.ok(product);
     }
@@ -69,13 +66,13 @@ public class ProductController {
     @PostMapping
     @Operation(summary = "Create product", description = "Create a new product (Admin only)")
     @ApiResponses({
-        @ApiResponse(responseCode = "201", description = "Product created successfully"),
-        @ApiResponse(responseCode = "400", description = "Invalid request body"),
-        @ApiResponse(responseCode = "409", description = "Product with same name exists")
+            @ApiResponse(responseCode = "201", description = "Product created successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid request body"),
+            @ApiResponse(responseCode = "409", description = "Product with same name exists")
     })
     public ResponseEntity<ProductResponse> createProduct(
             @Valid @RequestBody ProductRequest request) {
-        
+
         ProductResponse product = productService.createProduct(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(product);
     }
@@ -86,14 +83,13 @@ public class ProductController {
     @PutMapping("/{id}")
     @Operation(summary = "Update product", description = "Update an existing product (Admin only)")
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Product updated successfully"),
-        @ApiResponse(responseCode = "404", description = "Product not found")
+            @ApiResponse(responseCode = "200", description = "Product updated successfully"),
+            @ApiResponse(responseCode = "404", description = "Product not found")
     })
     public ResponseEntity<ProductResponse> updateProduct(
-            @Parameter(description = "Product ID")
-            @PathVariable Long id,
+            @Parameter(description = "Product ID") @PathVariable Long id,
             @Valid @RequestBody ProductRequest request) {
-        
+
         ProductResponse product = productService.updateProduct(id, request);
         return ResponseEntity.ok(product);
     }
@@ -104,14 +100,13 @@ public class ProductController {
     @PutMapping("/{id}/availability")
     @Operation(summary = "Update availability", description = "Toggle product availability (Staff)")
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Availability updated"),
-        @ApiResponse(responseCode = "404", description = "Product not found")
+            @ApiResponse(responseCode = "200", description = "Availability updated"),
+            @ApiResponse(responseCode = "404", description = "Product not found")
     })
     public ResponseEntity<ProductResponse> updateAvailability(
-            @Parameter(description = "Product ID")
-            @PathVariable Long id,
+            @Parameter(description = "Product ID") @PathVariable Long id,
             @Valid @RequestBody AvailabilityRequest request) {
-        
+
         ProductResponse product = productService.updateAvailability(id, request);
         return ResponseEntity.ok(product);
     }
@@ -122,13 +117,12 @@ public class ProductController {
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete product", description = "Delete a product (Admin only)")
     @ApiResponses({
-        @ApiResponse(responseCode = "204", description = "Product deleted"),
-        @ApiResponse(responseCode = "404", description = "Product not found")
+            @ApiResponse(responseCode = "204", description = "Product deleted"),
+            @ApiResponse(responseCode = "404", description = "Product not found")
     })
     public ResponseEntity<Void> deleteProduct(
-            @Parameter(description = "Product ID")
-            @PathVariable Long id) {
-        
+            @Parameter(description = "Product ID") @PathVariable Long id) {
+
         productService.deleteProduct(id);
         return ResponseEntity.noContent().build();
     }

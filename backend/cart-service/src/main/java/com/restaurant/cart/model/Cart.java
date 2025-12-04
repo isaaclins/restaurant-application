@@ -20,22 +20,22 @@ import java.util.List;
 public class Cart implements Serializable {
 
     private String sessionId;
-    
+
     @Builder.Default
     private List<CartItem> items = new ArrayList<>();
-    
+
     public int getTotalItems() {
         return items.stream()
                 .mapToInt(CartItem::getQuantity)
                 .sum();
     }
-    
+
     public BigDecimal getTotalPrice() {
         return items.stream()
                 .map(CartItem::getTotalPrice)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
-    
+
     public void addItem(CartItem item) {
         // Check if item already exists
         for (CartItem existing : items) {
@@ -46,11 +46,11 @@ public class Cart implements Serializable {
         }
         items.add(item);
     }
-    
+
     public void removeItem(Long productId) {
         items.removeIf(item -> item.getProductId().equals(productId));
     }
-    
+
     public void updateItemQuantity(Long productId, int quantity) {
         for (CartItem item : items) {
             if (item.getProductId().equals(productId)) {
@@ -59,7 +59,7 @@ public class Cart implements Serializable {
             }
         }
     }
-    
+
     public void clear() {
         items.clear();
     }

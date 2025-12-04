@@ -39,10 +39,9 @@ public class OrderResponse {
         AddressDTO address = null;
         if (order.getDeliveryStreet() != null) {
             address = new AddressDTO(
-                order.getDeliveryStreet(),
-                order.getDeliveryCity(),
-                order.getDeliveryPostalCode()
-            );
+                    order.getDeliveryStreet(),
+                    order.getDeliveryCity(),
+                    order.getDeliveryPostalCode());
         }
 
         List<OrderItemResponse> items = order.getItems().stream()
@@ -51,8 +50,7 @@ public class OrderResponse {
                         item.getProductName(),
                         item.getQuantity(),
                         item.getUnitPrice(),
-                        item.getTotalPrice()
-                ))
+                        item.getTotalPrice()))
                 .collect(Collectors.toList());
 
         return OrderResponse.builder()

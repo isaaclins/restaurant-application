@@ -41,9 +41,9 @@ public class FallbackController {
         response.put("message", message);
         response.put("timestamp", LocalDateTime.now().toString());
         response.put("error", "SERVICE_UNAVAILABLE");
-        
+
         return ResponseEntity
-            .status(HttpStatus.SERVICE_UNAVAILABLE)
-            .body(response);
+                .status(HttpStatus.SERVICE_UNAVAILABLE)
+                .body(response);
     }
 }

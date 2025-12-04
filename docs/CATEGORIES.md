@@ -35,14 +35,14 @@ Categories are fully manageable through the REST API. The restaurant can:
 
 ### Fields
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `name` | string | ✅ | Category name (2-50 chars, unique) |
-| `description` | string | ❌ | Detailed description (max 255 chars) |
-| `displayOrder` | integer | ❌ | Order in menu (0 = first) |
-| `isActive` | boolean | ❌ | Visibility for customers (default: true) |
-| `iconUrl` | string | ❌ | Icon/image URL (max 500 chars) |
-| `colorCode` | string | ❌ | Hex color for UI (e.g., #FF5733) |
+| Field          | Type    | Required | Description                              |
+| -------------- | ------- | -------- | ---------------------------------------- |
+| `name`         | string  | ✅       | Category name (2-50 chars, unique)       |
+| `description`  | string  | ❌       | Detailed description (max 255 chars)     |
+| `displayOrder` | integer | ❌       | Order in menu (0 = first)                |
+| `isActive`     | boolean | ❌       | Visibility for customers (default: true) |
+| `iconUrl`      | string  | ❌       | Icon/image URL (max 500 chars)           |
+| `colorCode`    | string  | ❌       | Hex color for UI (e.g., #FF5733)         |
 
 ---
 
@@ -63,6 +63,7 @@ GET /api/categories
 Returns all categories ordered by `displayOrder`.
 
 **Response:**
+
 ```json
 [
   {
@@ -141,6 +142,7 @@ DELETE /api/categories/{id}
 ⚠️ **Note:** Only empty categories (no products) can be deleted.
 
 **Error Response (if products exist):**
+
 ```json
 {
   "status": 400,
