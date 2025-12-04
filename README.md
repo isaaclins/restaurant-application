@@ -45,7 +45,7 @@ Kunden können online bestellen, das Restaurant sieht Bestellungen live auf eine
 └──────────────┘ └──────────────┘ └──────────────┘
         │               │               │
         ▼               ▼               ▼
-   PostgreSQL        Redis         PostgreSQL
+     MySQL           Redis           MySQL
 ```
 
 ### Microservices-Stack
