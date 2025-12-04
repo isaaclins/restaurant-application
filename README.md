@@ -150,7 +150,7 @@ cd client && npm install && npm run tauri dev
 
 ## 📄 Lizenz
 
-Schulprojekt – Dezember 2024
+Schulprojekt – Dezember 2025
 
 ---
 
