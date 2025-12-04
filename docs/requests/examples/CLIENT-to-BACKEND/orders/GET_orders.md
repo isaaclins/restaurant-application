@@ -15,12 +15,12 @@ Authorization: Bearer <restaurant-token>
 
 ### Query Parameters (optional)
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `status` | string | Filter nach Status (z.B. `NEW,PREPARING`) |
-| `type` | string | Filter nach Typ (`DELIVERY` oder `PICKUP`) |
-| `from` | datetime | Bestellungen ab Datum |
-| `to` | datetime | Bestellungen bis Datum |
+| Parameter | Type     | Description                                |
+| --------- | -------- | ------------------------------------------ |
+| `status`  | string   | Filter nach Status (z.B. `NEW,PREPARING`)  |
+| `type`    | string   | Filter nach Typ (`DELIVERY` oder `PICKUP`) |
+| `from`    | datetime | Bestellungen ab Datum                      |
+| `to`      | datetime | Bestellungen bis Datum                     |
 
 ### Example
 
@@ -66,7 +66,7 @@ curl -X GET "http://localhost:8080/api/orders?status=NEW,PREPARING,READY" \
             "completed": true
           }
         ],
-        "total": 47.00,
+        "total": 47.0,
         "paymentMethod": "CARD",
         "paymentStatus": "PAID",
         "createdAt": "2025-12-04T20:45:00Z",
@@ -98,7 +98,7 @@ curl -X GET "http://localhost:8080/api/orders?status=NEW,PREPARING,READY" \
             "completed": false
           }
         ],
-        "total": 31.50,
+        "total": 31.5,
         "paymentMethod": "CASH",
         "paymentStatus": "PENDING",
         "createdAt": "2025-12-04T20:55:00Z",

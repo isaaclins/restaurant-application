@@ -14,9 +14,9 @@ Accept: application/json
 
 ### Path Parameters
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `sessionId` | string | ✅ | Session-ID des Warenkorbs |
+| Parameter   | Type   | Required | Description               |
+| ----------- | ------ | -------- | ------------------------- |
+| `sessionId` | string | ✅       | Session-ID des Warenkorbs |
 
 ### Example
 
@@ -42,16 +42,16 @@ curl -X GET "http://localhost:8080/api/cart/abc123-session-id"
         "productName": "Margherita",
         "quantity": 2,
         "size": "M",
-        "unitPrice": 18.50,
+        "unitPrice": 18.5,
         "extras": [
           {
             "id": 1,
             "name": "Extra Käse",
-            "price": 2.50
+            "price": 2.5
           }
         ],
         "notes": "Extra knusprig",
-        "itemTotal": 42.00
+        "itemTotal": 42.0
       },
       {
         "id": "item-uuid-2",
@@ -59,15 +59,15 @@ curl -X GET "http://localhost:8080/api/cart/abc123-session-id"
         "productName": "Coca Cola",
         "quantity": 1,
         "size": null,
-        "unitPrice": 4.50,
+        "unitPrice": 4.5,
         "extras": [],
         "notes": null,
-        "itemTotal": 4.50
+        "itemTotal": 4.5
       }
     ],
-    "subtotal": 46.50,
-    "deliveryFee": 5.00,
-    "total": 51.50,
+    "subtotal": 46.5,
+    "deliveryFee": 5.0,
+    "total": 51.5,
     "itemCount": 3,
     "createdAt": "2025-12-04T20:00:00Z",
     "expiresAt": "2025-12-04T22:00:00Z"

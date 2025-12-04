@@ -37,16 +37,16 @@ Accept: application/json
 
 ### Body Parameters
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `sessionId` | string | ✅ | Warenkorb Session-ID |
-| `type` | string | ✅ | `DELIVERY` oder `PICKUP` |
-| `customer.name` | string | ✅ | Kundenname |
-| `customer.phone` | string | ✅ | Telefonnummer |
-| `customer.email` | string | ❌ | E-Mail Adresse |
-| `deliveryAddress` | object | ✅* | Lieferadresse (*nur bei DELIVERY) |
-| `paymentMethod` | string | ✅ | `CARD`, `TWINT`, `CASH` |
-| `notes` | string | ❌ | Allgemeine Notizen |
+| Field             | Type   | Required | Description                        |
+| ----------------- | ------ | -------- | ---------------------------------- |
+| `sessionId`       | string | ✅       | Warenkorb Session-ID               |
+| `type`            | string | ✅       | `DELIVERY` oder `PICKUP`           |
+| `customer.name`   | string | ✅       | Kundenname                         |
+| `customer.phone`  | string | ✅       | Telefonnummer                      |
+| `customer.email`  | string | ❌       | E-Mail Adresse                     |
+| `deliveryAddress` | object | ✅\*     | Lieferadresse (\*nur bei DELIVERY) |
+| `paymentMethod`   | string | ✅       | `CARD`, `TWINT`, `CASH`            |
+| `notes`           | string | ❌       | Allgemeine Notizen                 |
 
 ### Example
 
@@ -95,19 +95,19 @@ curl -X POST "http://localhost:8080/api/orders" \
         "productName": "Margherita",
         "quantity": 2,
         "size": "M",
-        "unitPrice": 18.50,
+        "unitPrice": 18.5,
         "extras": [
           {
             "name": "Extra Käse",
-            "price": 2.50
+            "price": 2.5
           }
         ],
-        "itemTotal": 42.00
+        "itemTotal": 42.0
       }
     ],
-    "subtotal": 42.00,
-    "deliveryFee": 5.00,
-    "total": 47.00,
+    "subtotal": 42.0,
+    "deliveryFee": 5.0,
+    "total": 47.0,
     "paymentMethod": "CARD",
     "paymentStatus": "PENDING",
     "notes": "Bitte schnell liefern",

@@ -15,15 +15,15 @@ Authorization: Bearer <restaurant-token>
 
 ### Query Parameters
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `from` | date | Ab Datum (YYYY-MM-DD) |
-| `to` | date | Bis Datum (YYYY-MM-DD) |
-| `status` | string | Filter: `PAID`, `PENDING`, `REFUNDED` |
-| `minAmount` | decimal | Mindestbetrag |
-| `maxAmount` | decimal | Maximalbetrag |
-| `page` | integer | Seitennummer (default: 1) |
-| `limit` | integer | Einträge pro Seite (default: 50) |
+| Parameter   | Type    | Description                           |
+| ----------- | ------- | ------------------------------------- |
+| `from`      | date    | Ab Datum (YYYY-MM-DD)                 |
+| `to`        | date    | Bis Datum (YYYY-MM-DD)                |
+| `status`    | string  | Filter: `PAID`, `PENDING`, `REFUNDED` |
+| `minAmount` | decimal | Mindestbetrag                         |
+| `maxAmount` | decimal | Maximalbetrag                         |
+| `page`      | integer | Seitennummer (default: 1)             |
+| `limit`     | integer | Einträge pro Seite (default: 50)      |
 
 ### Example - Heutige Rechnungen
 
@@ -63,14 +63,14 @@ curl -X GET "http://localhost:8080/api/receipts?from=2025-11-27&to=2025-12-04&st
           {
             "name": "Margherita (M)",
             "quantity": 2,
-            "unitPrice": 18.50,
+            "unitPrice": 18.5,
             "extras": "Extra Käse (+2.50)",
-            "total": 42.00
+            "total": 42.0
           }
         ],
-        "subtotal": 42.00,
-        "deliveryFee": 5.00,
-        "total": 47.00,
+        "subtotal": 42.0,
+        "deliveryFee": 5.0,
+        "total": 47.0,
         "paymentMethod": "CARD",
         "paymentStatus": "PAID",
         "paidAt": "2025-12-04T20:46:00Z",
@@ -88,14 +88,14 @@ curl -X GET "http://localhost:8080/api/receipts?from=2025-11-27&to=2025-12-04&st
           {
             "name": "Quattro Formaggi (L)",
             "quantity": 1,
-            "unitPrice": 26.50,
+            "unitPrice": 26.5,
             "extras": null,
-            "total": 26.50
+            "total": 26.5
           }
         ],
-        "subtotal": 26.50,
+        "subtotal": 26.5,
         "deliveryFee": 0,
-        "total": 26.50,
+        "total": 26.5,
         "paymentMethod": "CASH",
         "paymentStatus": "PAID",
         "paidAt": "2025-12-04T21:10:00Z",
@@ -109,12 +109,12 @@ curl -X GET "http://localhost:8080/api/receipts?from=2025-11-27&to=2025-12-04&st
       "totalItems": 2
     },
     "summary": {
-      "totalRevenue": 73.50,
+      "totalRevenue": 73.5,
       "totalOrders": 2,
       "averageOrder": 36.75,
       "paymentMethods": {
-        "CARD": 47.00,
-        "CASH": 26.50,
+        "CARD": 47.0,
+        "CASH": 26.5,
         "TWINT": 0
       }
     }

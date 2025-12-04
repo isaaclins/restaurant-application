@@ -15,9 +15,9 @@ Accept: application/json
 
 ### Path Parameters
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `sessionId` | string | ✅ | Eindeutige Session-ID (vom Client generiert) |
+| Parameter   | Type   | Required | Description                                  |
+| ----------- | ------ | -------- | -------------------------------------------- |
+| `sessionId` | string | ✅       | Eindeutige Session-ID (vom Client generiert) |
 
 ### Request Body
 
@@ -33,13 +33,13 @@ Accept: application/json
 
 ### Body Parameters
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `productId` | integer | ✅ | ID des Produkts |
-| `quantity` | integer | ✅ | Menge (min: 1, max: 99) |
-| `size` | string | ❌ | Grösse (S/M/L) - nur für Pizza |
-| `extras` | array[int] | ❌ | IDs der gewählten Extras |
-| `notes` | string | ❌ | Spezielle Wünsche |
+| Field       | Type       | Required | Description                    |
+| ----------- | ---------- | -------- | ------------------------------ |
+| `productId` | integer    | ✅       | ID des Produkts                |
+| `quantity`  | integer    | ✅       | Menge (min: 1, max: 99)        |
+| `size`      | string     | ❌       | Grösse (S/M/L) - nur für Pizza |
+| `extras`    | array[int] | ❌       | IDs der gewählten Extras       |
+| `notes`     | string     | ❌       | Spezielle Wünsche              |
 
 ### Example
 
@@ -73,21 +73,21 @@ curl -X POST "http://localhost:8080/api/cart/abc123-session-id/items" \
         "productName": "Margherita",
         "quantity": 2,
         "size": "M",
-        "unitPrice": 18.50,
+        "unitPrice": 18.5,
         "extras": [
           {
             "id": 1,
             "name": "Extra Käse",
-            "price": 2.50
+            "price": 2.5
           }
         ],
         "notes": "Extra knusprig",
-        "itemTotal": 42.00
+        "itemTotal": 42.0
       }
     ],
-    "subtotal": 42.00,
-    "deliveryFee": 5.00,
-    "total": 47.00,
+    "subtotal": 42.0,
+    "deliveryFee": 5.0,
+    "total": 47.0,
     "itemCount": 2,
     "expiresAt": "2025-12-04T23:30:00Z"
   }

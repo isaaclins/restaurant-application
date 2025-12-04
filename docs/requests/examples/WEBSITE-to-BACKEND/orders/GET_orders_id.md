@@ -14,9 +14,9 @@ Accept: application/json
 
 ### Path Parameters
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `id` | integer | ✅ | Bestell-ID |
+| Parameter | Type    | Required | Description |
+| --------- | ------- | -------- | ----------- |
+| `id`      | integer | ✅       | Bestell-ID  |
 
 ### Example
 
@@ -59,7 +59,7 @@ curl -X GET "http://localhost:8080/api/orders/1001"
         "size": "M"
       }
     ],
-    "total": 47.00,
+    "total": 47.0,
     "paymentMethod": "CARD",
     "paymentStatus": "PAID",
     "estimatedTime": "2025-12-04T21:15:00Z",
@@ -76,16 +76,16 @@ NEW → CONFIRMED → PREPARING → READY → OUT_FOR_DELIVERY → DELIVERED
      └→ CANCELLED (jederzeit vor READY)
 ```
 
-| Status | Description |
-|--------|-------------|
-| `NEW` | Bestellung eingegangen, wartet auf Bestätigung |
-| `CONFIRMED` | Restaurant hat Bestellung bestätigt |
-| `PREPARING` | Küche bereitet zu |
-| `READY` | Bestellung fertig |
-| `OUT_FOR_DELIVERY` | Fahrer unterwegs (nur Lieferung) |
-| `DELIVERED` | Geliefert |
-| `PICKED_UP` | Abgeholt (nur Abholung) |
-| `CANCELLED` | Storniert |
+| Status             | Description                                    |
+| ------------------ | ---------------------------------------------- |
+| `NEW`              | Bestellung eingegangen, wartet auf Bestätigung |
+| `CONFIRMED`        | Restaurant hat Bestellung bestätigt            |
+| `PREPARING`        | Küche bereitet zu                              |
+| `READY`            | Bestellung fertig                              |
+| `OUT_FOR_DELIVERY` | Fahrer unterwegs (nur Lieferung)               |
+| `DELIVERED`        | Geliefert                                      |
+| `PICKED_UP`        | Abgeholt (nur Abholung)                        |
+| `CANCELLED`        | Storniert                                      |
 
 ### Error (404 Not Found)
 

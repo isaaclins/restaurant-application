@@ -31,6 +31,8 @@
 - [x] Restaurant Client Features definiert
 - [x] Projektstruktur erstellt (backend/, website/, client/, docs/)
 - [x] **Tauri** als Desktop-Framework gewählt (statt Electron)
+- [x] **API-Dokumentation** erstellt mit Request/Response Beispielen
+- [x] 22 Endpoints dokumentiert (WEBSITE-to-BACKEND & CLIENT-to-BACKEND)
 
 #### ❌ Misserfolge / Herausforderungen
 
@@ -41,8 +43,10 @@
 
 - Template soll generic sein für verschiedene Restaurant-Typen
 - Inspiration von bekannten Pizzeria-Bestellsystemen (Dieci)
-- **KDS mit Farbcodes** für Bestellstatus (Grün->Gelb->Rot)
+- **KDS mit Farbcodes** für Bestellstatus (Rot→Gelb→Grün)
 - **Volle Restaurant-Autonomie**: Keine Entwickler-Hilfe für Preisänderungen etc.
+- **Backend zuerst entwickeln** – Frontend ist UX/UI abhängig und subjektiv
+- API-Vertrag definieren bevor Implementation beginnt
 
 #### 🔍 Erkenntnisse
 
@@ -50,6 +54,8 @@
 - Klare Service-Grenzen sind wichtig für Wartbarkeit
 - **KDS ist Kernkomponente** für Restaurant-Workflow
 - Restaurant braucht volle Kontrolle über Produkte, Preise, Einstellungen
+- **API-First Ansatz**: Dokumentierte Endpoints als "Vertrag" zwischen Backend und Clients
+- Reihenfolge: Backend → Client (Tauri) → Website (zuletzt)
 
 #### 📝 Notizen
 
@@ -223,7 +229,47 @@
 
 ---
 
-### Entscheidung 5: [TITEL]
+### Entscheidung 5: API-First Entwicklung & Dokumentationsstruktur
+
+**Datum**: 04.12.2025
+
+**Kontext**: In welcher Reihenfolge entwickeln wir die Komponenten?
+
+**Entscheidung**: 
+1. **Backend zuerst** – Logik ist objektiv (1+1=2)
+2. **Client (KDS) zweiter** – braucht funktionierende APIs
+3. **Website zuletzt** – UX/UI ist subjektiv, kann flexibel angepasst werden
+
+**API-Dokumentation Struktur**:
+```
+docs/requests/
+├── README.md                          # Endpoint-Übersicht
+└── examples/
+    ├── WEBSITE-to-BACKEND/            # 10 Endpoints
+    │   ├── products/                  # GET products, GET by id, GET by category
+    │   ├── cart/                      # GET, POST items, DELETE item
+    │   ├── orders/                    # POST order, GET status
+    │   └── payments/                  # POST payment
+    │
+    └── CLIENT-to-BACKEND/             # 12 Endpoints
+        ├── orders/                    # GET all, PUT status, POST manual
+        ├── products/                  # POST, PUT, PUT availability, DELETE
+        ├── receipts/                  # GET all, GET pdf, GET daily report
+        └── settings/                  # GET, PUT
+```
+
+**Begründung**:
+- Backend-Logik ist der "Vertrag" für beide Clients
+- Dokumentierte APIs ermöglichen parallele Entwicklung
+- Frontend-Änderungen brechen keine Backend-Logik
+
+**Alternativen erwägt**:
+- Frontend-First (abgelehnt: API müsste nachträglich angepasst werden)
+- Parallele Entwicklung ohne Spec (abgelehnt: Inkonsistenzen wahrscheinlich)
+
+---
+
+### Entscheidung 6: [TITEL]
 
 **Datum**: [DATUM]
 

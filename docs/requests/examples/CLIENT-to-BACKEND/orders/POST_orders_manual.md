@@ -47,15 +47,15 @@ Authorization: Bearer <restaurant-token>
 
 ### Body Parameters
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `type` | string | ✅ | `PICKUP` (Walk-in ist immer Abholung) |
-| `source` | string | ✅ | `WALK_IN` (unterscheidet von Online) |
-| `customer.name` | string | ❌ | Optional für Walk-in |
-| `customer.phone` | string | ❌ | Optional für Walk-in |
-| `items` | array | ✅ | Bestellte Produkte |
-| `paymentMethod` | string | ✅ | `CASH`, `CARD`, `TWINT` |
-| `notes` | string | ❌ | Interne Notizen |
+| Field            | Type   | Required | Description                           |
+| ---------------- | ------ | -------- | ------------------------------------- |
+| `type`           | string | ✅       | `PICKUP` (Walk-in ist immer Abholung) |
+| `source`         | string | ✅       | `WALK_IN` (unterscheidet von Online)  |
+| `customer.name`  | string | ❌       | Optional für Walk-in                  |
+| `customer.phone` | string | ❌       | Optional für Walk-in                  |
+| `items`          | array  | ✅       | Bestellte Produkte                    |
+| `paymentMethod`  | string | ✅       | `CASH`, `CARD`, `TWINT`               |
+| `notes`          | string | ❌       | Interne Notizen                       |
 
 ### Example
 
@@ -98,29 +98,29 @@ curl -X POST "http://localhost:8080/api/orders" \
         "productName": "Margherita",
         "quantity": 1,
         "size": "M",
-        "unitPrice": 18.50,
+        "unitPrice": 18.5,
         "extras": [
           {
             "name": "Extra Käse",
-            "price": 2.50
+            "price": 2.5
           }
         ],
         "notes": "Ohne Oliven",
-        "itemTotal": 21.00
+        "itemTotal": 21.0
       },
       {
         "productId": 5,
         "productName": "Coca Cola",
         "quantity": 2,
         "size": null,
-        "unitPrice": 4.50,
+        "unitPrice": 4.5,
         "extras": [],
         "notes": null,
-        "itemTotal": 9.00
+        "itemTotal": 9.0
       }
     ],
-    "subtotal": 30.00,
-    "total": 30.00,
+    "subtotal": 30.0,
+    "total": 30.0,
     "paymentMethod": "CASH",
     "paymentStatus": "PENDING",
     "notes": "Wartet am Tresen",

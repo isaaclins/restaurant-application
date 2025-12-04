@@ -16,9 +16,9 @@ Authorization: Bearer <restaurant-token>
 
 ### Path Parameters
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `id` | integer | ✅ | Produkt-ID |
+| Parameter | Type    | Required | Description |
+| --------- | ------- | -------- | ----------- |
+| `id`      | integer | ✅       | Produkt-ID  |
 
 ### Request Body
 
@@ -26,24 +26,24 @@ Authorization: Bearer <restaurant-token>
 {
   "name": "Pizza Diavola",
   "description": "Scharfe Salami, Peperoncini, Mozzarella, Chili-Öl",
-  "price": 20.50,
+  "price": 20.5,
   "category": "PIZZA",
   "available": true,
   "allergens": ["GLUTEN", "DAIRY"],
   "sizes": {
-    "S": 20.50,
-    "M": 24.50,
-    "L": 28.50
+    "S": 20.5,
+    "M": 24.5,
+    "L": 28.5
   },
   "extras": [
     {
       "id": 10,
       "name": "Extra Salami",
-      "price": 4.00
+      "price": 4.0
     },
     {
       "name": "Burrata",
-      "price": 5.00
+      "price": 5.0
     }
   ]
 }
@@ -53,16 +53,16 @@ Authorization: Bearer <restaurant-token>
 
 Alle Felder sind optional - nur übergebene Felder werden aktualisiert.
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `name` | string | Produktname |
-| `description` | string | Beschreibung |
-| `price` | decimal | Basispreis |
-| `category` | string | Kategorie |
-| `available` | boolean | Verfügbarkeit |
-| `allergens` | array[string] | Allergene |
-| `sizes` | object | Grössen mit Preisen |
-| `extras` | array | Extras (mit ID = update, ohne ID = neu) |
+| Field         | Type          | Description                             |
+| ------------- | ------------- | --------------------------------------- |
+| `name`        | string        | Produktname                             |
+| `description` | string        | Beschreibung                            |
+| `price`       | decimal       | Basispreis                              |
+| `category`    | string        | Kategorie                               |
+| `available`   | boolean       | Verfügbarkeit                           |
+| `allergens`   | array[string] | Allergene                               |
+| `sizes`       | object        | Grössen mit Preisen                     |
+| `extras`      | array         | Extras (mit ID = update, ohne ID = neu) |
 
 ### Example - Nur Preis ändern
 
@@ -86,26 +86,26 @@ curl -X PUT "http://localhost:8080/api/products/15" \
     "id": 15,
     "name": "Pizza Diavola",
     "description": "Scharfe Salami, Peperoncini, Mozzarella, Chili-Öl",
-    "price": 20.50,
+    "price": 20.5,
     "category": "PIZZA",
     "imageUrl": "/images/diavola.jpg",
     "available": true,
     "allergens": ["GLUTEN", "DAIRY"],
     "sizes": {
-      "S": 20.50,
-      "M": 24.50,
-      "L": 28.50
+      "S": 20.5,
+      "M": 24.5,
+      "L": 28.5
     },
     "extras": [
       {
         "id": 10,
         "name": "Extra Salami",
-        "price": 4.00
+        "price": 4.0
       },
       {
         "id": 12,
         "name": "Burrata",
-        "price": 5.00
+        "price": 5.0
       }
     ],
     "createdAt": "2025-12-04T21:10:00Z",

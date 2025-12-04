@@ -22,8 +22,8 @@ Authorization: Bearer <restaurant-token>
     "monday": { "open": "11:30", "close": "21:30" }
   },
   "delivery": {
-    "fee": 6.00,
-    "minimumOrder": 25.00
+    "fee": 6.0,
+    "minimumOrder": 25.0
   }
 }
 ```
@@ -53,9 +53,9 @@ Authorization: Bearer <restaurant-token>
   },
   "delivery": {
     "enabled": true,
-    "fee": 5.00,
-    "freeDeliveryThreshold": 50.00,
-    "minimumOrder": 20.00,
+    "fee": 5.0,
+    "freeDeliveryThreshold": 50.0,
+    "minimumOrder": 20.0,
     "estimatedTime": 45,
     "postalCodes": ["8001", "8002", "8003", "8004", "8005"]
   },
@@ -133,8 +133,8 @@ curl -X PUT "http://localhost:8080/api/settings" \
       "tuesday": { "open": "11:00", "close": "22:00" }
     },
     "delivery": {
-      "fee": 6.00,
-      "minimumOrder": 25.00
+      "fee": 6.0,
+      "minimumOrder": 25.0
     },
     "updatedAt": "2025-12-04T21:45:00Z"
   },

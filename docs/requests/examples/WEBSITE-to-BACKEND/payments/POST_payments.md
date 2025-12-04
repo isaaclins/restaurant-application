@@ -30,12 +30,12 @@ Accept: application/json
 
 ### Body Parameters
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `orderId` | integer | ✅ | Bestell-ID |
-| `method` | string | ✅ | `CARD`, `TWINT`, `CASH` |
-| `cardDetails` | object | ✅* | Kartendaten (*nur bei CARD) |
-| `twintPhone` | string | ✅* | Telefonnummer (*nur bei TWINT) |
+| Field         | Type    | Required | Description                     |
+| ------------- | ------- | -------- | ------------------------------- |
+| `orderId`     | integer | ✅       | Bestell-ID                      |
+| `method`      | string  | ✅       | `CARD`, `TWINT`, `CASH`         |
+| `cardDetails` | object  | ✅\*     | Kartendaten (\*nur bei CARD)    |
+| `twintPhone`  | string  | ✅\*     | Telefonnummer (\*nur bei TWINT) |
 
 ### Example - Kartenzahlung
 
@@ -90,7 +90,7 @@ curl -X POST "http://localhost:8080/api/payments" \
     "paymentId": "pay_abc123xyz",
     "orderId": 1001,
     "method": "CARD",
-    "amount": 47.00,
+    "amount": 47.0,
     "currency": "CHF",
     "status": "COMPLETED",
     "transactionId": "txn_mock_12345",
@@ -109,7 +109,7 @@ curl -X POST "http://localhost:8080/api/payments" \
     "paymentId": "pay_twint456",
     "orderId": 1001,
     "method": "TWINT",
-    "amount": 47.00,
+    "amount": 47.0,
     "currency": "CHF",
     "status": "COMPLETED",
     "transactionId": "twint_mock_67890",
@@ -128,7 +128,7 @@ curl -X POST "http://localhost:8080/api/payments" \
     "paymentId": "pay_cash789",
     "orderId": 1001,
     "method": "CASH",
-    "amount": 47.00,
+    "amount": 47.0,
     "currency": "CHF",
     "status": "PENDING",
     "processedAt": null
@@ -177,10 +177,10 @@ curl -X POST "http://localhost:8080/api/payments" \
 
 ## Mockup Test Cards
 
-| Card Number | Result |
-|-------------|--------|
-| `4242424242424242` | ✅ Success |
-| `4000000000000002` | ❌ Declined |
+| Card Number        | Result                |
+| ------------------ | --------------------- |
+| `4242424242424242` | ✅ Success            |
+| `4000000000000002` | ❌ Declined           |
 | `4000000000009995` | ❌ Insufficient funds |
 
 ---

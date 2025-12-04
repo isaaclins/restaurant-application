@@ -14,20 +14,20 @@ Accept: application/json
 
 ### Path Parameters
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `category` | string | ✅ | Kategorie-Name |
+| Parameter  | Type   | Required | Description    |
+| ---------- | ------ | -------- | -------------- |
+| `category` | string | ✅       | Kategorie-Name |
 
 ### Valid Categories
 
-| Category | Description |
-|----------|-------------|
-| `PIZZA` | Pizzen |
-| `PASTA` | Pasta-Gerichte |
-| `SALAD` | Salate |
-| `DESSERT` | Desserts |
-| `DRINKS` | Getränke |
-| `SIDES` | Beilagen |
+| Category  | Description    |
+| --------- | -------------- |
+| `PIZZA`   | Pizzen         |
+| `PASTA`   | Pasta-Gerichte |
+| `SALAD`   | Salate         |
+| `DESSERT` | Desserts       |
+| `DRINKS`  | Getränke       |
+| `SIDES`   | Beilagen       |
 
 ### Example
 
@@ -49,28 +49,28 @@ curl -X GET "http://localhost:8080/api/products/category/PIZZA"
       "id": 1,
       "name": "Margherita",
       "description": "Tomaten, Mozzarella, Basilikum",
-      "price": 14.50,
+      "price": 14.5,
       "category": "PIZZA",
       "imageUrl": "/images/margherita.jpg",
       "available": true,
       "sizes": {
-        "S": 14.50,
-        "M": 18.50,
-        "L": 22.50
+        "S": 14.5,
+        "M": 18.5,
+        "L": 22.5
       }
     },
     {
       "id": 3,
       "name": "Quattro Formaggi",
       "description": "Vier Käsesorten",
-      "price": 18.50,
+      "price": 18.5,
       "category": "PIZZA",
       "imageUrl": "/images/quattro.jpg",
       "available": true,
       "sizes": {
-        "S": 18.50,
-        "M": 22.50,
-        "L": 26.50
+        "S": 18.5,
+        "M": 22.5,
+        "L": 26.5
       }
     }
   ],

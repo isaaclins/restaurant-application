@@ -14,10 +14,10 @@ Accept: application/json
 
 ### Path Parameters
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `sessionId` | string | ✅ | Session-ID des Warenkorbs |
-| `itemId` | string | ✅ | ID des Items im Warenkorb |
+| Parameter   | Type   | Required | Description               |
+| ----------- | ------ | -------- | ------------------------- |
+| `sessionId` | string | ✅       | Session-ID des Warenkorbs |
+| `itemId`    | string | ✅       | ID des Items im Warenkorb |
 
 ### Example
 
@@ -43,15 +43,15 @@ curl -X DELETE "http://localhost:8080/api/cart/abc123-session-id/items/item-uuid
         "productName": "Coca Cola",
         "quantity": 1,
         "size": null,
-        "unitPrice": 4.50,
+        "unitPrice": 4.5,
         "extras": [],
         "notes": null,
-        "itemTotal": 4.50
+        "itemTotal": 4.5
       }
     ],
-    "subtotal": 4.50,
-    "deliveryFee": 5.00,
-    "total": 9.50,
+    "subtotal": 4.5,
+    "deliveryFee": 5.0,
+    "total": 9.5,
     "itemCount": 1,
     "expiresAt": "2025-12-04T22:00:00Z"
   },

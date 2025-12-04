@@ -16,9 +16,9 @@ Authorization: Bearer <restaurant-token>
 
 ### Path Parameters
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `id` | integer | ✅ | Produkt-ID |
+| Parameter | Type    | Required | Description |
+| --------- | ------- | -------- | ----------- |
+| `id`      | integer | ✅       | Produkt-ID  |
 
 ### Request Body
 

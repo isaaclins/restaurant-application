@@ -52,9 +52,9 @@ curl -X GET "http://localhost:8080/api/settings" \
     },
     "delivery": {
       "enabled": true,
-      "fee": 5.00,
-      "freeDeliveryThreshold": 50.00,
-      "minimumOrder": 20.00,
+      "fee": 5.0,
+      "freeDeliveryThreshold": 50.0,
+      "minimumOrder": 20.0,
       "estimatedTime": 45,
       "radius": 5,
       "postalCodes": ["8001", "8002", "8003", "8004", "8005"]

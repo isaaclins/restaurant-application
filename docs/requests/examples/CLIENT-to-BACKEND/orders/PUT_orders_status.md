@@ -16,9 +16,9 @@ Authorization: Bearer <restaurant-token>
 
 ### Path Parameters
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `id` | integer | ✅ | Bestell-ID |
+| Parameter | Type    | Required | Description |
+| --------- | ------- | -------- | ----------- |
+| `id`      | integer | ✅       | Bestell-ID  |
 
 ### Request Body
 
@@ -36,13 +36,13 @@ NEW → CONFIRMED → PREPARING → READY → OUT_FOR_DELIVERY → DELIVERED
      └→ CANCELLED (vor READY möglich)
 ```
 
-| From | To (allowed) |
-|------|--------------|
-| `NEW` | `CONFIRMED`, `CANCELLED` |
-| `CONFIRMED` | `PREPARING`, `CANCELLED` |
-| `PREPARING` | `READY`, `CANCELLED` |
-| `READY` | `OUT_FOR_DELIVERY`, `PICKED_UP` |
-| `OUT_FOR_DELIVERY` | `DELIVERED` |
+| From               | To (allowed)                    |
+| ------------------ | ------------------------------- |
+| `NEW`              | `CONFIRMED`, `CANCELLED`        |
+| `CONFIRMED`        | `PREPARING`, `CANCELLED`        |
+| `PREPARING`        | `READY`, `CANCELLED`            |
+| `READY`            | `OUT_FOR_DELIVERY`, `PICKED_UP` |
+| `OUT_FOR_DELIVERY` | `DELIVERED`                     |
 
 ### Example
 

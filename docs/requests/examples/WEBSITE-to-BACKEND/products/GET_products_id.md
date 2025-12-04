@@ -14,9 +14,9 @@ Accept: application/json
 
 ### Path Parameters
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `id` | integer | ✅ | Produkt ID |
+| Parameter | Type    | Required | Description |
+| --------- | ------- | -------- | ----------- |
+| `id`      | integer | ✅       | Produkt ID  |
 
 ### Example
 
@@ -37,26 +37,26 @@ curl -X GET "http://localhost:8080/api/products/1"
     "id": 1,
     "name": "Margherita",
     "description": "Tomaten, Mozzarella, Basilikum",
-    "price": 14.50,
+    "price": 14.5,
     "category": "PIZZA",
     "imageUrl": "/images/margherita.jpg",
     "available": true,
     "allergens": ["GLUTEN", "DAIRY"],
     "sizes": {
-      "S": 14.50,
-      "M": 18.50,
-      "L": 22.50
+      "S": 14.5,
+      "M": 18.5,
+      "L": 22.5
     },
     "extras": [
       {
         "id": 1,
         "name": "Extra Käse",
-        "price": 2.50
+        "price": 2.5
       },
       {
         "id": 2,
         "name": "Schinken",
-        "price": 3.00
+        "price": 3.0
       }
     ],
     "createdAt": "2025-12-01T10:00:00Z",

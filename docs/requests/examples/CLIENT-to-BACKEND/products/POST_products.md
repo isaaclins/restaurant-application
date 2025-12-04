@@ -20,23 +20,23 @@ Authorization: Bearer <restaurant-token>
 {
   "name": "Pizza Diavola",
   "description": "Scharfe Salami, Peperoncini, Mozzarella",
-  "price": 19.50,
+  "price": 19.5,
   "category": "PIZZA",
   "available": true,
   "allergens": ["GLUTEN", "DAIRY"],
   "sizes": {
-    "S": 19.50,
-    "M": 23.50,
-    "L": 27.50
+    "S": 19.5,
+    "M": 23.5,
+    "L": 27.5
   },
   "extras": [
     {
       "name": "Extra Salami",
-      "price": 3.50
+      "price": 3.5
     },
     {
       "name": "Jalapeños",
-      "price": 2.00
+      "price": 2.0
     }
   ]
 }
@@ -44,16 +44,16 @@ Authorization: Bearer <restaurant-token>
 
 ### Body Parameters
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `name` | string | ✅ | Produktname |
-| `description` | string | ✅ | Beschreibung |
-| `price` | decimal | ✅ | Basispreis |
-| `category` | string | ✅ | Kategorie (PIZZA, PASTA, etc.) |
-| `available` | boolean | ❌ | Standard: true |
-| `allergens` | array[string] | ❌ | Liste der Allergene |
-| `sizes` | object | ❌ | Grössen mit Preisen (nur Pizza) |
-| `extras` | array | ❌ | Optionale Extras |
+| Field         | Type          | Required | Description                     |
+| ------------- | ------------- | -------- | ------------------------------- |
+| `name`        | string        | ✅       | Produktname                     |
+| `description` | string        | ✅       | Beschreibung                    |
+| `price`       | decimal       | ✅       | Basispreis                      |
+| `category`    | string        | ✅       | Kategorie (PIZZA, PASTA, etc.)  |
+| `available`   | boolean       | ❌       | Standard: true                  |
+| `allergens`   | array[string] | ❌       | Liste der Allergene             |
+| `sizes`       | object        | ❌       | Grössen mit Preisen (nur Pizza) |
+| `extras`      | array         | ❌       | Optionale Extras                |
 
 ### Valid Categories
 
@@ -91,26 +91,26 @@ curl -X POST "http://localhost:8080/api/products" \
     "id": 15,
     "name": "Pizza Diavola",
     "description": "Scharfe Salami, Peperoncini, Mozzarella",
-    "price": 19.50,
+    "price": 19.5,
     "category": "PIZZA",
     "imageUrl": null,
     "available": true,
     "allergens": ["GLUTEN", "DAIRY"],
     "sizes": {
-      "S": 19.50,
-      "M": 23.50,
-      "L": 27.50
+      "S": 19.5,
+      "M": 23.5,
+      "L": 27.5
     },
     "extras": [
       {
         "id": 10,
         "name": "Extra Salami",
-        "price": 3.50
+        "price": 3.5
       },
       {
         "id": 11,
         "name": "Jalapeños",
-        "price": 2.00
+        "price": 2.0
       }
     ],
     "createdAt": "2025-12-04T21:10:00Z",
