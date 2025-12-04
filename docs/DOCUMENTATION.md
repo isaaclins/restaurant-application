@@ -29,6 +29,8 @@
 - [x] **Architektur-Pivot**: Von reiner Microservices zu 3-Komponenten-System
 - [x] KDS (Kitchen Display System) Wireframe erstellt und analysiert
 - [x] Restaurant Client Features definiert
+- [x] Projektstruktur erstellt (backend/, website/, client/, docs/)
+- [x] **Tauri** als Desktop-Framework gewählt (statt Electron)
 
 #### ❌ Misserfolge / Herausforderungen
 
@@ -53,7 +55,7 @@
 
 - Projektabgabe: Mehrere Wochen mit wöchentlichen Updates
 - Fokus auf funktionierende Demo, nicht 100% Production-Ready
-- Electron für Desktop-App (gleicher Stack wie Website)
+- **Tauri** für Desktop-App (leicht, schnell, React für UI)
 
 ---
 
@@ -142,7 +144,7 @@
 ┌─────────────────────┐          ┌─────────────────────┐
 │      WEBSITE        │          │   RESTAURANT CLIENT │
 │  (Kunden-Portal)    │          │   (KDS Desktop App) │
-│     - React/Web     │          │   - Electron        │
+│     - React/Web     │          │   - Tauri + React   │
 │     - Bestellen     │          │   - Order Management│
 │     - Warenkorb     │          │   - Produkt-Editor  │
 │     - Bezahlen      │          │   - Rechnungen      │
@@ -196,7 +198,30 @@
 
 ---
 
-### Entscheidung 4: [TITEL]
+### Entscheidung 4: Tauri für Desktop Client
+
+**Datum**: 04.12.2025
+
+**Kontext**: Welches Framework für die Restaurant Desktop App (KDS)?
+
+**Entscheidung**: **Tauri** mit React Frontend
+
+**Begründung**:
+- Extrem leicht (~10MB vs ~150MB bei Electron)
+- Schnelle Performance durch Rust-Backend
+- React für UI = Code-Sharing mit Website möglich
+- Sicher und zukunftssicher (Tauri 2.0 stabil)
+- 95% JavaScript, minimaler Rust-Code nötig
+
+**Alternativen erwägt**:
+- Electron (abgelehnt: zu schwer, RAM-hungrig)
+- Neutralino.js (abgelehnt: kleinere Community, weniger Features)
+- JavaFX (abgelehnt: altmodische UI, weniger modern)
+- Flutter Desktop (abgelehnt: Dart-Lernkurve)
+
+---
+
+### Entscheidung 5: [TITEL]
 
 **Datum**: [DATUM]
 
