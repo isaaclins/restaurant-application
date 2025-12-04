@@ -7,14 +7,21 @@
 ## 📋 Inhaltsverzeichnis
 
 1. [Projektübersicht](#projektübersicht)
-2. [Aufgabenstellung](#aufgabenstellung)
-3. [Architektur](#architektur)
-4. [Microservices](#microservices)
-5. [Technologie-Stack](#technologie-stack)
-6. [API-Dokumentation](#api-dokumentation)
-7. [Installation & Setup](#installation--setup)
-8. [Workflow & Bestellprozess](#workflow--bestellprozess)
-9. [Reflexion & Entscheidungen](#reflexion--entscheidungen)
+2. [Schnellstart](#schnellstart)
+3. [Aufgabenstellung](#aufgabenstellung)
+4. [Projekt-Plan](#projekt-plan)
+5. [Architektur](#architektur)
+6. [Microservices](#microservices)
+7. [Technologie-Stack](#technologie-stack)
+8. [API-Dokumentation](#api-dokumentation)
+9. [Installation & Setup](#installation--setup)
+10. [Workflow & Bestellprozess](#workflow--bestellprozess)
+11. [Reflexion & Entscheidungen](#reflexion--entscheidungen)
+
+### 📚 Weitere Dokumentation
+
+- **[PROJECT_PLAN.md](./PROJECT_PLAN.md)** – Detaillierter Projektplan mit Must-Haves
+- **[DOCUMENTATION.md](./DOCUMENTATION.md)** – Entwicklungs-Tagebuch & Entscheidungen
 
 ---
 
