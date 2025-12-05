@@ -1,0 +1,53 @@
+{
+  "sampleProducts": [
+    {
+      "name": "Margherita Pizza",
+      "description": "Classic tomato sauce, mozzarella, fresh basil",
+      "price": 18.50,
+      "available": true,
+      "preparationTime": 15
+    },
+    {
+      "name": "Quattro Formaggi",
+      "description": "Four cheese pizza with gorgonzola, mozzarella, parmesan, fontina",
+      "price": 22.00,
+      "available": true,
+      "preparationTime": 18
+    },
+    {
+      "name": "Spaghetti Carbonara",
+      "description": "Creamy egg sauce with pancetta and parmesan",
+      "price": 19.50,
+      "available": true,
+      "preparationTime": 12
+    },
+    {
+      "name": "Caesar Salad",
+      "description": "Romaine lettuce, croutons, parmesan, caesar dressing",
+      "price": 14.50,
+      "available": true,
+      "preparationTime": 8
+    },
+    {
+      "name": "Tiramisu",
+      "description": "Classic Italian dessert with mascarpone and espresso",
+      "price": 9.50,
+      "available": true,
+      "preparationTime": 5
+    },
+    {
+      "name": "Espresso",
+      "description": "Strong Italian coffee",
+      "price": 3.50,
+      "available": true,
+      "preparationTime": 2
+    }
+  ],
+  "unavailableProduct": {
+    "name": "Seasonal Special",
+    "description": "Currently not available",
+    "price": 25.00,
+    "available": false,
+    "preparationTime": 20
+  }
+}

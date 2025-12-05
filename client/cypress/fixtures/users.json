@@ -1,0 +1,18 @@
+{
+  "admin": {
+    "username": "admin",
+    "password": "admin123",
+    "email": "admin@restaurant.local",
+    "role": "ADMIN"
+  },
+  "staff": {
+    "username": "staff",
+    "password": "staff123",
+    "email": "staff@restaurant.local",
+    "role": "STAFF"
+  },
+  "invalid": {
+    "username": "invalid",
+    "password": "wrongpassword"
+  }
+}

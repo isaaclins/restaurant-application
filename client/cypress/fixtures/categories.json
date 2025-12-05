@@ -1,0 +1,34 @@
+{
+  "sampleCategories": [
+    {
+      "name": "Pizzas",
+      "displayOrder": 1,
+      "isActive": true
+    },
+    {
+      "name": "Pasta",
+      "displayOrder": 2,
+      "isActive": true
+    },
+    {
+      "name": "Salads",
+      "displayOrder": 3,
+      "isActive": true
+    },
+    {
+      "name": "Desserts",
+      "displayOrder": 4,
+      "isActive": true
+    },
+    {
+      "name": "Drinks",
+      "displayOrder": 5,
+      "isActive": true
+    }
+  ],
+  "inactiveCategory": {
+    "name": "Seasonal Specials",
+    "displayOrder": 10,
+    "isActive": false
+  }
+}

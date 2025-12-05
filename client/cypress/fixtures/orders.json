@@ -1,0 +1,74 @@
+{
+  "sampleOrders": [
+    {
+      "customerName": "Max Müller",
+      "customerEmail": "max.mueller@example.com",
+      "customerPhone": "+41 79 123 4567",
+      "orderType": "PICKUP",
+      "paymentMethod": "CASH",
+      "items": [
+        {
+          "productId": 1,
+          "productName": "Margherita Pizza",
+          "quantity": 2,
+          "unitPrice": 18.50,
+          "totalPrice": 37.00
+        }
+      ],
+      "totalPrice": 37.00
+    },
+    {
+      "customerName": "Anna Schmidt",
+      "customerEmail": "anna.schmidt@example.com",
+      "customerPhone": "+41 79 234 5678",
+      "orderType": "DELIVERY",
+      "paymentMethod": "CARD",
+      "deliveryStreet": "Bahnhofstrasse 10",
+      "deliveryCity": "Zürich",
+      "deliveryPostalCode": "8001",
+      "items": [
+        {
+          "productId": 2,
+          "productName": "Quattro Formaggi",
+          "quantity": 1,
+          "unitPrice": 22.00,
+          "totalPrice": 22.00
+        },
+        {
+          "productId": 3,
+          "productName": "Tiramisu",
+          "quantity": 2,
+          "unitPrice": 9.50,
+          "totalPrice": 19.00
+        }
+      ],
+      "totalPrice": 41.00
+    },
+    {
+      "customerName": "Peter Weber",
+      "customerEmail": "peter.weber@example.com",
+      "customerPhone": "+41 79 345 6789",
+      "orderType": "PICKUP",
+      "paymentMethod": "CASH",
+      "items": [
+        {
+          "productId": 4,
+          "productName": "Caesar Salad",
+          "quantity": 1,
+          "unitPrice": 14.50,
+          "totalPrice": 14.50
+        }
+      ],
+      "totalPrice": 14.50
+    }
+  ],
+  "emptyOrder": {
+    "customerName": "Empty Order Test",
+    "customerEmail": "empty@example.com",
+    "customerPhone": "+41 79 000 0000",
+    "orderType": "PICKUP",
+    "paymentMethod": "CASH",
+    "items": [],
+    "totalPrice": 0
+  }
+}
