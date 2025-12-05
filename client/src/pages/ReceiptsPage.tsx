@@ -14,6 +14,7 @@ import {
   Truck,
   ChevronRight,
 } from 'lucide-react';
+import { ToastContainer, useToast } from '../components/Toast';
 
 type DateRange = 'today' | 'yesterday' | 'week' | 'month' | 'year' | 'custom';
 
@@ -22,6 +23,7 @@ function ReceiptsPage() {
   const [dateRange, setDateRange] = useState<DateRange>('today');
   const [customDate, setCustomDate] = useState('');
   const [selectedReceipt, setSelectedReceipt] = useState<Receipt | null>(null);
+  const { toasts, removeToast, success, error } = useToast();
 
   const { startDate, endDate } = useMemo(() => {
     const now = new Date();
@@ -71,10 +73,14 @@ function ReceiptsPage() {
 
   const handleDownload = async (receipt: Receipt) => {
     try {
-      await receiptsApi.downloadReceiptPdf(receipt.id, receipt.receiptNumber);
-    } catch (error) {
-      console.error('Failed to download PDF:', error);
-      alert('Failed to download PDF. Please try again.');
+      const saved = await receiptsApi.downloadReceiptPdf(receipt.id, receipt.receiptNumber);
+      if (saved) {
+        success(`Receipt ${receipt.receiptNumber} downloaded successfully!`);
+      }
+      // If saved is false, user cancelled - no message needed
+    } catch (err) {
+      console.error('Failed to download PDF:', err);
+      error('Failed to download PDF. Please try again.');
     }
   };
 
@@ -271,6 +277,9 @@ function ReceiptsPage() {
           onDownload={() => handleDownload(selectedReceipt)}
         />
       )}
+
+      {/* Toast Notifications */}
+      <ToastContainer toasts={toasts} onRemove={removeToast} />
     </div>
   );
 }

@@ -18,16 +18,7 @@ export const receiptsApi = {
   getReceiptPdf: async (id: number): Promise<Blob> => {
     const response = await api.get(`/api/receipts/${id}/pdf`, {
       responseType: 'blob',
-      headers: {
-        'Accept': 'application/pdf',
-      },
     });
-    // Check if the response is actually a PDF
-    if (response.data.type === 'application/json') {
-      // Error response was returned as blob, parse it
-      const text = await response.data.text();
-      throw new Error(JSON.parse(text).message || 'Failed to fetch PDF');
-    }
     return response.data;
   },
 
@@ -38,8 +29,8 @@ export const receiptsApi = {
     return response.data;
   },
 
-  // Download receipt PDF
-  downloadReceiptPdf: async (id: number, receiptNumber: string): Promise<void> => {
+  // Download receipt PDF with "Save As" dialog
+  downloadReceiptPdf: async (id: number, receiptNumber: string): Promise<boolean> => {
     try {
       const blob = await receiptsApi.getReceiptPdf(id);
       
@@ -47,20 +38,46 @@ export const receiptsApi = {
       if (!blob || blob.size === 0) {
         throw new Error('Received empty PDF');
       }
-      
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `receipt-${receiptNumber}.pdf`;
-      a.style.display = 'none';
-      document.body.appendChild(a);
-      a.click();
-      
-      // Cleanup after a short delay to ensure download starts
-      setTimeout(() => {
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
-      }, 100);
+
+      // Check if the File System Access API is available (modern browsers)
+      if ('showSaveFilePicker' in window) {
+        try {
+          const handle = await (window as any).showSaveFilePicker({
+            suggestedName: `receipt-${receiptNumber}.pdf`,
+            types: [
+              {
+                description: 'PDF Document',
+                accept: { 'application/pdf': ['.pdf'] },
+              },
+            ],
+          });
+          const writable = await handle.createWritable();
+          await writable.write(blob);
+          await writable.close();
+          return true;
+        } catch (err: any) {
+          // User cancelled the save dialog
+          if (err.name === 'AbortError') {
+            return false;
+          }
+          throw err;
+        }
+      } else {
+        // Fallback for browsers without File System Access API
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `receipt-${receiptNumber}.pdf`;
+        a.style.display = 'none';
+        document.body.appendChild(a);
+        a.click();
+        
+        setTimeout(() => {
+          window.URL.revokeObjectURL(url);
+          document.body.removeChild(a);
+        }, 100);
+        return true;
+      }
     } catch (error) {
       console.error('PDF download failed:', error);
       throw error;
