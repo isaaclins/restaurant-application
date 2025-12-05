@@ -1,10 +1,28 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+/* KDS Custom Theme */
+@theme {
+  /* Status Colors for orders */
+  --color-status-new: #ef4444;
+  --color-status-prep: #f59e0b;
+  --color-status-ready: #22c55e;
+  --color-status-completed: #6b7280;
+}
 
 /* KDS Custom Styles */
 :root {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  background-color: #f5f5f5;
+}
+
+#root {
+  min-height: 100vh;
 }
 
 /* Scrollbar styling */
