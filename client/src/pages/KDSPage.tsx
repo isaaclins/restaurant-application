@@ -19,10 +19,79 @@ import {
 // =============================================================================
 
 interface SelectedOrder extends Order {
-  itemChecks: Record<number, boolean>;
+  itemChecks: Record<string, boolean>;
 }
 
 type SortMode = 'time' | 'item';
+
+// =============================================================================
+// LocalStorage Helpers for Item Checks
+// =============================================================================
+
+const CHECKS_STORAGE_KEY = 'kds_item_checks';
+
+interface StoredChecks {
+  [orderId: string]: {
+    checks: Record<string, boolean>;
+    timestamp: number;
+  };
+}
+
+function getStoredChecks(): StoredChecks {
+  try {
+    const stored = localStorage.getItem(CHECKS_STORAGE_KEY);
+    return stored ? JSON.parse(stored) : {};
+  } catch {
+    return {};
+  }
+}
+
+function saveOrderChecks(orderId: number, checks: Record<string, boolean>): void {
+  const stored = getStoredChecks();
+  stored[orderId.toString()] = {
+    checks,
+    timestamp: Date.now(),
+  };
+  localStorage.setItem(CHECKS_STORAGE_KEY, JSON.stringify(stored));
+}
+
+function getOrderChecks(orderId: number): Record<string, boolean> | null {
+  const stored = getStoredChecks();
+  const orderData = stored[orderId.toString()];
+  if (!orderData) return null;
+  
+  // Check if older than 30 minutes (1800000ms)
+  if (Date.now() - orderData.timestamp > 1800000) {
+    removeOrderChecks(orderId);
+    return null;
+  }
+  
+  return orderData.checks;
+}
+
+function removeOrderChecks(orderId: number): void {
+  const stored = getStoredChecks();
+  delete stored[orderId.toString()];
+  localStorage.setItem(CHECKS_STORAGE_KEY, JSON.stringify(stored));
+}
+
+function cleanupExpiredChecks(): void {
+  const stored = getStoredChecks();
+  const now = Date.now();
+  let changed = false;
+  
+  for (const orderId in stored) {
+    // Remove if older than 30 minutes
+    if (now - stored[orderId].timestamp > 1800000) {
+      delete stored[orderId];
+      changed = true;
+    }
+  }
+  
+  if (changed) {
+    localStorage.setItem(CHECKS_STORAGE_KEY, JSON.stringify(stored));
+  }
+}
 
 // =============================================================================
 // Utility Functions
@@ -262,7 +331,7 @@ function DeliveryGrid({ orders, selectedOrderId, onSelectOrder }: DeliveryGridPr
 
 interface DetailPanelProps {
   order: SelectedOrder | null;
-  onToggleItem: (itemId: number) => void;
+  onToggleItem: (itemKey: string) => void;
   onComplete: () => void;
   onDelete: () => void;
 }
@@ -291,7 +360,10 @@ function DetailPanel({ order, onToggleItem, onComplete, onDelete }: DetailPanelP
     );
   }
 
-  const allChecked = order.items.every((item) => order.itemChecks[item.id]);
+  const allChecked = order.items.length > 0 && order.items.every((_, index) => {
+    const itemKey = `${index}-${order.items[index].productId}`;
+    return order.itemChecks[itemKey];
+  });
 
   return (
     <div className="flex flex-col h-full border-l border-gray-200">
@@ -310,30 +382,52 @@ function DetailPanel({ order, onToggleItem, onComplete, onDelete }: DetailPanelP
       {/* Items List */}
       <div className="flex-1 overflow-auto p-4">
         <div className="space-y-4">
-          {order.items.map((item) => (
-            <div key={item.id} className="flex items-start">
-              <div className="flex-1">
-                <div className="text-sm text-orange-600 font-medium">
-                  {item.quantity}x {item.productName}
-                </div>
-                {item.notes && (
-                  <div className="text-xs text-gray-500 ml-4">
-                    - {item.notes}
+          {/* Sort items: unchecked first, checked (completed) at bottom */}
+          {[...order.items]
+            .map((item, index) => ({ item, index, itemKey: `${index}-${item.productId}` }))
+            .sort((a, b) => {
+              const aChecked = order.itemChecks[a.itemKey] ? 1 : 0;
+              const bChecked = order.itemChecks[b.itemKey] ? 1 : 0;
+              return aChecked - bChecked;
+            })
+            .map(({ item, itemKey }) => {
+              const isChecked = order.itemChecks[itemKey];
+              return (
+                <div 
+                  key={itemKey} 
+                  className={`flex items-start transition-all duration-300 ${
+                    isChecked ? 'opacity-50' : ''
+                  }`}
+                >
+                  <div className="flex-1">
+                    <div className={`text-sm font-medium ${
+                      isChecked 
+                        ? 'text-gray-400 line-through' 
+                        : 'text-orange-600'
+                    }`}>
+                      {item.quantity}x {item.productName}
+                    </div>
+                    {item.notes && (
+                      <div className={`text-xs ml-4 ${
+                        isChecked ? 'text-gray-300 line-through' : 'text-gray-500'
+                      }`}>
+                        - {item.notes}
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-              <button
-                onClick={() => onToggleItem(item.id)}
-                className={`w-6 h-6 rounded border-2 flex items-center justify-center transition ${
-                  order.itemChecks[item.id]
-                    ? 'bg-green-500 border-green-500 text-white'
-                    : 'border-gray-300 hover:border-gray-400'
-                }`}
-              >
-                {order.itemChecks[item.id] && <Check className="w-4 h-4" />}
-              </button>
-            </div>
-          ))}
+                  <button
+                    onClick={() => onToggleItem(itemKey)}
+                    className={`w-6 h-6 rounded border-2 flex items-center justify-center transition ${
+                      isChecked
+                        ? 'bg-green-500 border-green-500 text-white'
+                        : 'border-gray-300 hover:border-gray-400'
+                    }`}
+                  >
+                    {isChecked && <Check className="w-4 h-4" />}
+                  </button>
+                </div>
+              );
+            })}
         </div>
       </div>
 
@@ -585,6 +679,11 @@ function KDSPage() {
   const [sortMode, setSortMode] = useState<SortMode>('time');
   const [showCreateModal, setShowCreateModal] = useState(false);
 
+  // Cleanup expired checks on mount
+  useEffect(() => {
+    cleanupExpiredChecks();
+  }, []);
+
   // Fetch orders
   const { data: orders = [], isLoading } = useQuery({
     queryKey: ['orders'],
@@ -643,39 +742,54 @@ function KDSPage() {
     );
   }, [activeOrders, sortMode]);
 
-  // Handle order selection
+  // Handle order selection - restore checks from localStorage if available
   const handleSelectOrder = (order: Order) => {
-    const itemChecks: Record<number, boolean> = {};
-    order.items.forEach((item) => {
-      itemChecks[item.id] = false;
+    const storedChecks = getOrderChecks(order.id);
+    const itemChecks: Record<string, boolean> = {};
+    
+    order.items.forEach((item, index) => {
+      const itemKey = `${index}-${item.productId}`;
+      // Use stored check value if available, otherwise false
+      itemChecks[itemKey] = storedChecks?.[itemKey] ?? false;
     });
+    
     setSelectedOrder({ ...order, itemChecks });
   };
 
-  // Handle item toggle
-  const handleToggleItem = (itemId: number) => {
+  // Handle item toggle - save to localStorage
+  const handleToggleItem = (itemKey: string) => {
     if (!selectedOrder) return;
+    
+    const newChecks = {
+      ...selectedOrder.itemChecks,
+      [itemKey]: !selectedOrder.itemChecks[itemKey],
+    };
+    
+    // Save to localStorage
+    saveOrderChecks(selectedOrder.id, newChecks);
+    
     setSelectedOrder({
       ...selectedOrder,
-      itemChecks: {
-        ...selectedOrder.itemChecks,
-        [itemId]: !selectedOrder.itemChecks[itemId],
-      },
+      itemChecks: newChecks,
     });
   };
 
-  // Handle complete order
+  // Handle complete order - remove checks from localStorage
   const handleComplete = () => {
     if (!selectedOrder) return;
+    // Remove checks from localStorage
+    removeOrderChecks(selectedOrder.id);
     // Use PICKED_UP for pickup orders, DELIVERED for delivery orders
     const completedStatus = selectedOrder.orderType === 'PICKUP' ? 'PICKED_UP' : 'DELIVERED';
     updateStatusMutation.mutate({ id: selectedOrder.id, status: completedStatus });
   };
 
-  // Handle delete/cancel order
+  // Handle delete/cancel order - remove checks from localStorage
   const handleDelete = () => {
     if (!selectedOrder) return;
     if (confirm('Are you sure you want to cancel this order?')) {
+      // Remove checks from localStorage
+      removeOrderChecks(selectedOrder.id);
       updateStatusMutation.mutate({ id: selectedOrder.id, status: 'CANCELLED' });
     }
   };

@@ -688,7 +688,151 @@ curl -X POST http://localhost:8085/api/auth/login \
 
 ---
 
-### Tag 3 – [DATUM]
+### Tag 3 – 05.12.2025 | KDS UI Verbesserungen & System-Analyse (Morgen-Session)
+
+#### ✅ Erfolge – KDS UI/UX Überarbeitung
+
+- [x] **KDS Sidebar** überarbeitet mit verbesserten Icons
+- [x] **KDS Layout** – 3-Spalten mit Pickup | Delivery | Detail View
+- [x] **Order Cards** – Kompakte Darstellung mit Timer und Status
+- [x] **Checkbox Persistenz** – Items können abgehakt werden (localStorage mit 30min Expiry)
+- [x] **Status-Workflow Buttons** – Confirm → Start Preparing → Mark Ready → Complete
+- [x] **Toast Notifications** – Feedback bei Aktionen (Success/Error)
+- [x] **Responsive Timer** – Farbcodiert basierend auf Wartezeit
+- [x] **Detail Modal** – Vollständige Bestellansicht mit allen Items
+
+#### 🔍 System-Analyse durchgeführt
+
+**Frage:** "Was ist gemockt und was nicht? Welche Funktionen funktionieren nicht?"
+
+**Analyse-Ergebnis:**
+
+| Feature              | Status             | Details                                   |
+| -------------------- | ------------------ | ----------------------------------------- |
+| **Auth-Service**     | ✅ Voll funktional | JWT Login, Refresh Token, User Management |
+| **Product-Service**  | ✅ Voll funktional | CRUD, Kategorien, Verfügbarkeit           |
+| **Cart-Service**     | ✅ Voll funktional | Redis-basiert, Session-Warenkorb          |
+| **Order-Service**    | ✅ Voll funktional | Status-Workflow, Kafka Events             |
+| **Payment-Service**  | ⚠️ **MOCKUP**      | H2 In-Memory, Test-Karten für Simulation  |
+| **Receipt-Service**  | ❌ Nicht gestartet | Code existiert, aber nicht in `start.sh`  |
+| **Settings-Service** | ❌ Nicht gestartet | Code existiert, aber nicht in `start.sh`  |
+
+**"Complete Order" funktioniert nicht – Ursache:**
+
+Das Backend hat eine **strenge Status-Validierung** im OrderService:
+
+```java
+// Erlaubte Status-Übergänge:
+PENDING → CONFIRMED oder CANCELLED
+CONFIRMED → IN_PROGRESS oder CANCELLED
+IN_PROGRESS → READY oder CANCELLED
+READY → DELIVERED oder PICKED_UP  // ← Nur von READY aus!
+```
+
+**Problem:** Orders müssen erst durch den kompletten Workflow laufen:
+
+1. `PENDING` (neu erstellt)
+2. `CONFIRMED` (bestätigt)
+3. `IN_PROGRESS` (in Zubereitung)
+4. `READY` (fertig)
+5. `DELIVERED` oder `PICKED_UP` (abgeschlossen)
+
+→ **Lösung:** Im KDS wurden Status-Buttons hinzugefügt für jeden Schritt
+
+**Gateway Routing-Problem identifiziert:**
+
+```yaml
+# In api-gateway/application.yml - FALSCH konfiguriert:
+settings-service → lb://PRODUCT-SERVICE  # Sollte SETTINGS-SERVICE sein
+receipts-service → lb://ORDER-SERVICE    # Sollte RECEIPT-SERVICE sein
+```
+
+**Services nicht im start.sh:**
+
+- `receipt-service` (Port 8086) – Volle Implementation existiert
+- `settings-service` (Port 8087) – Volle Implementation existiert
+
+#### 🐛 Probleme & Lösungen
+
+**Problem 1: KDS Checkbox-State geht verloren bei Refresh**
+
+**Ursache:** React State wird bei Page-Reload zurückgesetzt
+
+**Lösung:** localStorage mit expiry-Logik implementiert:
+
+```typescript
+// Speichert: { orderId: { itemIndex: true }, timestamp: Date.now() }
+// Auto-Cleanup nach 30 Minuten
+const CHECKBOX_EXPIRY_MS = 30 * 60 * 1000;
+```
+
+---
+
+**Problem 2: "Complete Order" Button macht nichts**
+
+**Ursache:** Backend erlaubt nur `READY → DELIVERED/PICKED_UP` Übergang
+
+**Analyse:** Order war noch im Status `PENDING`, nicht `READY`
+
+**Lösung:** UI zeigt jetzt kontextbezogene Buttons basierend auf aktuellem Status:
+
+- PENDING → "Confirm Order"
+- CONFIRMED → "Start Preparing"
+- IN_PROGRESS → "Mark Ready"
+- READY → "Complete" (Delivered/Picked Up)
+
+---
+
+**Problem 3: Settings-Page gibt 404**
+
+**Ursache:** `settings-service` nicht gestartet UND falsch geroutet
+
+**Details:**
+
+1. Service nicht in `start.sh` enthalten
+2. Gateway routet `/api/settings/**` zu `PRODUCT-SERVICE` statt `SETTINGS-SERVICE`
+
+**Status:** Identifiziert, Fix pending
+
+---
+
+**Problem 4: Receipts-Page gibt 404**
+
+**Ursache:** `receipt-service` nicht gestartet UND falsch geroutet
+
+**Details:**
+
+1. Service nicht in `start.sh` enthalten
+2. Gateway routet `/api/receipts/**` zu `ORDER-SERVICE` statt `RECEIPT-SERVICE`
+
+**Status:** Identifiziert, Fix pending
+
+#### 📊 Übersicht: Was funktioniert vs. was nicht
+
+| Seite            | Funktioniert | Problem                                                     |
+| ---------------- | ------------ | ----------------------------------------------------------- |
+| **Login**        | ✅ Ja        | –                                                           |
+| **KDS (Orders)** | ✅ Ja        | Status-Workflow muss Schritt-für-Schritt durchlaufen werden |
+| **Products**     | ✅ Ja        | CRUD voll funktional                                        |
+| **Receipts**     | ❌ Nein      | Service nicht gestartet, Gateway falsch konfiguriert        |
+| **Settings**     | ❌ Nein      | Service nicht gestartet, Gateway falsch konfiguriert        |
+
+#### 🎯 Identifizierte Fixes (TODO)
+
+1. [ ] `start.sh` um `receipt-service` und `settings-service` erweitern
+2. [ ] Gateway-Routing korrigieren für Settings und Receipts
+3. [ ] Optional: Status-Shortcut-Buttons im KDS (z.B. direkt zu READY)
+
+#### 🔍 Erkenntnisse
+
+- **Order Status Machine**: Backend erzwingt korrekte Abfolge – das ist gewollt für Konsistenz
+- **Payment ist Mockup**: Absichtlich! Echte Payment-Integration ist out-of-scope
+- **Zwei Services vergessen**: Receipt und Settings wurden implementiert aber nie gestartet
+- **Gateway-Routing**: Wurde als Fallback zu falschen Services konfiguriert
+- **localStorage für UI-State**: Praktisch für temporäre Zustände die Server nicht kennen muss
+- **Checkbox-Expiry**: Verhindert Stale-Data bei lange offenen Browser-Tabs
+
+---
 
 ## 🏁 Meilensteine
 
