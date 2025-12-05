@@ -119,8 +119,7 @@ class EmailTemplateServiceTest {
                 1L,
                 "Neuer Betreff",
                 "<html>Neuer Inhalt</html>",
-                "Neuer Text"
-        );
+                "Neuer Text");
 
         assertThat(result.getSubject()).isEqualTo("Neuer Betreff");
         assertThat(result.getHtmlTemplate()).isEqualTo("<html>Neuer Inhalt</html>");
@@ -139,8 +138,7 @@ class EmailTemplateServiceTest {
 
         Map<String, Object> variables = Map.of(
                 "customerName", "John",
-                "orderNumber", "ORD-123"
-        );
+                "orderNumber", "ORD-123");
 
         String result = emailTemplateService.renderTemplate(template, variables);
 
@@ -157,7 +155,6 @@ class EmailTemplateServiceTest {
                 NotificationType.RECEIPT_READY,
                 NotificationType.ORDER_PREPARING,
                 NotificationType.ORDER_DELIVERED,
-                NotificationType.ORDER_CANCELLED
-        );
+                NotificationType.ORDER_CANCELLED);
     }
 }

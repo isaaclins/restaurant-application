@@ -17,35 +17,35 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class OrderEvent {
-    
+
     private Long orderId;
     private String orderNumber;
     private String status;
-    
+
     // Customer info
     private String customerName;
     private String customerEmail;
     private String customerPhone;
     private Long customerId;
-    
+
     // Order details
     private String orderType;
     private String paymentMethod;
     private String notes;
-    
+
     // Pricing
     private BigDecimal subtotal;
     private BigDecimal deliveryFee;
     private BigDecimal discount;
     private BigDecimal totalPrice;
-    
+
     // Items
     private List<OrderItemEvent> items;
-    
+
     // Timestamps
     private LocalDateTime createdAt;
     private LocalDateTime completedAt;
-    
+
     @Data
     @Builder
     @NoArgsConstructor

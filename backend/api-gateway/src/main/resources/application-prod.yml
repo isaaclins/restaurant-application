@@ -11,7 +11,7 @@ spring:
       # Global CORS Configuration - PRODUCTION (HTTPS only)
       globalcors:
         cors-configurations:
-          '[/**]':
+          "[/**]":
             allowedOrigins:
               - "https://${DOMAIN:restaurant.example.com}"
               - "https://www.${DOMAIN:restaurant.example.com}"

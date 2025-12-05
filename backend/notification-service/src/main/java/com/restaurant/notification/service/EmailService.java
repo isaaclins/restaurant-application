@@ -72,8 +72,8 @@ public class EmailService {
     @Async
     @Transactional
     public void sendEmail(NotificationType type, String recipientEmail, String recipientName,
-                          String language, Map<String, Object> variables, Long orderId, Long userId, String receiptId) {
-        
+            String language, Map<String, Object> variables, Long orderId, Long userId, String receiptId) {
+
         // Create notification record
         Notification notification = Notification.builder()
                 .type(type)
@@ -90,7 +90,7 @@ public class EmailService {
 
         // Get template
         Optional<EmailTemplate> templateOpt = templateService.getTemplate(type, language != null ? language : "DE");
-        
+
         if (templateOpt.isEmpty()) {
             log.warn("No email template found for type {} and language {}", type, language);
             notification.setStatus(NotificationStatus.FAILED);
@@ -144,10 +144,10 @@ public class EmailService {
 
         for (Notification notification : failedNotifications) {
             log.info("Retrying notification {} (attempt {})", notification.getId(), notification.getRetryCount() + 1);
-            
+
             notification.setRetryCount(notification.getRetryCount() + 1);
             notification.setStatus(NotificationStatus.RETRY);
-            
+
             try {
                 doSendEmail(notification.getRecipientEmail(), notification.getSubject(), notification.getHtmlContent());
                 notification.setStatus(NotificationStatus.SENT);
@@ -158,7 +158,7 @@ public class EmailService {
                 notification.setStatus(NotificationStatus.FAILED);
                 notification.setErrorMessage(e.getMessage());
             }
-            
+
             notificationRepository.save(notification);
         }
     }
@@ -182,9 +182,9 @@ public class EmailService {
     private String renderSimpleTemplate(String template, Map<String, Object> variables) {
         String result = template;
         for (Map.Entry<String, Object> entry : variables.entrySet()) {
-            result = result.replace("{" + entry.getKey() + "}", 
+            result = result.replace("{" + entry.getKey() + "}",
                     entry.getValue() != null ? entry.getValue().toString() : "");
-            result = result.replace("${" + entry.getKey() + "}", 
+            result = result.replace("${" + entry.getKey() + "}",
                     entry.getValue() != null ? entry.getValue().toString() : "");
         }
         return result;
@@ -194,7 +194,7 @@ public class EmailService {
      * Update SMTP configuration dynamically
      */
     public void updateSmtpConfig(String host, Integer port, String username, String password,
-                                  String newFromEmail, String newFromName, Boolean newUseSsl, Boolean newUseTls) {
+            String newFromEmail, String newFromName, Boolean newUseSsl, Boolean newUseTls) {
         if (mailSender instanceof JavaMailSenderImpl javaMailSender) {
             if (host != null && !host.isEmpty()) {
                 javaMailSender.setHost(host);
@@ -208,7 +208,7 @@ public class EmailService {
             if (password != null && !password.isEmpty()) {
                 javaMailSender.setPassword(password);
             }
-            
+
             Properties props = javaMailSender.getJavaMailProperties();
             if (newUseTls != null) {
                 props.put("mail.smtp.starttls.enable", newUseTls.toString());
@@ -216,8 +216,8 @@ public class EmailService {
             if (newUseSsl != null) {
                 props.put("mail.smtp.ssl.enable", newUseSsl.toString());
             }
-            
-            log.info("SMTP configuration updated: host={}, port={}", 
+
+            log.info("SMTP configuration updated: host={}, port={}",
                     javaMailSender.getHost(), javaMailSender.getPort());
         }
     }

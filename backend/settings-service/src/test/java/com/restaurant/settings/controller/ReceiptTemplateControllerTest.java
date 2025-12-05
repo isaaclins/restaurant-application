@@ -139,8 +139,8 @@ class ReceiptTemplateControllerTest {
                 .thenReturn(germanTemplate);
 
         mockMvc.perform(put("/api/receipt-templates/1")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.thankYouMessage", is("Neuer Dankestext")))
                 .andExpect(jsonPath("$.showLogo", is(false)));

@@ -33,7 +33,7 @@ public class ImageService {
         try {
             // First generate PDF
             byte[] pdfBytes = pdfService.generateReceiptPdf(receipt);
-            
+
             // Convert PDF to PNG
             return convertPdfToPng(pdfBytes);
         } catch (Exception e) {
@@ -47,16 +47,16 @@ public class ImageService {
      */
     public byte[] convertPdfToPng(byte[] pdfBytes) {
         try (PDDocument document = Loader.loadPDF(pdfBytes);
-             ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
-            
+                ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+
             PDFRenderer renderer = new PDFRenderer(document);
-            
+
             // Render first page at 150 DPI
             BufferedImage image = renderer.renderImageWithDPI(0, 150, ImageType.RGB);
-            
+
             ImageIO.write(image, "PNG", baos);
             return baos.toByteArray();
-            
+
         } catch (Exception e) {
             log.error("Error converting PDF to PNG: {}", e.getMessage(), e);
             throw new RuntimeException("Error converting PDF to PNG: " + e.getMessage(), e);
@@ -69,13 +69,13 @@ public class ImageService {
     public byte[] generateHighQualityPng(Receipt receipt) {
         try {
             byte[] pdfBytes = pdfService.generateReceiptPdf(receipt);
-            
+
             try (PDDocument document = Loader.loadPDF(pdfBytes);
-                 ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
-                
+                    ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+
                 PDFRenderer renderer = new PDFRenderer(document);
                 BufferedImage image = renderer.renderImageWithDPI(0, 300, ImageType.RGB);
-                
+
                 ImageIO.write(image, "PNG", baos);
                 return baos.toByteArray();
             }

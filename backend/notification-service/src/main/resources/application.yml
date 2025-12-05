@@ -68,7 +68,7 @@ notification:
     enabled: ${EMAIL_ENABLED:false}
     from: ${MAIL_FROM:noreply@restaurant.com}
     from-name: ${MAIL_FROM_NAME:Restaurant}
-  
+
   retry:
     max-attempts: 3
     delay-ms: 5000

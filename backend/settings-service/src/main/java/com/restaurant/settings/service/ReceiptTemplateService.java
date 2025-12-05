@@ -92,54 +92,92 @@ public class ReceiptTemplateService {
         }
 
         // Update fields if provided
-        if (request.getIsDefault() != null) template.setIsDefault(request.getIsDefault());
+        if (request.getIsDefault() != null)
+            template.setIsDefault(request.getIsDefault());
 
         // Header
-        if (request.getShowLogo() != null) template.setShowLogo(request.getShowLogo());
-        if (request.getHeaderText() != null) template.setHeaderText(request.getHeaderText());
-        if (request.getShowRestaurantInfo() != null) template.setShowRestaurantInfo(request.getShowRestaurantInfo());
+        if (request.getShowLogo() != null)
+            template.setShowLogo(request.getShowLogo());
+        if (request.getHeaderText() != null)
+            template.setHeaderText(request.getHeaderText());
+        if (request.getShowRestaurantInfo() != null)
+            template.setShowRestaurantInfo(request.getShowRestaurantInfo());
 
         // Content
-        if (request.getShowCustomerInfo() != null) template.setShowCustomerInfo(request.getShowCustomerInfo());
-        if (request.getShowOrderNumber() != null) template.setShowOrderNumber(request.getShowOrderNumber());
-        if (request.getShowDateTime() != null) template.setShowDateTime(request.getShowDateTime());
-        if (request.getDateFormat() != null) template.setDateFormat(request.getDateFormat());
-        if (request.getShowItemNotes() != null) template.setShowItemNotes(request.getShowItemNotes());
-        if (request.getShowVatDetails() != null) template.setShowVatDetails(request.getShowVatDetails());
-        if (request.getShowPaymentMethod() != null) template.setShowPaymentMethod(request.getShowPaymentMethod());
+        if (request.getShowCustomerInfo() != null)
+            template.setShowCustomerInfo(request.getShowCustomerInfo());
+        if (request.getShowOrderNumber() != null)
+            template.setShowOrderNumber(request.getShowOrderNumber());
+        if (request.getShowDateTime() != null)
+            template.setShowDateTime(request.getShowDateTime());
+        if (request.getDateFormat() != null)
+            template.setDateFormat(request.getDateFormat());
+        if (request.getShowItemNotes() != null)
+            template.setShowItemNotes(request.getShowItemNotes());
+        if (request.getShowVatDetails() != null)
+            template.setShowVatDetails(request.getShowVatDetails());
+        if (request.getShowPaymentMethod() != null)
+            template.setShowPaymentMethod(request.getShowPaymentMethod());
 
         // Footer
-        if (request.getFooterText() != null) template.setFooterText(request.getFooterText());
-        if (request.getThankYouMessage() != null) template.setThankYouMessage(request.getThankYouMessage());
-        if (request.getShowSocialMedia() != null) template.setShowSocialMedia(request.getShowSocialMedia());
-        if (request.getSocialMediaText() != null) template.setSocialMediaText(request.getSocialMediaText());
-        if (request.getPromoText() != null) template.setPromoText(request.getPromoText());
+        if (request.getFooterText() != null)
+            template.setFooterText(request.getFooterText());
+        if (request.getThankYouMessage() != null)
+            template.setThankYouMessage(request.getThankYouMessage());
+        if (request.getShowSocialMedia() != null)
+            template.setShowSocialMedia(request.getShowSocialMedia());
+        if (request.getSocialMediaText() != null)
+            template.setSocialMediaText(request.getSocialMediaText());
+        if (request.getPromoText() != null)
+            template.setPromoText(request.getPromoText());
 
         // Formatting
-        if (request.getCurrency() != null) template.setCurrency(request.getCurrency());
-        if (request.getCurrencyPosition() != null) template.setCurrencyPosition(request.getCurrencyPosition());
-        if (request.getDecimalSeparator() != null) template.setDecimalSeparator(request.getDecimalSeparator());
-        if (request.getThousandSeparator() != null) template.setThousandSeparator(request.getThousandSeparator());
+        if (request.getCurrency() != null)
+            template.setCurrency(request.getCurrency());
+        if (request.getCurrencyPosition() != null)
+            template.setCurrencyPosition(request.getCurrencyPosition());
+        if (request.getDecimalSeparator() != null)
+            template.setDecimalSeparator(request.getDecimalSeparator());
+        if (request.getThousandSeparator() != null)
+            template.setThousandSeparator(request.getThousandSeparator());
 
         // Labels
-        if (request.getLabelReceipt() != null) template.setLabelReceipt(request.getLabelReceipt());
-        if (request.getLabelReceiptNumber() != null) template.setLabelReceiptNumber(request.getLabelReceiptNumber());
-        if (request.getLabelOrderNumber() != null) template.setLabelOrderNumber(request.getLabelOrderNumber());
-        if (request.getLabelDate() != null) template.setLabelDate(request.getLabelDate());
-        if (request.getLabelOrderType() != null) template.setLabelOrderType(request.getLabelOrderType());
-        if (request.getLabelPaymentMethod() != null) template.setLabelPaymentMethod(request.getLabelPaymentMethod());
-        if (request.getLabelCustomer() != null) template.setLabelCustomer(request.getLabelCustomer());
-        if (request.getLabelItem() != null) template.setLabelItem(request.getLabelItem());
-        if (request.getLabelQuantity() != null) template.setLabelQuantity(request.getLabelQuantity());
-        if (request.getLabelPrice() != null) template.setLabelPrice(request.getLabelPrice());
-        if (request.getLabelTotal() != null) template.setLabelTotal(request.getLabelTotal());
-        if (request.getLabelSubtotal() != null) template.setLabelSubtotal(request.getLabelSubtotal());
-        if (request.getLabelVat() != null) template.setLabelVat(request.getLabelVat());
-        if (request.getLabelDeliveryFee() != null) template.setLabelDeliveryFee(request.getLabelDeliveryFee());
-        if (request.getLabelDiscount() != null) template.setLabelDiscount(request.getLabelDiscount());
-        if (request.getLabelDelivery() != null) template.setLabelDelivery(request.getLabelDelivery());
-        if (request.getLabelPickup() != null) template.setLabelPickup(request.getLabelPickup());
-        if (request.getLabelDineIn() != null) template.setLabelDineIn(request.getLabelDineIn());
+        if (request.getLabelReceipt() != null)
+            template.setLabelReceipt(request.getLabelReceipt());
+        if (request.getLabelReceiptNumber() != null)
+            template.setLabelReceiptNumber(request.getLabelReceiptNumber());
+        if (request.getLabelOrderNumber() != null)
+            template.setLabelOrderNumber(request.getLabelOrderNumber());
+        if (request.getLabelDate() != null)
+            template.setLabelDate(request.getLabelDate());
+        if (request.getLabelOrderType() != null)
+            template.setLabelOrderType(request.getLabelOrderType());
+        if (request.getLabelPaymentMethod() != null)
+            template.setLabelPaymentMethod(request.getLabelPaymentMethod());
+        if (request.getLabelCustomer() != null)
+            template.setLabelCustomer(request.getLabelCustomer());
+        if (request.getLabelItem() != null)
+            template.setLabelItem(request.getLabelItem());
+        if (request.getLabelQuantity() != null)
+            template.setLabelQuantity(request.getLabelQuantity());
+        if (request.getLabelPrice() != null)
+            template.setLabelPrice(request.getLabelPrice());
+        if (request.getLabelTotal() != null)
+            template.setLabelTotal(request.getLabelTotal());
+        if (request.getLabelSubtotal() != null)
+            template.setLabelSubtotal(request.getLabelSubtotal());
+        if (request.getLabelVat() != null)
+            template.setLabelVat(request.getLabelVat());
+        if (request.getLabelDeliveryFee() != null)
+            template.setLabelDeliveryFee(request.getLabelDeliveryFee());
+        if (request.getLabelDiscount() != null)
+            template.setLabelDiscount(request.getLabelDiscount());
+        if (request.getLabelDelivery() != null)
+            template.setLabelDelivery(request.getLabelDelivery());
+        if (request.getLabelPickup() != null)
+            template.setLabelPickup(request.getLabelPickup());
+        if (request.getLabelDineIn() != null)
+            template.setLabelDineIn(request.getLabelDineIn());
 
         return receiptTemplateRepository.save(template);
     }

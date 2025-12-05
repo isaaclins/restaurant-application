@@ -50,8 +50,7 @@ public class NotificationEventConsumer {
                 variables,
                 event.getOrderId(),
                 event.getUserId(),
-                null
-        );
+                null);
     }
 
     /**
@@ -76,8 +75,7 @@ public class NotificationEventConsumer {
                 variables,
                 event.getOrderId(),
                 event.getUserId(),
-                null
-        );
+                null);
     }
 
     /**
@@ -108,13 +106,13 @@ public class NotificationEventConsumer {
                 variables,
                 event.getOrderId(),
                 event.getUserId(),
-                event.getReceiptId()
-        );
+                event.getReceiptId());
     }
 
     private NotificationType mapOrderStatusToNotificationType(String status) {
-        if (status == null) return null;
-        
+        if (status == null)
+            return null;
+
         return switch (status.toUpperCase()) {
             case "CONFIRMED", "CREATED" -> NotificationType.ORDER_CONFIRMATION;
             case "PREPARING" -> NotificationType.ORDER_PREPARING;
@@ -142,10 +140,11 @@ public class NotificationEventConsumer {
     }
 
     private String translateOrderType(String orderType, String language) {
-        if (orderType == null) return "";
-        
+        if (orderType == null)
+            return "";
+
         String lang = language != null ? language.toUpperCase() : "DE";
-        
+
         return switch (orderType.toUpperCase()) {
             case "DELIVERY" -> switch (lang) {
                 case "EN" -> "Delivery";

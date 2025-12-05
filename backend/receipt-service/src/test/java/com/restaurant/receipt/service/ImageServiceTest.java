@@ -93,17 +93,17 @@ class ImageServiceTest {
     // Integration test with real PDF would be:
     // @Test
     // void generateReceiptPng_withRealPdf_shouldReturnPngBytes() {
-    //     // Generate real PDF first
-    //     PdfService realPdfService = new PdfService();
-    //     ImageService realImageService = new ImageService(realPdfService);
-    //     
-    //     byte[] result = realImageService.generateReceiptPng(testReceipt);
-    //     
-    //     assertThat(result).isNotEmpty();
-    //     // PNG magic bytes
-    //     assertThat(result[0]).isEqualTo((byte) 0x89);
-    //     assertThat(result[1]).isEqualTo((byte) 0x50); // P
-    //     assertThat(result[2]).isEqualTo((byte) 0x4E); // N
-    //     assertThat(result[3]).isEqualTo((byte) 0x47); // G
+    // // Generate real PDF first
+    // PdfService realPdfService = new PdfService();
+    // ImageService realImageService = new ImageService(realPdfService);
+    //
+    // byte[] result = realImageService.generateReceiptPng(testReceipt);
+    //
+    // assertThat(result).isNotEmpty();
+    // // PNG magic bytes
+    // assertThat(result[0]).isEqualTo((byte) 0x89);
+    // assertThat(result[1]).isEqualTo((byte) 0x50); // P
+    // assertThat(result[2]).isEqualTo((byte) 0x4E); // N
+    // assertThat(result[3]).isEqualTo((byte) 0x47); // G
     // }
 }

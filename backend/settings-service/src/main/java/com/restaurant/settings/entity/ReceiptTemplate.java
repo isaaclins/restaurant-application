@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
  */
 @Entity
 @Table(name = "receipt_templates", uniqueConstraints = {
-    @UniqueConstraint(columnNames = {"language"})
+        @UniqueConstraint(columnNames = { "language" })
 })
 @Data
 @Builder
@@ -33,7 +33,7 @@ public class ReceiptTemplate {
     private Boolean isDefault = false;
 
     // ==================== Header Section ====================
-    
+
     @Builder.Default
     private Boolean showLogo = true;
 
@@ -44,7 +44,7 @@ public class ReceiptTemplate {
     private Boolean showRestaurantInfo = true;
 
     // ==================== Content Section ====================
-    
+
     @Builder.Default
     private Boolean showCustomerInfo = true;
 
@@ -68,7 +68,7 @@ public class ReceiptTemplate {
     private Boolean showPaymentMethod = true;
 
     // ==================== Footer Section ====================
-    
+
     @Column(length = 500)
     private String footerText;
 
@@ -85,7 +85,7 @@ public class ReceiptTemplate {
     private String promoText;
 
     // ==================== Formatting ====================
-    
+
     @Builder.Default
     @Column(length = 10)
     private String currency = "CHF";
@@ -103,64 +103,64 @@ public class ReceiptTemplate {
     private String thousandSeparator = "'";
 
     // ==================== Localized Labels ====================
-    
+
     // These are the translatable labels used in the receipt
     @Column(length = 100)
-    private String labelReceipt;          // "QUITTUNG" / "RECEIPT" / "RICEVUTA" / "REÇU"
+    private String labelReceipt; // "QUITTUNG" / "RECEIPT" / "RICEVUTA" / "REÇU"
 
     @Column(length = 100)
-    private String labelReceiptNumber;    // "Quittungsnr." / "Receipt No." / etc.
+    private String labelReceiptNumber; // "Quittungsnr." / "Receipt No." / etc.
 
     @Column(length = 100)
-    private String labelOrderNumber;      // "Bestellnr." / "Order No." / etc.
+    private String labelOrderNumber; // "Bestellnr." / "Order No." / etc.
 
     @Column(length = 100)
-    private String labelDate;             // "Datum" / "Date" / etc.
+    private String labelDate; // "Datum" / "Date" / etc.
 
     @Column(length = 100)
-    private String labelOrderType;        // "Bestellart" / "Order Type" / etc.
+    private String labelOrderType; // "Bestellart" / "Order Type" / etc.
 
     @Column(length = 100)
-    private String labelPaymentMethod;    // "Zahlungsart" / "Payment Method" / etc.
+    private String labelPaymentMethod; // "Zahlungsart" / "Payment Method" / etc.
 
     @Column(length = 100)
-    private String labelCustomer;         // "Kunde" / "Customer" / etc.
+    private String labelCustomer; // "Kunde" / "Customer" / etc.
 
     @Column(length = 100)
-    private String labelItem;             // "Artikel" / "Item" / etc.
+    private String labelItem; // "Artikel" / "Item" / etc.
 
     @Column(length = 100)
-    private String labelQuantity;         // "Menge" / "Qty" / etc.
+    private String labelQuantity; // "Menge" / "Qty" / etc.
 
     @Column(length = 100)
-    private String labelPrice;            // "Preis" / "Price" / etc.
+    private String labelPrice; // "Preis" / "Price" / etc.
 
     @Column(length = 100)
-    private String labelTotal;            // "Total" / "Total" / etc.
+    private String labelTotal; // "Total" / "Total" / etc.
 
     @Column(length = 100)
-    private String labelSubtotal;         // "Zwischensumme" / "Subtotal" / etc.
+    private String labelSubtotal; // "Zwischensumme" / "Subtotal" / etc.
 
     @Column(length = 100)
-    private String labelVat;              // "MwSt." / "VAT" / etc.
+    private String labelVat; // "MwSt." / "VAT" / etc.
 
     @Column(length = 100)
-    private String labelDeliveryFee;      // "Liefergebühr" / "Delivery Fee" / etc.
+    private String labelDeliveryFee; // "Liefergebühr" / "Delivery Fee" / etc.
 
     @Column(length = 100)
-    private String labelDiscount;         // "Rabatt" / "Discount" / etc.
+    private String labelDiscount; // "Rabatt" / "Discount" / etc.
 
     @Column(length = 100)
-    private String labelDelivery;         // "Lieferung" / "Delivery" / etc.
+    private String labelDelivery; // "Lieferung" / "Delivery" / etc.
 
     @Column(length = 100)
-    private String labelPickup;           // "Abholung" / "Pickup" / etc.
+    private String labelPickup; // "Abholung" / "Pickup" / etc.
 
     @Column(length = 100)
-    private String labelDineIn;           // "Im Restaurant" / "Dine-In" / etc.
+    private String labelDineIn; // "Im Restaurant" / "Dine-In" / etc.
 
     // ==================== Timestamps ====================
-    
+
     @Builder.Default
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();

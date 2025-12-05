@@ -96,8 +96,8 @@ class NotificationControllerTest {
                 .thenReturn(new PageImpl<>(notifications, pageRequest, notifications.size()));
 
         mockMvc.perform(get("/api/notifications")
-                        .param("page", "0")
-                        .param("size", "20"))
+                .param("page", "0")
+                .param("size", "20"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content", hasSize(1)))
                 .andExpect(jsonPath("$.content[0].recipientEmail", is("test@example.com")));
@@ -157,8 +157,8 @@ class NotificationControllerTest {
                 .build();
 
         mockMvc.perform(post("/api/notifications/send")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status", is("queued")));
 
@@ -170,8 +170,7 @@ class NotificationControllerTest {
                 any(),
                 eq(123L),
                 isNull(),
-                isNull()
-        );
+                isNull());
     }
 
     @Test
@@ -229,12 +228,11 @@ class NotificationControllerTest {
                 .thenReturn(testTemplate);
 
         mockMvc.perform(put("/api/notifications/templates/1")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(Map.of(
-                                "subject", "Updated Subject",
-                                "htmlTemplate", "<html>Updated</html>",
-                                "textTemplate", "Updated text"
-                        ))))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(Map.of(
+                        "subject", "Updated Subject",
+                        "htmlTemplate", "<html>Updated</html>",
+                        "textTemplate", "Updated text"))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.subject", is("Updated Subject")));
     }

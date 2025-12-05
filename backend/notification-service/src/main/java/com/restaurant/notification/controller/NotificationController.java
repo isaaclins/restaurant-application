@@ -83,10 +83,10 @@ public class NotificationController {
     public ResponseEntity<Map<String, String>> sendNotification(@RequestBody SendNotificationRequest request) {
         log.info("Manual notification request: {} to {}", request.getType(), request.getRecipientEmail());
 
-        Map<String, Object> variables = request.getTemplateVariables() != null 
-                ? request.getTemplateVariables() 
+        Map<String, Object> variables = request.getTemplateVariables() != null
+                ? request.getTemplateVariables()
                 : new HashMap<>();
-        
+
         variables.put("year", LocalDateTime.now().getYear());
 
         emailService.sendEmail(
@@ -97,8 +97,7 @@ public class NotificationController {
                 variables,
                 request.getOrderId(),
                 request.getUserId(),
-                request.getReceiptId()
-        );
+                request.getReceiptId());
 
         return ResponseEntity.ok(Map.of("status", "queued", "message", "Notification queued for sending"));
     }
@@ -119,13 +118,13 @@ public class NotificationController {
     @GetMapping("/stats")
     public ResponseEntity<Map<String, Object>> getStats() {
         LocalDateTime since = LocalDateTime.now().minusDays(7);
-        
+
         Map<String, Object> stats = new HashMap<>();
         stats.put("sent", notificationRepository.countByStatusAndCreatedAtAfter(NotificationStatus.SENT, since));
         stats.put("failed", notificationRepository.countByStatusAndCreatedAtAfter(NotificationStatus.FAILED, since));
         stats.put("pending", notificationRepository.countByStatusAndCreatedAtAfter(NotificationStatus.PENDING, since));
         stats.put("byType", notificationRepository.countByTypeGrouped(since));
-        
+
         return ResponseEntity.ok(stats);
     }
 
@@ -174,7 +173,7 @@ public class NotificationController {
         String subject = request.get("subject");
         String htmlTemplate = request.get("htmlTemplate");
         String textTemplate = request.get("textTemplate");
-        
+
         EmailTemplate updated = emailTemplateService.updateTemplate(id, subject, htmlTemplate, textTemplate);
         return ResponseEntity.ok(updated);
     }
@@ -188,7 +187,8 @@ public class NotificationController {
             Long templateId = Long.valueOf(request.get("templateId").toString());
             String recipientEmail = (String) request.get("recipientEmail");
             @SuppressWarnings("unchecked")
-            Map<String, String> variables = (Map<String, String>) request.getOrDefault("templateVariables", new HashMap<>());
+            Map<String, String> variables = (Map<String, String>) request.getOrDefault("templateVariables",
+                    new HashMap<>());
 
             EmailTemplate template = emailTemplateService.getTemplateById(templateId);
             if (template == null) {
@@ -204,8 +204,7 @@ public class NotificationController {
                     "Test User",
                     template.getLanguage(),
                     templateVars,
-                    null, null, null
-            );
+                    null, null, null);
 
             return ResponseEntity.ok(Map.of("success", true, "message", "Test email sent"));
         } catch (Exception e) {

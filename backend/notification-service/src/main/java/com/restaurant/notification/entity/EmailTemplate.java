@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
  */
 @Entity
 @Table(name = "email_templates", uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"type", "language"})
+        @UniqueConstraint(columnNames = { "type", "language" })
 })
 @Data
 @Builder

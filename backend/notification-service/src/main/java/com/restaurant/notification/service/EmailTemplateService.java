@@ -30,13 +30,13 @@ public class EmailTemplateService {
     @Transactional
     public void initializeDefaultTemplates() {
         log.info("Initializing default email templates...");
-        
-        String[] languages = {"DE", "EN", "FR", "IT"};
-        
+
+        String[] languages = { "DE", "EN", "FR", "IT" };
+
         for (String language : languages) {
             createDefaultTemplatesForLanguage(language);
         }
-        
+
         log.info("Email template initialization complete");
     }
 
@@ -45,17 +45,17 @@ public class EmailTemplateService {
         if (!emailTemplateRepository.existsByTypeAndLanguage(NotificationType.ORDER_CONFIRMATION, language)) {
             emailTemplateRepository.save(createOrderConfirmationTemplate(language));
         }
-        
+
         // Receipt Ready
         if (!emailTemplateRepository.existsByTypeAndLanguage(NotificationType.RECEIPT_READY, language)) {
             emailTemplateRepository.save(createReceiptReadyTemplate(language));
         }
-        
+
         // Order Ready
         if (!emailTemplateRepository.existsByTypeAndLanguage(NotificationType.ORDER_READY, language)) {
             emailTemplateRepository.save(createOrderReadyTemplate(language));
         }
-        
+
         // Payment Received
         if (!emailTemplateRepository.existsByTypeAndLanguage(NotificationType.PAYMENT_RECEIVED, language)) {
             emailTemplateRepository.save(createPaymentReceivedTemplate(language));
@@ -98,18 +98,18 @@ public class EmailTemplateService {
     public EmailTemplate updateTemplate(Long id, String subject, String htmlTemplate, String textTemplate) {
         EmailTemplate template = emailTemplateRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Template not found: " + id));
-        
+
         template.setSubject(subject);
         template.setHtmlTemplate(htmlTemplate);
         template.setTextTemplate(textTemplate);
-        
+
         return emailTemplateRepository.save(template);
     }
 
     public String renderTemplate(EmailTemplate template, Map<String, Object> variables) {
         Context context = new Context();
         context.setVariables(variables);
-        
+
         try {
             return templateEngine.process(template.getHtmlTemplate(), context);
         } catch (Exception e) {
@@ -117,7 +117,7 @@ public class EmailTemplateService {
             // Return the template with simple variable replacement as fallback
             String result = template.getHtmlTemplate();
             for (Map.Entry<String, Object> entry : variables.entrySet()) {
-                result = result.replace("${" + entry.getKey() + "}", 
+                result = result.replace("${" + entry.getKey() + "}",
                         entry.getValue() != null ? entry.getValue().toString() : "");
             }
             return result;
@@ -128,7 +128,7 @@ public class EmailTemplateService {
     private EmailTemplate createOrderConfirmationTemplate(String language) {
         String subject;
         String html;
-        
+
         switch (language) {
             case "EN" -> {
                 subject = "Order Confirmation - #{orderNumber}";
@@ -147,7 +147,7 @@ public class EmailTemplateService {
                 html = getOrderConfirmationHtmlDe();
             }
         }
-        
+
         return EmailTemplate.builder()
                 .type(NotificationType.ORDER_CONFIRMATION)
                 .language(language)
@@ -161,7 +161,7 @@ public class EmailTemplateService {
     private EmailTemplate createReceiptReadyTemplate(String language) {
         String subject;
         String html;
-        
+
         switch (language) {
             case "EN" -> {
                 subject = "Your Receipt - Order #{orderNumber}";
@@ -180,7 +180,7 @@ public class EmailTemplateService {
                 html = getReceiptReadyHtmlDe();
             }
         }
-        
+
         return EmailTemplate.builder()
                 .type(NotificationType.RECEIPT_READY)
                 .language(language)
@@ -194,7 +194,7 @@ public class EmailTemplateService {
     private EmailTemplate createOrderReadyTemplate(String language) {
         String subject;
         String html;
-        
+
         switch (language) {
             case "EN" -> {
                 subject = "Your Order is Ready! - #{orderNumber}";
@@ -213,7 +213,7 @@ public class EmailTemplateService {
                 html = getOrderReadyHtmlDe();
             }
         }
-        
+
         return EmailTemplate.builder()
                 .type(NotificationType.ORDER_READY)
                 .language(language)
@@ -227,7 +227,7 @@ public class EmailTemplateService {
     private EmailTemplate createPaymentReceivedTemplate(String language) {
         String subject;
         String html;
-        
+
         switch (language) {
             case "EN" -> {
                 subject = "Payment Received - Order #{orderNumber}";
@@ -246,7 +246,7 @@ public class EmailTemplateService {
                 html = getPaymentReceivedHtmlDe();
             }
         }
-        
+
         return EmailTemplate.builder()
                 .type(NotificationType.PAYMENT_RECEIVED)
                 .language(language)
@@ -260,617 +260,617 @@ public class EmailTemplateService {
     // HTML Templates - German
     private String getOrderConfirmationHtmlDe() {
         return """
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <meta charset="UTF-8">
-                <style>
-                    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-                    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-                    .header { background: #4CAF50; color: white; padding: 20px; text-align: center; }
-                    .content { padding: 20px; background: #f9f9f9; }
-                    .order-details { background: white; padding: 15px; margin: 10px 0; border-radius: 5px; }
-                    .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
-                </style>
-            </head>
-            <body>
-                <div class="container">
-                    <div class="header">
-                        <h1>Bestellbestätigung</h1>
-                    </div>
-                    <div class="content">
-                        <p>Hallo ${customerName},</p>
-                        <p>Vielen Dank für Ihre Bestellung! Wir haben Ihre Bestellung erhalten und bereiten sie vor.</p>
-                        <div class="order-details">
-                            <h3>Bestelldetails</h3>
-                            <p><strong>Bestellnummer:</strong> ${orderNumber}</p>
-                            <p><strong>Bestellart:</strong> ${orderType}</p>
-                            <p><strong>Gesamtbetrag:</strong> ${totalAmount} ${currency}</p>
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <style>
+                        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                        .header { background: #4CAF50; color: white; padding: 20px; text-align: center; }
+                        .content { padding: 20px; background: #f9f9f9; }
+                        .order-details { background: white; padding: 15px; margin: 10px 0; border-radius: 5px; }
+                        .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <div class="header">
+                            <h1>Bestellbestätigung</h1>
                         </div>
-                        <p>Sie erhalten eine weitere E-Mail, sobald Ihre Bestellung bereit ist.</p>
+                        <div class="content">
+                            <p>Hallo ${customerName},</p>
+                            <p>Vielen Dank für Ihre Bestellung! Wir haben Ihre Bestellung erhalten und bereiten sie vor.</p>
+                            <div class="order-details">
+                                <h3>Bestelldetails</h3>
+                                <p><strong>Bestellnummer:</strong> ${orderNumber}</p>
+                                <p><strong>Bestellart:</strong> ${orderType}</p>
+                                <p><strong>Gesamtbetrag:</strong> ${totalAmount} ${currency}</p>
+                            </div>
+                            <p>Sie erhalten eine weitere E-Mail, sobald Ihre Bestellung bereit ist.</p>
+                        </div>
+                        <div class="footer">
+                            <p>© ${year} Restaurant. Alle Rechte vorbehalten.</p>
+                        </div>
                     </div>
-                    <div class="footer">
-                        <p>© ${year} Restaurant. Alle Rechte vorbehalten.</p>
-                    </div>
-                </div>
-            </body>
-            </html>
-            """;
+                </body>
+                </html>
+                """;
     }
 
     private String getReceiptReadyHtmlDe() {
         return """
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <meta charset="UTF-8">
-                <style>
-                    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-                    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-                    .header { background: #2196F3; color: white; padding: 20px; text-align: center; }
-                    .content { padding: 20px; background: #f9f9f9; }
-                    .btn { display: inline-block; padding: 10px 20px; background: #4CAF50; color: white; text-decoration: none; border-radius: 5px; margin: 5px; }
-                    .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
-                </style>
-            </head>
-            <body>
-                <div class="container">
-                    <div class="header">
-                        <h1>Ihre Quittung</h1>
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <style>
+                        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                        .header { background: #2196F3; color: white; padding: 20px; text-align: center; }
+                        .content { padding: 20px; background: #f9f9f9; }
+                        .btn { display: inline-block; padding: 10px 20px; background: #4CAF50; color: white; text-decoration: none; border-radius: 5px; margin: 5px; }
+                        .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <div class="header">
+                            <h1>Ihre Quittung</h1>
+                        </div>
+                        <div class="content">
+                            <p>Hallo ${customerName},</p>
+                            <p>Ihre Quittung für Bestellung <strong>${orderNumber}</strong> ist bereit.</p>
+                            <p style="text-align: center; margin: 20px 0;">
+                                <a href="${pdfUrl}" class="btn">PDF herunterladen</a>
+                                <a href="${pngUrl}" class="btn">Als Bild</a>
+                            </p>
+                            <p>Vielen Dank für Ihren Einkauf!</p>
+                        </div>
+                        <div class="footer">
+                            <p>© ${year} Restaurant. Alle Rechte vorbehalten.</p>
+                        </div>
                     </div>
-                    <div class="content">
-                        <p>Hallo ${customerName},</p>
-                        <p>Ihre Quittung für Bestellung <strong>${orderNumber}</strong> ist bereit.</p>
-                        <p style="text-align: center; margin: 20px 0;">
-                            <a href="${pdfUrl}" class="btn">PDF herunterladen</a>
-                            <a href="${pngUrl}" class="btn">Als Bild</a>
-                        </p>
-                        <p>Vielen Dank für Ihren Einkauf!</p>
-                    </div>
-                    <div class="footer">
-                        <p>© ${year} Restaurant. Alle Rechte vorbehalten.</p>
-                    </div>
-                </div>
-            </body>
-            </html>
-            """;
+                </body>
+                </html>
+                """;
     }
 
     private String getOrderReadyHtmlDe() {
         return """
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <meta charset="UTF-8">
-                <style>
-                    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-                    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-                    .header { background: #FF9800; color: white; padding: 20px; text-align: center; }
-                    .content { padding: 20px; background: #f9f9f9; }
-                    .highlight { font-size: 24px; color: #FF9800; text-align: center; padding: 20px; }
-                    .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
-                </style>
-            </head>
-            <body>
-                <div class="container">
-                    <div class="header">
-                        <h1>Bestellung bereit!</h1>
-                    </div>
-                    <div class="content">
-                        <p>Hallo ${customerName},</p>
-                        <div class="highlight">
-                            🎉 Ihre Bestellung ist bereit!
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <style>
+                        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                        .header { background: #FF9800; color: white; padding: 20px; text-align: center; }
+                        .content { padding: 20px; background: #f9f9f9; }
+                        .highlight { font-size: 24px; color: #FF9800; text-align: center; padding: 20px; }
+                        .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <div class="header">
+                            <h1>Bestellung bereit!</h1>
                         </div>
-                        <p><strong>Bestellnummer:</strong> ${orderNumber}</p>
-                        <p>Sie können Ihre Bestellung jetzt abholen.</p>
+                        <div class="content">
+                            <p>Hallo ${customerName},</p>
+                            <div class="highlight">
+                                🎉 Ihre Bestellung ist bereit!
+                            </div>
+                            <p><strong>Bestellnummer:</strong> ${orderNumber}</p>
+                            <p>Sie können Ihre Bestellung jetzt abholen.</p>
+                        </div>
+                        <div class="footer">
+                            <p>© ${year} Restaurant. Alle Rechte vorbehalten.</p>
+                        </div>
                     </div>
-                    <div class="footer">
-                        <p>© ${year} Restaurant. Alle Rechte vorbehalten.</p>
-                    </div>
-                </div>
-            </body>
-            </html>
-            """;
+                </body>
+                </html>
+                """;
     }
 
     private String getPaymentReceivedHtmlDe() {
         return """
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <meta charset="UTF-8">
-                <style>
-                    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-                    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-                    .header { background: #4CAF50; color: white; padding: 20px; text-align: center; }
-                    .content { padding: 20px; background: #f9f9f9; }
-                    .amount { font-size: 28px; color: #4CAF50; text-align: center; padding: 20px; }
-                    .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
-                </style>
-            </head>
-            <body>
-                <div class="container">
-                    <div class="header">
-                        <h1>Zahlung erhalten</h1>
-                    </div>
-                    <div class="content">
-                        <p>Hallo ${customerName},</p>
-                        <p>Wir haben Ihre Zahlung erfolgreich erhalten.</p>
-                        <div class="amount">
-                            ✓ ${totalAmount} ${currency}
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <style>
+                        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                        .header { background: #4CAF50; color: white; padding: 20px; text-align: center; }
+                        .content { padding: 20px; background: #f9f9f9; }
+                        .amount { font-size: 28px; color: #4CAF50; text-align: center; padding: 20px; }
+                        .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <div class="header">
+                            <h1>Zahlung erhalten</h1>
                         </div>
-                        <p><strong>Bestellnummer:</strong> ${orderNumber}</p>
-                        <p><strong>Zahlungsart:</strong> ${paymentMethod}</p>
+                        <div class="content">
+                            <p>Hallo ${customerName},</p>
+                            <p>Wir haben Ihre Zahlung erfolgreich erhalten.</p>
+                            <div class="amount">
+                                ✓ ${totalAmount} ${currency}
+                            </div>
+                            <p><strong>Bestellnummer:</strong> ${orderNumber}</p>
+                            <p><strong>Zahlungsart:</strong> ${paymentMethod}</p>
+                        </div>
+                        <div class="footer">
+                            <p>© ${year} Restaurant. Alle Rechte vorbehalten.</p>
+                        </div>
                     </div>
-                    <div class="footer">
-                        <p>© ${year} Restaurant. Alle Rechte vorbehalten.</p>
-                    </div>
-                </div>
-            </body>
-            </html>
-            """;
+                </body>
+                </html>
+                """;
     }
 
     // HTML Templates - English
     private String getOrderConfirmationHtmlEn() {
         return """
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <meta charset="UTF-8">
-                <style>
-                    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-                    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-                    .header { background: #4CAF50; color: white; padding: 20px; text-align: center; }
-                    .content { padding: 20px; background: #f9f9f9; }
-                    .order-details { background: white; padding: 15px; margin: 10px 0; border-radius: 5px; }
-                    .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
-                </style>
-            </head>
-            <body>
-                <div class="container">
-                    <div class="header">
-                        <h1>Order Confirmation</h1>
-                    </div>
-                    <div class="content">
-                        <p>Hello ${customerName},</p>
-                        <p>Thank you for your order! We have received your order and are preparing it.</p>
-                        <div class="order-details">
-                            <h3>Order Details</h3>
-                            <p><strong>Order Number:</strong> ${orderNumber}</p>
-                            <p><strong>Order Type:</strong> ${orderType}</p>
-                            <p><strong>Total Amount:</strong> ${totalAmount} ${currency}</p>
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <style>
+                        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                        .header { background: #4CAF50; color: white; padding: 20px; text-align: center; }
+                        .content { padding: 20px; background: #f9f9f9; }
+                        .order-details { background: white; padding: 15px; margin: 10px 0; border-radius: 5px; }
+                        .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <div class="header">
+                            <h1>Order Confirmation</h1>
                         </div>
-                        <p>You will receive another email when your order is ready.</p>
+                        <div class="content">
+                            <p>Hello ${customerName},</p>
+                            <p>Thank you for your order! We have received your order and are preparing it.</p>
+                            <div class="order-details">
+                                <h3>Order Details</h3>
+                                <p><strong>Order Number:</strong> ${orderNumber}</p>
+                                <p><strong>Order Type:</strong> ${orderType}</p>
+                                <p><strong>Total Amount:</strong> ${totalAmount} ${currency}</p>
+                            </div>
+                            <p>You will receive another email when your order is ready.</p>
+                        </div>
+                        <div class="footer">
+                            <p>© ${year} Restaurant. All rights reserved.</p>
+                        </div>
                     </div>
-                    <div class="footer">
-                        <p>© ${year} Restaurant. All rights reserved.</p>
-                    </div>
-                </div>
-            </body>
-            </html>
-            """;
+                </body>
+                </html>
+                """;
     }
 
     private String getReceiptReadyHtmlEn() {
         return """
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <meta charset="UTF-8">
-                <style>
-                    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-                    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-                    .header { background: #2196F3; color: white; padding: 20px; text-align: center; }
-                    .content { padding: 20px; background: #f9f9f9; }
-                    .btn { display: inline-block; padding: 10px 20px; background: #4CAF50; color: white; text-decoration: none; border-radius: 5px; margin: 5px; }
-                    .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
-                </style>
-            </head>
-            <body>
-                <div class="container">
-                    <div class="header">
-                        <h1>Your Receipt</h1>
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <style>
+                        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                        .header { background: #2196F3; color: white; padding: 20px; text-align: center; }
+                        .content { padding: 20px; background: #f9f9f9; }
+                        .btn { display: inline-block; padding: 10px 20px; background: #4CAF50; color: white; text-decoration: none; border-radius: 5px; margin: 5px; }
+                        .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <div class="header">
+                            <h1>Your Receipt</h1>
+                        </div>
+                        <div class="content">
+                            <p>Hello ${customerName},</p>
+                            <p>Your receipt for order <strong>${orderNumber}</strong> is ready.</p>
+                            <p style="text-align: center; margin: 20px 0;">
+                                <a href="${pdfUrl}" class="btn">Download PDF</a>
+                                <a href="${pngUrl}" class="btn">As Image</a>
+                            </p>
+                            <p>Thank you for your purchase!</p>
+                        </div>
+                        <div class="footer">
+                            <p>© ${year} Restaurant. All rights reserved.</p>
+                        </div>
                     </div>
-                    <div class="content">
-                        <p>Hello ${customerName},</p>
-                        <p>Your receipt for order <strong>${orderNumber}</strong> is ready.</p>
-                        <p style="text-align: center; margin: 20px 0;">
-                            <a href="${pdfUrl}" class="btn">Download PDF</a>
-                            <a href="${pngUrl}" class="btn">As Image</a>
-                        </p>
-                        <p>Thank you for your purchase!</p>
-                    </div>
-                    <div class="footer">
-                        <p>© ${year} Restaurant. All rights reserved.</p>
-                    </div>
-                </div>
-            </body>
-            </html>
-            """;
+                </body>
+                </html>
+                """;
     }
 
     private String getOrderReadyHtmlEn() {
         return """
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <meta charset="UTF-8">
-                <style>
-                    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-                    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-                    .header { background: #FF9800; color: white; padding: 20px; text-align: center; }
-                    .content { padding: 20px; background: #f9f9f9; }
-                    .highlight { font-size: 24px; color: #FF9800; text-align: center; padding: 20px; }
-                    .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
-                </style>
-            </head>
-            <body>
-                <div class="container">
-                    <div class="header">
-                        <h1>Order Ready!</h1>
-                    </div>
-                    <div class="content">
-                        <p>Hello ${customerName},</p>
-                        <div class="highlight">
-                            🎉 Your order is ready!
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <style>
+                        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                        .header { background: #FF9800; color: white; padding: 20px; text-align: center; }
+                        .content { padding: 20px; background: #f9f9f9; }
+                        .highlight { font-size: 24px; color: #FF9800; text-align: center; padding: 20px; }
+                        .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <div class="header">
+                            <h1>Order Ready!</h1>
                         </div>
-                        <p><strong>Order Number:</strong> ${orderNumber}</p>
-                        <p>You can pick up your order now.</p>
+                        <div class="content">
+                            <p>Hello ${customerName},</p>
+                            <div class="highlight">
+                                🎉 Your order is ready!
+                            </div>
+                            <p><strong>Order Number:</strong> ${orderNumber}</p>
+                            <p>You can pick up your order now.</p>
+                        </div>
+                        <div class="footer">
+                            <p>© ${year} Restaurant. All rights reserved.</p>
+                        </div>
                     </div>
-                    <div class="footer">
-                        <p>© ${year} Restaurant. All rights reserved.</p>
-                    </div>
-                </div>
-            </body>
-            </html>
-            """;
+                </body>
+                </html>
+                """;
     }
 
     private String getPaymentReceivedHtmlEn() {
         return """
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <meta charset="UTF-8">
-                <style>
-                    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-                    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-                    .header { background: #4CAF50; color: white; padding: 20px; text-align: center; }
-                    .content { padding: 20px; background: #f9f9f9; }
-                    .amount { font-size: 28px; color: #4CAF50; text-align: center; padding: 20px; }
-                    .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
-                </style>
-            </head>
-            <body>
-                <div class="container">
-                    <div class="header">
-                        <h1>Payment Received</h1>
-                    </div>
-                    <div class="content">
-                        <p>Hello ${customerName},</p>
-                        <p>We have successfully received your payment.</p>
-                        <div class="amount">
-                            ✓ ${totalAmount} ${currency}
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <style>
+                        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                        .header { background: #4CAF50; color: white; padding: 20px; text-align: center; }
+                        .content { padding: 20px; background: #f9f9f9; }
+                        .amount { font-size: 28px; color: #4CAF50; text-align: center; padding: 20px; }
+                        .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <div class="header">
+                            <h1>Payment Received</h1>
                         </div>
-                        <p><strong>Order Number:</strong> ${orderNumber}</p>
-                        <p><strong>Payment Method:</strong> ${paymentMethod}</p>
+                        <div class="content">
+                            <p>Hello ${customerName},</p>
+                            <p>We have successfully received your payment.</p>
+                            <div class="amount">
+                                ✓ ${totalAmount} ${currency}
+                            </div>
+                            <p><strong>Order Number:</strong> ${orderNumber}</p>
+                            <p><strong>Payment Method:</strong> ${paymentMethod}</p>
+                        </div>
+                        <div class="footer">
+                            <p>© ${year} Restaurant. All rights reserved.</p>
+                        </div>
                     </div>
-                    <div class="footer">
-                        <p>© ${year} Restaurant. All rights reserved.</p>
-                    </div>
-                </div>
-            </body>
-            </html>
-            """;
+                </body>
+                </html>
+                """;
     }
 
     // HTML Templates - French
     private String getOrderConfirmationHtmlFr() {
         return """
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <meta charset="UTF-8">
-                <style>
-                    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-                    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-                    .header { background: #4CAF50; color: white; padding: 20px; text-align: center; }
-                    .content { padding: 20px; background: #f9f9f9; }
-                    .order-details { background: white; padding: 15px; margin: 10px 0; border-radius: 5px; }
-                    .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
-                </style>
-            </head>
-            <body>
-                <div class="container">
-                    <div class="header">
-                        <h1>Confirmation de commande</h1>
-                    </div>
-                    <div class="content">
-                        <p>Bonjour ${customerName},</p>
-                        <p>Merci pour votre commande! Nous avons reçu votre commande et la préparons.</p>
-                        <div class="order-details">
-                            <h3>Détails de la commande</h3>
-                            <p><strong>Numéro de commande:</strong> ${orderNumber}</p>
-                            <p><strong>Type de commande:</strong> ${orderType}</p>
-                            <p><strong>Montant total:</strong> ${totalAmount} ${currency}</p>
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <style>
+                        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                        .header { background: #4CAF50; color: white; padding: 20px; text-align: center; }
+                        .content { padding: 20px; background: #f9f9f9; }
+                        .order-details { background: white; padding: 15px; margin: 10px 0; border-radius: 5px; }
+                        .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <div class="header">
+                            <h1>Confirmation de commande</h1>
                         </div>
-                        <p>Vous recevrez un autre e-mail lorsque votre commande sera prête.</p>
+                        <div class="content">
+                            <p>Bonjour ${customerName},</p>
+                            <p>Merci pour votre commande! Nous avons reçu votre commande et la préparons.</p>
+                            <div class="order-details">
+                                <h3>Détails de la commande</h3>
+                                <p><strong>Numéro de commande:</strong> ${orderNumber}</p>
+                                <p><strong>Type de commande:</strong> ${orderType}</p>
+                                <p><strong>Montant total:</strong> ${totalAmount} ${currency}</p>
+                            </div>
+                            <p>Vous recevrez un autre e-mail lorsque votre commande sera prête.</p>
+                        </div>
+                        <div class="footer">
+                            <p>© ${year} Restaurant. Tous droits réservés.</p>
+                        </div>
                     </div>
-                    <div class="footer">
-                        <p>© ${year} Restaurant. Tous droits réservés.</p>
-                    </div>
-                </div>
-            </body>
-            </html>
-            """;
+                </body>
+                </html>
+                """;
     }
 
     private String getReceiptReadyHtmlFr() {
         return """
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <meta charset="UTF-8">
-                <style>
-                    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-                    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-                    .header { background: #2196F3; color: white; padding: 20px; text-align: center; }
-                    .content { padding: 20px; background: #f9f9f9; }
-                    .btn { display: inline-block; padding: 10px 20px; background: #4CAF50; color: white; text-decoration: none; border-radius: 5px; margin: 5px; }
-                    .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
-                </style>
-            </head>
-            <body>
-                <div class="container">
-                    <div class="header">
-                        <h1>Votre reçu</h1>
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <style>
+                        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                        .header { background: #2196F3; color: white; padding: 20px; text-align: center; }
+                        .content { padding: 20px; background: #f9f9f9; }
+                        .btn { display: inline-block; padding: 10px 20px; background: #4CAF50; color: white; text-decoration: none; border-radius: 5px; margin: 5px; }
+                        .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <div class="header">
+                            <h1>Votre reçu</h1>
+                        </div>
+                        <div class="content">
+                            <p>Bonjour ${customerName},</p>
+                            <p>Votre reçu pour la commande <strong>${orderNumber}</strong> est prêt.</p>
+                            <p style="text-align: center; margin: 20px 0;">
+                                <a href="${pdfUrl}" class="btn">Télécharger PDF</a>
+                                <a href="${pngUrl}" class="btn">En image</a>
+                            </p>
+                            <p>Merci pour votre achat!</p>
+                        </div>
+                        <div class="footer">
+                            <p>© ${year} Restaurant. Tous droits réservés.</p>
+                        </div>
                     </div>
-                    <div class="content">
-                        <p>Bonjour ${customerName},</p>
-                        <p>Votre reçu pour la commande <strong>${orderNumber}</strong> est prêt.</p>
-                        <p style="text-align: center; margin: 20px 0;">
-                            <a href="${pdfUrl}" class="btn">Télécharger PDF</a>
-                            <a href="${pngUrl}" class="btn">En image</a>
-                        </p>
-                        <p>Merci pour votre achat!</p>
-                    </div>
-                    <div class="footer">
-                        <p>© ${year} Restaurant. Tous droits réservés.</p>
-                    </div>
-                </div>
-            </body>
-            </html>
-            """;
+                </body>
+                </html>
+                """;
     }
 
     private String getOrderReadyHtmlFr() {
         return """
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <meta charset="UTF-8">
-                <style>
-                    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-                    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-                    .header { background: #FF9800; color: white; padding: 20px; text-align: center; }
-                    .content { padding: 20px; background: #f9f9f9; }
-                    .highlight { font-size: 24px; color: #FF9800; text-align: center; padding: 20px; }
-                    .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
-                </style>
-            </head>
-            <body>
-                <div class="container">
-                    <div class="header">
-                        <h1>Commande prête!</h1>
-                    </div>
-                    <div class="content">
-                        <p>Bonjour ${customerName},</p>
-                        <div class="highlight">
-                            🎉 Votre commande est prête!
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <style>
+                        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                        .header { background: #FF9800; color: white; padding: 20px; text-align: center; }
+                        .content { padding: 20px; background: #f9f9f9; }
+                        .highlight { font-size: 24px; color: #FF9800; text-align: center; padding: 20px; }
+                        .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <div class="header">
+                            <h1>Commande prête!</h1>
                         </div>
-                        <p><strong>Numéro de commande:</strong> ${orderNumber}</p>
-                        <p>Vous pouvez récupérer votre commande maintenant.</p>
+                        <div class="content">
+                            <p>Bonjour ${customerName},</p>
+                            <div class="highlight">
+                                🎉 Votre commande est prête!
+                            </div>
+                            <p><strong>Numéro de commande:</strong> ${orderNumber}</p>
+                            <p>Vous pouvez récupérer votre commande maintenant.</p>
+                        </div>
+                        <div class="footer">
+                            <p>© ${year} Restaurant. Tous droits réservés.</p>
+                        </div>
                     </div>
-                    <div class="footer">
-                        <p>© ${year} Restaurant. Tous droits réservés.</p>
-                    </div>
-                </div>
-            </body>
-            </html>
-            """;
+                </body>
+                </html>
+                """;
     }
 
     private String getPaymentReceivedHtmlFr() {
         return """
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <meta charset="UTF-8">
-                <style>
-                    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-                    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-                    .header { background: #4CAF50; color: white; padding: 20px; text-align: center; }
-                    .content { padding: 20px; background: #f9f9f9; }
-                    .amount { font-size: 28px; color: #4CAF50; text-align: center; padding: 20px; }
-                    .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
-                </style>
-            </head>
-            <body>
-                <div class="container">
-                    <div class="header">
-                        <h1>Paiement reçu</h1>
-                    </div>
-                    <div class="content">
-                        <p>Bonjour ${customerName},</p>
-                        <p>Nous avons bien reçu votre paiement.</p>
-                        <div class="amount">
-                            ✓ ${totalAmount} ${currency}
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <style>
+                        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                        .header { background: #4CAF50; color: white; padding: 20px; text-align: center; }
+                        .content { padding: 20px; background: #f9f9f9; }
+                        .amount { font-size: 28px; color: #4CAF50; text-align: center; padding: 20px; }
+                        .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <div class="header">
+                            <h1>Paiement reçu</h1>
                         </div>
-                        <p><strong>Numéro de commande:</strong> ${orderNumber}</p>
-                        <p><strong>Mode de paiement:</strong> ${paymentMethod}</p>
+                        <div class="content">
+                            <p>Bonjour ${customerName},</p>
+                            <p>Nous avons bien reçu votre paiement.</p>
+                            <div class="amount">
+                                ✓ ${totalAmount} ${currency}
+                            </div>
+                            <p><strong>Numéro de commande:</strong> ${orderNumber}</p>
+                            <p><strong>Mode de paiement:</strong> ${paymentMethod}</p>
+                        </div>
+                        <div class="footer">
+                            <p>© ${year} Restaurant. Tous droits réservés.</p>
+                        </div>
                     </div>
-                    <div class="footer">
-                        <p>© ${year} Restaurant. Tous droits réservés.</p>
-                    </div>
-                </div>
-            </body>
-            </html>
-            """;
+                </body>
+                </html>
+                """;
     }
 
     // HTML Templates - Italian
     private String getOrderConfirmationHtmlIt() {
         return """
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <meta charset="UTF-8">
-                <style>
-                    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-                    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-                    .header { background: #4CAF50; color: white; padding: 20px; text-align: center; }
-                    .content { padding: 20px; background: #f9f9f9; }
-                    .order-details { background: white; padding: 15px; margin: 10px 0; border-radius: 5px; }
-                    .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
-                </style>
-            </head>
-            <body>
-                <div class="container">
-                    <div class="header">
-                        <h1>Conferma ordine</h1>
-                    </div>
-                    <div class="content">
-                        <p>Ciao ${customerName},</p>
-                        <p>Grazie per il tuo ordine! Abbiamo ricevuto il tuo ordine e lo stiamo preparando.</p>
-                        <div class="order-details">
-                            <h3>Dettagli ordine</h3>
-                            <p><strong>Numero ordine:</strong> ${orderNumber}</p>
-                            <p><strong>Tipo ordine:</strong> ${orderType}</p>
-                            <p><strong>Importo totale:</strong> ${totalAmount} ${currency}</p>
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <style>
+                        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                        .header { background: #4CAF50; color: white; padding: 20px; text-align: center; }
+                        .content { padding: 20px; background: #f9f9f9; }
+                        .order-details { background: white; padding: 15px; margin: 10px 0; border-radius: 5px; }
+                        .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <div class="header">
+                            <h1>Conferma ordine</h1>
                         </div>
-                        <p>Riceverai un'altra email quando il tuo ordine sarà pronto.</p>
+                        <div class="content">
+                            <p>Ciao ${customerName},</p>
+                            <p>Grazie per il tuo ordine! Abbiamo ricevuto il tuo ordine e lo stiamo preparando.</p>
+                            <div class="order-details">
+                                <h3>Dettagli ordine</h3>
+                                <p><strong>Numero ordine:</strong> ${orderNumber}</p>
+                                <p><strong>Tipo ordine:</strong> ${orderType}</p>
+                                <p><strong>Importo totale:</strong> ${totalAmount} ${currency}</p>
+                            </div>
+                            <p>Riceverai un'altra email quando il tuo ordine sarà pronto.</p>
+                        </div>
+                        <div class="footer">
+                            <p>© ${year} Restaurant. Tutti i diritti riservati.</p>
+                        </div>
                     </div>
-                    <div class="footer">
-                        <p>© ${year} Restaurant. Tutti i diritti riservati.</p>
-                    </div>
-                </div>
-            </body>
-            </html>
-            """;
+                </body>
+                </html>
+                """;
     }
 
     private String getReceiptReadyHtmlIt() {
         return """
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <meta charset="UTF-8">
-                <style>
-                    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-                    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-                    .header { background: #2196F3; color: white; padding: 20px; text-align: center; }
-                    .content { padding: 20px; background: #f9f9f9; }
-                    .btn { display: inline-block; padding: 10px 20px; background: #4CAF50; color: white; text-decoration: none; border-radius: 5px; margin: 5px; }
-                    .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
-                </style>
-            </head>
-            <body>
-                <div class="container">
-                    <div class="header">
-                        <h1>La tua ricevuta</h1>
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <style>
+                        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                        .header { background: #2196F3; color: white; padding: 20px; text-align: center; }
+                        .content { padding: 20px; background: #f9f9f9; }
+                        .btn { display: inline-block; padding: 10px 20px; background: #4CAF50; color: white; text-decoration: none; border-radius: 5px; margin: 5px; }
+                        .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <div class="header">
+                            <h1>La tua ricevuta</h1>
+                        </div>
+                        <div class="content">
+                            <p>Ciao ${customerName},</p>
+                            <p>La tua ricevuta per l'ordine <strong>${orderNumber}</strong> è pronta.</p>
+                            <p style="text-align: center; margin: 20px 0;">
+                                <a href="${pdfUrl}" class="btn">Scarica PDF</a>
+                                <a href="${pngUrl}" class="btn">Come immagine</a>
+                            </p>
+                            <p>Grazie per il tuo acquisto!</p>
+                        </div>
+                        <div class="footer">
+                            <p>© ${year} Restaurant. Tutti i diritti riservati.</p>
+                        </div>
                     </div>
-                    <div class="content">
-                        <p>Ciao ${customerName},</p>
-                        <p>La tua ricevuta per l'ordine <strong>${orderNumber}</strong> è pronta.</p>
-                        <p style="text-align: center; margin: 20px 0;">
-                            <a href="${pdfUrl}" class="btn">Scarica PDF</a>
-                            <a href="${pngUrl}" class="btn">Come immagine</a>
-                        </p>
-                        <p>Grazie per il tuo acquisto!</p>
-                    </div>
-                    <div class="footer">
-                        <p>© ${year} Restaurant. Tutti i diritti riservati.</p>
-                    </div>
-                </div>
-            </body>
-            </html>
-            """;
+                </body>
+                </html>
+                """;
     }
 
     private String getOrderReadyHtmlIt() {
         return """
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <meta charset="UTF-8">
-                <style>
-                    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-                    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-                    .header { background: #FF9800; color: white; padding: 20px; text-align: center; }
-                    .content { padding: 20px; background: #f9f9f9; }
-                    .highlight { font-size: 24px; color: #FF9800; text-align: center; padding: 20px; }
-                    .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
-                </style>
-            </head>
-            <body>
-                <div class="container">
-                    <div class="header">
-                        <h1>Ordine pronto!</h1>
-                    </div>
-                    <div class="content">
-                        <p>Ciao ${customerName},</p>
-                        <div class="highlight">
-                            🎉 Il tuo ordine è pronto!
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <style>
+                        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                        .header { background: #FF9800; color: white; padding: 20px; text-align: center; }
+                        .content { padding: 20px; background: #f9f9f9; }
+                        .highlight { font-size: 24px; color: #FF9800; text-align: center; padding: 20px; }
+                        .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <div class="header">
+                            <h1>Ordine pronto!</h1>
                         </div>
-                        <p><strong>Numero ordine:</strong> ${orderNumber}</p>
-                        <p>Puoi ritirare il tuo ordine adesso.</p>
+                        <div class="content">
+                            <p>Ciao ${customerName},</p>
+                            <div class="highlight">
+                                🎉 Il tuo ordine è pronto!
+                            </div>
+                            <p><strong>Numero ordine:</strong> ${orderNumber}</p>
+                            <p>Puoi ritirare il tuo ordine adesso.</p>
+                        </div>
+                        <div class="footer">
+                            <p>© ${year} Restaurant. Tutti i diritti riservati.</p>
+                        </div>
                     </div>
-                    <div class="footer">
-                        <p>© ${year} Restaurant. Tutti i diritti riservati.</p>
-                    </div>
-                </div>
-            </body>
-            </html>
-            """;
+                </body>
+                </html>
+                """;
     }
 
     private String getPaymentReceivedHtmlIt() {
         return """
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <meta charset="UTF-8">
-                <style>
-                    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-                    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-                    .header { background: #4CAF50; color: white; padding: 20px; text-align: center; }
-                    .content { padding: 20px; background: #f9f9f9; }
-                    .amount { font-size: 28px; color: #4CAF50; text-align: center; padding: 20px; }
-                    .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
-                </style>
-            </head>
-            <body>
-                <div class="container">
-                    <div class="header">
-                        <h1>Pagamento ricevuto</h1>
-                    </div>
-                    <div class="content">
-                        <p>Ciao ${customerName},</p>
-                        <p>Abbiamo ricevuto con successo il tuo pagamento.</p>
-                        <div class="amount">
-                            ✓ ${totalAmount} ${currency}
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <style>
+                        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                        .header { background: #4CAF50; color: white; padding: 20px; text-align: center; }
+                        .content { padding: 20px; background: #f9f9f9; }
+                        .amount { font-size: 28px; color: #4CAF50; text-align: center; padding: 20px; }
+                        .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <div class="header">
+                            <h1>Pagamento ricevuto</h1>
                         </div>
-                        <p><strong>Numero ordine:</strong> ${orderNumber}</p>
-                        <p><strong>Metodo di pagamento:</strong> ${paymentMethod}</p>
+                        <div class="content">
+                            <p>Ciao ${customerName},</p>
+                            <p>Abbiamo ricevuto con successo il tuo pagamento.</p>
+                            <div class="amount">
+                                ✓ ${totalAmount} ${currency}
+                            </div>
+                            <p><strong>Numero ordine:</strong> ${orderNumber}</p>
+                            <p><strong>Metodo di pagamento:</strong> ${paymentMethod}</p>
+                        </div>
+                        <div class="footer">
+                            <p>© ${year} Restaurant. Tutti i diritti riservati.</p>
+                        </div>
                     </div>
-                    <div class="footer">
-                        <p>© ${year} Restaurant. Tutti i diritti riservati.</p>
-                    </div>
-                </div>
-            </body>
-            </html>
-            """;
+                </body>
+                </html>
+                """;
     }
 
     // ==================== WELCOME TEMPLATES ====================
@@ -878,7 +878,7 @@ public class EmailTemplateService {
     private EmailTemplate createWelcomeTemplate(String language) {
         String subject;
         String html;
-        
+
         switch (language) {
             case "EN" -> {
                 subject = "Welcome to ${restaurantName}!";
@@ -897,7 +897,7 @@ public class EmailTemplateService {
                 html = getWelcomeHtmlDe();
             }
         }
-        
+
         return EmailTemplate.builder()
                 .type(NotificationType.WELCOME)
                 .language(language)
@@ -910,154 +910,154 @@ public class EmailTemplateService {
 
     private String getWelcomeHtmlDe() {
         return """
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <meta charset="UTF-8">
-                <style>
-                    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-                    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-                    .header { background: linear-gradient(135deg, #FF6B35, #FF9800); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
-                    .content { padding: 30px; background: #f9f9f9; }
-                    .btn { display: inline-block; padding: 12px 30px; background: #FF6B35; color: white; text-decoration: none; border-radius: 25px; font-weight: bold; }
-                    .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
-                </style>
-            </head>
-            <body>
-                <div class="container">
-                    <div class="header">
-                        <h1>🎉 Willkommen!</h1>
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <style>
+                        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                        .header { background: linear-gradient(135deg, #FF6B35, #FF9800); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+                        .content { padding: 30px; background: #f9f9f9; }
+                        .btn { display: inline-block; padding: 12px 30px; background: #FF6B35; color: white; text-decoration: none; border-radius: 25px; font-weight: bold; }
+                        .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <div class="header">
+                            <h1>🎉 Willkommen!</h1>
+                        </div>
+                        <div class="content">
+                            <p>Hallo ${customerName},</p>
+                            <p>Herzlich willkommen bei <strong>${restaurantName}</strong>! Wir freuen uns, Sie als neuen Kunden begrüssen zu dürfen.</p>
+                            <p>Als Dankeschön für Ihre Registrierung schenken wir Ihnen <strong>10% Rabatt</strong> auf Ihre erste Bestellung!</p>
+                            <p style="text-align: center; margin: 30px 0;">
+                                <a href="${orderUrl}" class="btn">Jetzt bestellen</a>
+                            </p>
+                            <p>Bei Fragen stehen wir Ihnen gerne zur Verfügung.</p>
+                        </div>
+                        <div class="footer">
+                            <p>© ${year} ${restaurantName}. Alle Rechte vorbehalten.</p>
+                        </div>
                     </div>
-                    <div class="content">
-                        <p>Hallo ${customerName},</p>
-                        <p>Herzlich willkommen bei <strong>${restaurantName}</strong>! Wir freuen uns, Sie als neuen Kunden begrüssen zu dürfen.</p>
-                        <p>Als Dankeschön für Ihre Registrierung schenken wir Ihnen <strong>10% Rabatt</strong> auf Ihre erste Bestellung!</p>
-                        <p style="text-align: center; margin: 30px 0;">
-                            <a href="${orderUrl}" class="btn">Jetzt bestellen</a>
-                        </p>
-                        <p>Bei Fragen stehen wir Ihnen gerne zur Verfügung.</p>
-                    </div>
-                    <div class="footer">
-                        <p>© ${year} ${restaurantName}. Alle Rechte vorbehalten.</p>
-                    </div>
-                </div>
-            </body>
-            </html>
-            """;
+                </body>
+                </html>
+                """;
     }
 
     private String getWelcomeHtmlEn() {
         return """
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <meta charset="UTF-8">
-                <style>
-                    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-                    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-                    .header { background: linear-gradient(135deg, #FF6B35, #FF9800); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
-                    .content { padding: 30px; background: #f9f9f9; }
-                    .btn { display: inline-block; padding: 12px 30px; background: #FF6B35; color: white; text-decoration: none; border-radius: 25px; font-weight: bold; }
-                    .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
-                </style>
-            </head>
-            <body>
-                <div class="container">
-                    <div class="header">
-                        <h1>🎉 Welcome!</h1>
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <style>
+                        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                        .header { background: linear-gradient(135deg, #FF6B35, #FF9800); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+                        .content { padding: 30px; background: #f9f9f9; }
+                        .btn { display: inline-block; padding: 12px 30px; background: #FF6B35; color: white; text-decoration: none; border-radius: 25px; font-weight: bold; }
+                        .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <div class="header">
+                            <h1>🎉 Welcome!</h1>
+                        </div>
+                        <div class="content">
+                            <p>Hello ${customerName},</p>
+                            <p>Welcome to <strong>${restaurantName}</strong>! We're excited to have you as our new customer.</p>
+                            <p>As a thank you for registering, we're giving you <strong>10% off</strong> your first order!</p>
+                            <p style="text-align: center; margin: 30px 0;">
+                                <a href="${orderUrl}" class="btn">Order Now</a>
+                            </p>
+                            <p>If you have any questions, we're here to help.</p>
+                        </div>
+                        <div class="footer">
+                            <p>© ${year} ${restaurantName}. All rights reserved.</p>
+                        </div>
                     </div>
-                    <div class="content">
-                        <p>Hello ${customerName},</p>
-                        <p>Welcome to <strong>${restaurantName}</strong>! We're excited to have you as our new customer.</p>
-                        <p>As a thank you for registering, we're giving you <strong>10% off</strong> your first order!</p>
-                        <p style="text-align: center; margin: 30px 0;">
-                            <a href="${orderUrl}" class="btn">Order Now</a>
-                        </p>
-                        <p>If you have any questions, we're here to help.</p>
-                    </div>
-                    <div class="footer">
-                        <p>© ${year} ${restaurantName}. All rights reserved.</p>
-                    </div>
-                </div>
-            </body>
-            </html>
-            """;
+                </body>
+                </html>
+                """;
     }
 
     private String getWelcomeHtmlFr() {
         return """
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <meta charset="UTF-8">
-                <style>
-                    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-                    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-                    .header { background: linear-gradient(135deg, #FF6B35, #FF9800); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
-                    .content { padding: 30px; background: #f9f9f9; }
-                    .btn { display: inline-block; padding: 12px 30px; background: #FF6B35; color: white; text-decoration: none; border-radius: 25px; font-weight: bold; }
-                    .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
-                </style>
-            </head>
-            <body>
-                <div class="container">
-                    <div class="header">
-                        <h1>🎉 Bienvenue!</h1>
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <style>
+                        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                        .header { background: linear-gradient(135deg, #FF6B35, #FF9800); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+                        .content { padding: 30px; background: #f9f9f9; }
+                        .btn { display: inline-block; padding: 12px 30px; background: #FF6B35; color: white; text-decoration: none; border-radius: 25px; font-weight: bold; }
+                        .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <div class="header">
+                            <h1>🎉 Bienvenue!</h1>
+                        </div>
+                        <div class="content">
+                            <p>Bonjour ${customerName},</p>
+                            <p>Bienvenue chez <strong>${restaurantName}</strong>! Nous sommes ravis de vous accueillir parmi nos clients.</p>
+                            <p>Pour vous remercier de votre inscription, nous vous offrons <strong>10% de réduction</strong> sur votre première commande!</p>
+                            <p style="text-align: center; margin: 30px 0;">
+                                <a href="${orderUrl}" class="btn">Commander maintenant</a>
+                            </p>
+                            <p>Pour toute question, nous sommes à votre disposition.</p>
+                        </div>
+                        <div class="footer">
+                            <p>© ${year} ${restaurantName}. Tous droits réservés.</p>
+                        </div>
                     </div>
-                    <div class="content">
-                        <p>Bonjour ${customerName},</p>
-                        <p>Bienvenue chez <strong>${restaurantName}</strong>! Nous sommes ravis de vous accueillir parmi nos clients.</p>
-                        <p>Pour vous remercier de votre inscription, nous vous offrons <strong>10% de réduction</strong> sur votre première commande!</p>
-                        <p style="text-align: center; margin: 30px 0;">
-                            <a href="${orderUrl}" class="btn">Commander maintenant</a>
-                        </p>
-                        <p>Pour toute question, nous sommes à votre disposition.</p>
-                    </div>
-                    <div class="footer">
-                        <p>© ${year} ${restaurantName}. Tous droits réservés.</p>
-                    </div>
-                </div>
-            </body>
-            </html>
-            """;
+                </body>
+                </html>
+                """;
     }
 
     private String getWelcomeHtmlIt() {
         return """
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <meta charset="UTF-8">
-                <style>
-                    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-                    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-                    .header { background: linear-gradient(135deg, #FF6B35, #FF9800); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
-                    .content { padding: 30px; background: #f9f9f9; }
-                    .btn { display: inline-block; padding: 12px 30px; background: #FF6B35; color: white; text-decoration: none; border-radius: 25px; font-weight: bold; }
-                    .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
-                </style>
-            </head>
-            <body>
-                <div class="container">
-                    <div class="header">
-                        <h1>🎉 Benvenuto!</h1>
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <style>
+                        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                        .header { background: linear-gradient(135deg, #FF6B35, #FF9800); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+                        .content { padding: 30px; background: #f9f9f9; }
+                        .btn { display: inline-block; padding: 12px 30px; background: #FF6B35; color: white; text-decoration: none; border-radius: 25px; font-weight: bold; }
+                        .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <div class="header">
+                            <h1>🎉 Benvenuto!</h1>
+                        </div>
+                        <div class="content">
+                            <p>Ciao ${customerName},</p>
+                            <p>Benvenuto da <strong>${restaurantName}</strong>! Siamo felici di averti come nuovo cliente.</p>
+                            <p>Come ringraziamento per la registrazione, ti offriamo <strong>10% di sconto</strong> sul tuo primo ordine!</p>
+                            <p style="text-align: center; margin: 30px 0;">
+                                <a href="${orderUrl}" class="btn">Ordina ora</a>
+                            </p>
+                            <p>Per qualsiasi domanda, siamo a tua disposizione.</p>
+                        </div>
+                        <div class="footer">
+                            <p>© ${year} ${restaurantName}. Tutti i diritti riservati.</p>
+                        </div>
                     </div>
-                    <div class="content">
-                        <p>Ciao ${customerName},</p>
-                        <p>Benvenuto da <strong>${restaurantName}</strong>! Siamo felici di averti come nuovo cliente.</p>
-                        <p>Come ringraziamento per la registrazione, ti offriamo <strong>10% di sconto</strong> sul tuo primo ordine!</p>
-                        <p style="text-align: center; margin: 30px 0;">
-                            <a href="${orderUrl}" class="btn">Ordina ora</a>
-                        </p>
-                        <p>Per qualsiasi domanda, siamo a tua disposizione.</p>
-                    </div>
-                    <div class="footer">
-                        <p>© ${year} ${restaurantName}. Tutti i diritti riservati.</p>
-                    </div>
-                </div>
-            </body>
-            </html>
-            """;
+                </body>
+                </html>
+                """;
     }
 
     // ==================== PASSWORD RESET TEMPLATES ====================
@@ -1065,7 +1065,7 @@ public class EmailTemplateService {
     private EmailTemplate createPasswordResetTemplate(String language) {
         String subject;
         String html;
-        
+
         switch (language) {
             case "EN" -> {
                 subject = "Reset Your Password - ${restaurantName}";
@@ -1084,7 +1084,7 @@ public class EmailTemplateService {
                 html = getPasswordResetHtmlDe();
             }
         }
-        
+
         return EmailTemplate.builder()
                 .type(NotificationType.PASSWORD_RESET)
                 .language(language)
@@ -1097,162 +1097,162 @@ public class EmailTemplateService {
 
     private String getPasswordResetHtmlDe() {
         return """
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <meta charset="UTF-8">
-                <style>
-                    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-                    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-                    .header { background: #2196F3; color: white; padding: 20px; text-align: center; }
-                    .content { padding: 30px; background: #f9f9f9; }
-                    .btn { display: inline-block; padding: 12px 30px; background: #2196F3; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; }
-                    .code { background: #e0e0e0; padding: 15px 30px; font-size: 24px; letter-spacing: 5px; text-align: center; border-radius: 5px; margin: 20px 0; }
-                    .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
-                    .warning { color: #666; font-size: 12px; margin-top: 20px; }
-                </style>
-            </head>
-            <body>
-                <div class="container">
-                    <div class="header">
-                        <h1>🔐 Passwort zurücksetzen</h1>
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <style>
+                        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                        .header { background: #2196F3; color: white; padding: 20px; text-align: center; }
+                        .content { padding: 30px; background: #f9f9f9; }
+                        .btn { display: inline-block; padding: 12px 30px; background: #2196F3; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; }
+                        .code { background: #e0e0e0; padding: 15px 30px; font-size: 24px; letter-spacing: 5px; text-align: center; border-radius: 5px; margin: 20px 0; }
+                        .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
+                        .warning { color: #666; font-size: 12px; margin-top: 20px; }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <div class="header">
+                            <h1>🔐 Passwort zurücksetzen</h1>
+                        </div>
+                        <div class="content">
+                            <p>Hallo ${customerName},</p>
+                            <p>Sie haben eine Anfrage zum Zurücksetzen Ihres Passworts gestellt. Klicken Sie auf den Button unten oder verwenden Sie den Code:</p>
+                            <div class="code">${resetCode}</div>
+                            <p style="text-align: center;">
+                                <a href="${resetUrl}" class="btn">Passwort zurücksetzen</a>
+                            </p>
+                            <p class="warning">Dieser Link ist 24 Stunden gültig. Wenn Sie diese Anfrage nicht gestellt haben, ignorieren Sie diese E-Mail bitte.</p>
+                        </div>
+                        <div class="footer">
+                            <p>© ${year} ${restaurantName}. Alle Rechte vorbehalten.</p>
+                        </div>
                     </div>
-                    <div class="content">
-                        <p>Hallo ${customerName},</p>
-                        <p>Sie haben eine Anfrage zum Zurücksetzen Ihres Passworts gestellt. Klicken Sie auf den Button unten oder verwenden Sie den Code:</p>
-                        <div class="code">${resetCode}</div>
-                        <p style="text-align: center;">
-                            <a href="${resetUrl}" class="btn">Passwort zurücksetzen</a>
-                        </p>
-                        <p class="warning">Dieser Link ist 24 Stunden gültig. Wenn Sie diese Anfrage nicht gestellt haben, ignorieren Sie diese E-Mail bitte.</p>
-                    </div>
-                    <div class="footer">
-                        <p>© ${year} ${restaurantName}. Alle Rechte vorbehalten.</p>
-                    </div>
-                </div>
-            </body>
-            </html>
-            """;
+                </body>
+                </html>
+                """;
     }
 
     private String getPasswordResetHtmlEn() {
         return """
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <meta charset="UTF-8">
-                <style>
-                    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-                    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-                    .header { background: #2196F3; color: white; padding: 20px; text-align: center; }
-                    .content { padding: 30px; background: #f9f9f9; }
-                    .btn { display: inline-block; padding: 12px 30px; background: #2196F3; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; }
-                    .code { background: #e0e0e0; padding: 15px 30px; font-size: 24px; letter-spacing: 5px; text-align: center; border-radius: 5px; margin: 20px 0; }
-                    .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
-                    .warning { color: #666; font-size: 12px; margin-top: 20px; }
-                </style>
-            </head>
-            <body>
-                <div class="container">
-                    <div class="header">
-                        <h1>🔐 Reset Your Password</h1>
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <style>
+                        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                        .header { background: #2196F3; color: white; padding: 20px; text-align: center; }
+                        .content { padding: 30px; background: #f9f9f9; }
+                        .btn { display: inline-block; padding: 12px 30px; background: #2196F3; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; }
+                        .code { background: #e0e0e0; padding: 15px 30px; font-size: 24px; letter-spacing: 5px; text-align: center; border-radius: 5px; margin: 20px 0; }
+                        .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
+                        .warning { color: #666; font-size: 12px; margin-top: 20px; }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <div class="header">
+                            <h1>🔐 Reset Your Password</h1>
+                        </div>
+                        <div class="content">
+                            <p>Hello ${customerName},</p>
+                            <p>You requested to reset your password. Click the button below or use the code:</p>
+                            <div class="code">${resetCode}</div>
+                            <p style="text-align: center;">
+                                <a href="${resetUrl}" class="btn">Reset Password</a>
+                            </p>
+                            <p class="warning">This link is valid for 24 hours. If you didn't request this, please ignore this email.</p>
+                        </div>
+                        <div class="footer">
+                            <p>© ${year} ${restaurantName}. All rights reserved.</p>
+                        </div>
                     </div>
-                    <div class="content">
-                        <p>Hello ${customerName},</p>
-                        <p>You requested to reset your password. Click the button below or use the code:</p>
-                        <div class="code">${resetCode}</div>
-                        <p style="text-align: center;">
-                            <a href="${resetUrl}" class="btn">Reset Password</a>
-                        </p>
-                        <p class="warning">This link is valid for 24 hours. If you didn't request this, please ignore this email.</p>
-                    </div>
-                    <div class="footer">
-                        <p>© ${year} ${restaurantName}. All rights reserved.</p>
-                    </div>
-                </div>
-            </body>
-            </html>
-            """;
+                </body>
+                </html>
+                """;
     }
 
     private String getPasswordResetHtmlFr() {
         return """
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <meta charset="UTF-8">
-                <style>
-                    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-                    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-                    .header { background: #2196F3; color: white; padding: 20px; text-align: center; }
-                    .content { padding: 30px; background: #f9f9f9; }
-                    .btn { display: inline-block; padding: 12px 30px; background: #2196F3; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; }
-                    .code { background: #e0e0e0; padding: 15px 30px; font-size: 24px; letter-spacing: 5px; text-align: center; border-radius: 5px; margin: 20px 0; }
-                    .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
-                    .warning { color: #666; font-size: 12px; margin-top: 20px; }
-                </style>
-            </head>
-            <body>
-                <div class="container">
-                    <div class="header">
-                        <h1>🔐 Réinitialiser le mot de passe</h1>
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <style>
+                        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                        .header { background: #2196F3; color: white; padding: 20px; text-align: center; }
+                        .content { padding: 30px; background: #f9f9f9; }
+                        .btn { display: inline-block; padding: 12px 30px; background: #2196F3; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; }
+                        .code { background: #e0e0e0; padding: 15px 30px; font-size: 24px; letter-spacing: 5px; text-align: center; border-radius: 5px; margin: 20px 0; }
+                        .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
+                        .warning { color: #666; font-size: 12px; margin-top: 20px; }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <div class="header">
+                            <h1>🔐 Réinitialiser le mot de passe</h1>
+                        </div>
+                        <div class="content">
+                            <p>Bonjour ${customerName},</p>
+                            <p>Vous avez demandé à réinitialiser votre mot de passe. Cliquez sur le bouton ci-dessous ou utilisez le code:</p>
+                            <div class="code">${resetCode}</div>
+                            <p style="text-align: center;">
+                                <a href="${resetUrl}" class="btn">Réinitialiser</a>
+                            </p>
+                            <p class="warning">Ce lien est valide 24 heures. Si vous n'avez pas fait cette demande, veuillez ignorer cet e-mail.</p>
+                        </div>
+                        <div class="footer">
+                            <p>© ${year} ${restaurantName}. Tous droits réservés.</p>
+                        </div>
                     </div>
-                    <div class="content">
-                        <p>Bonjour ${customerName},</p>
-                        <p>Vous avez demandé à réinitialiser votre mot de passe. Cliquez sur le bouton ci-dessous ou utilisez le code:</p>
-                        <div class="code">${resetCode}</div>
-                        <p style="text-align: center;">
-                            <a href="${resetUrl}" class="btn">Réinitialiser</a>
-                        </p>
-                        <p class="warning">Ce lien est valide 24 heures. Si vous n'avez pas fait cette demande, veuillez ignorer cet e-mail.</p>
-                    </div>
-                    <div class="footer">
-                        <p>© ${year} ${restaurantName}. Tous droits réservés.</p>
-                    </div>
-                </div>
-            </body>
-            </html>
-            """;
+                </body>
+                </html>
+                """;
     }
 
     private String getPasswordResetHtmlIt() {
         return """
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <meta charset="UTF-8">
-                <style>
-                    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-                    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-                    .header { background: #2196F3; color: white; padding: 20px; text-align: center; }
-                    .content { padding: 30px; background: #f9f9f9; }
-                    .btn { display: inline-block; padding: 12px 30px; background: #2196F3; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; }
-                    .code { background: #e0e0e0; padding: 15px 30px; font-size: 24px; letter-spacing: 5px; text-align: center; border-radius: 5px; margin: 20px 0; }
-                    .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
-                    .warning { color: #666; font-size: 12px; margin-top: 20px; }
-                </style>
-            </head>
-            <body>
-                <div class="container">
-                    <div class="header">
-                        <h1>🔐 Reimposta la password</h1>
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <style>
+                        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                        .header { background: #2196F3; color: white; padding: 20px; text-align: center; }
+                        .content { padding: 30px; background: #f9f9f9; }
+                        .btn { display: inline-block; padding: 12px 30px; background: #2196F3; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; }
+                        .code { background: #e0e0e0; padding: 15px 30px; font-size: 24px; letter-spacing: 5px; text-align: center; border-radius: 5px; margin: 20px 0; }
+                        .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
+                        .warning { color: #666; font-size: 12px; margin-top: 20px; }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <div class="header">
+                            <h1>🔐 Reimposta la password</h1>
+                        </div>
+                        <div class="content">
+                            <p>Ciao ${customerName},</p>
+                            <p>Hai richiesto di reimpostare la password. Clicca sul pulsante qui sotto o usa il codice:</p>
+                            <div class="code">${resetCode}</div>
+                            <p style="text-align: center;">
+                                <a href="${resetUrl}" class="btn">Reimposta password</a>
+                            </p>
+                            <p class="warning">Questo link è valido per 24 ore. Se non hai fatto questa richiesta, ignora questa email.</p>
+                        </div>
+                        <div class="footer">
+                            <p>© ${year} ${restaurantName}. Tutti i diritti riservati.</p>
+                        </div>
                     </div>
-                    <div class="content">
-                        <p>Ciao ${customerName},</p>
-                        <p>Hai richiesto di reimpostare la password. Clicca sul pulsante qui sotto o usa il codice:</p>
-                        <div class="code">${resetCode}</div>
-                        <p style="text-align: center;">
-                            <a href="${resetUrl}" class="btn">Reimposta password</a>
-                        </p>
-                        <p class="warning">Questo link è valido per 24 ore. Se non hai fatto questa richiesta, ignora questa email.</p>
-                    </div>
-                    <div class="footer">
-                        <p>© ${year} ${restaurantName}. Tutti i diritti riservati.</p>
-                    </div>
-                </div>
-            </body>
-            </html>
-            """;
+                </body>
+                </html>
+                """;
     }
 
     // ==================== PROMOTION TEMPLATES ====================
@@ -1260,7 +1260,7 @@ public class EmailTemplateService {
     private EmailTemplate createPromotionTemplate(String language) {
         String subject;
         String html;
-        
+
         switch (language) {
             case "EN" -> {
                 subject = "🔥 Special Offer from ${restaurantName}!";
@@ -1279,7 +1279,7 @@ public class EmailTemplateService {
                 html = getPromotionHtmlDe();
             }
         }
-        
+
         return EmailTemplate.builder()
                 .type(NotificationType.PROMOTION)
                 .language(language)
@@ -1292,169 +1292,169 @@ public class EmailTemplateService {
 
     private String getPromotionHtmlDe() {
         return """
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <meta charset="UTF-8">
-                <style>
-                    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-                    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-                    .header { background: linear-gradient(135deg, #e91e63, #ff5722); color: white; padding: 40px; text-align: center; border-radius: 10px 10px 0 0; }
-                    .discount { font-size: 48px; font-weight: bold; }
-                    .content { padding: 30px; background: #f9f9f9; text-align: center; }
-                    .btn { display: inline-block; padding: 15px 40px; background: #e91e63; color: white; text-decoration: none; border-radius: 30px; font-weight: bold; font-size: 18px; }
-                    .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
-                    .valid { background: #fff3e0; padding: 10px; border-radius: 5px; margin: 20px 0; }
-                </style>
-            </head>
-            <body>
-                <div class="container">
-                    <div class="header">
-                        <div class="discount">${discountPercent}% RABATT</div>
-                        <p>Exklusiv für Sie!</p>
-                    </div>
-                    <div class="content">
-                        <h2>${promoTitle}</h2>
-                        <p>${promoDescription}</p>
-                        <div class="valid">
-                            <strong>Gültig bis:</strong> ${validUntil}<br>
-                            <strong>Code:</strong> ${promoCode}
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <style>
+                        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                        .header { background: linear-gradient(135deg, #e91e63, #ff5722); color: white; padding: 40px; text-align: center; border-radius: 10px 10px 0 0; }
+                        .discount { font-size: 48px; font-weight: bold; }
+                        .content { padding: 30px; background: #f9f9f9; text-align: center; }
+                        .btn { display: inline-block; padding: 15px 40px; background: #e91e63; color: white; text-decoration: none; border-radius: 30px; font-weight: bold; font-size: 18px; }
+                        .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
+                        .valid { background: #fff3e0; padding: 10px; border-radius: 5px; margin: 20px 0; }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <div class="header">
+                            <div class="discount">${discountPercent}% RABATT</div>
+                            <p>Exklusiv für Sie!</p>
                         </div>
-                        <a href="${orderUrl}" class="btn">Jetzt bestellen</a>
+                        <div class="content">
+                            <h2>${promoTitle}</h2>
+                            <p>${promoDescription}</p>
+                            <div class="valid">
+                                <strong>Gültig bis:</strong> ${validUntil}<br>
+                                <strong>Code:</strong> ${promoCode}
+                            </div>
+                            <a href="${orderUrl}" class="btn">Jetzt bestellen</a>
+                        </div>
+                        <div class="footer">
+                            <p>© ${year} ${restaurantName}. Alle Rechte vorbehalten.</p>
+                            <p><a href="${unsubscribeUrl}">Abmelden</a></p>
+                        </div>
                     </div>
-                    <div class="footer">
-                        <p>© ${year} ${restaurantName}. Alle Rechte vorbehalten.</p>
-                        <p><a href="${unsubscribeUrl}">Abmelden</a></p>
-                    </div>
-                </div>
-            </body>
-            </html>
-            """;
+                </body>
+                </html>
+                """;
     }
 
     private String getPromotionHtmlEn() {
         return """
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <meta charset="UTF-8">
-                <style>
-                    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-                    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-                    .header { background: linear-gradient(135deg, #e91e63, #ff5722); color: white; padding: 40px; text-align: center; border-radius: 10px 10px 0 0; }
-                    .discount { font-size: 48px; font-weight: bold; }
-                    .content { padding: 30px; background: #f9f9f9; text-align: center; }
-                    .btn { display: inline-block; padding: 15px 40px; background: #e91e63; color: white; text-decoration: none; border-radius: 30px; font-weight: bold; font-size: 18px; }
-                    .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
-                    .valid { background: #fff3e0; padding: 10px; border-radius: 5px; margin: 20px 0; }
-                </style>
-            </head>
-            <body>
-                <div class="container">
-                    <div class="header">
-                        <div class="discount">${discountPercent}% OFF</div>
-                        <p>Exclusive for you!</p>
-                    </div>
-                    <div class="content">
-                        <h2>${promoTitle}</h2>
-                        <p>${promoDescription}</p>
-                        <div class="valid">
-                            <strong>Valid until:</strong> ${validUntil}<br>
-                            <strong>Code:</strong> ${promoCode}
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <style>
+                        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                        .header { background: linear-gradient(135deg, #e91e63, #ff5722); color: white; padding: 40px; text-align: center; border-radius: 10px 10px 0 0; }
+                        .discount { font-size: 48px; font-weight: bold; }
+                        .content { padding: 30px; background: #f9f9f9; text-align: center; }
+                        .btn { display: inline-block; padding: 15px 40px; background: #e91e63; color: white; text-decoration: none; border-radius: 30px; font-weight: bold; font-size: 18px; }
+                        .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
+                        .valid { background: #fff3e0; padding: 10px; border-radius: 5px; margin: 20px 0; }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <div class="header">
+                            <div class="discount">${discountPercent}% OFF</div>
+                            <p>Exclusive for you!</p>
                         </div>
-                        <a href="${orderUrl}" class="btn">Order Now</a>
+                        <div class="content">
+                            <h2>${promoTitle}</h2>
+                            <p>${promoDescription}</p>
+                            <div class="valid">
+                                <strong>Valid until:</strong> ${validUntil}<br>
+                                <strong>Code:</strong> ${promoCode}
+                            </div>
+                            <a href="${orderUrl}" class="btn">Order Now</a>
+                        </div>
+                        <div class="footer">
+                            <p>© ${year} ${restaurantName}. All rights reserved.</p>
+                            <p><a href="${unsubscribeUrl}">Unsubscribe</a></p>
+                        </div>
                     </div>
-                    <div class="footer">
-                        <p>© ${year} ${restaurantName}. All rights reserved.</p>
-                        <p><a href="${unsubscribeUrl}">Unsubscribe</a></p>
-                    </div>
-                </div>
-            </body>
-            </html>
-            """;
+                </body>
+                </html>
+                """;
     }
 
     private String getPromotionHtmlFr() {
         return """
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <meta charset="UTF-8">
-                <style>
-                    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-                    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-                    .header { background: linear-gradient(135deg, #e91e63, #ff5722); color: white; padding: 40px; text-align: center; border-radius: 10px 10px 0 0; }
-                    .discount { font-size: 48px; font-weight: bold; }
-                    .content { padding: 30px; background: #f9f9f9; text-align: center; }
-                    .btn { display: inline-block; padding: 15px 40px; background: #e91e63; color: white; text-decoration: none; border-radius: 30px; font-weight: bold; font-size: 18px; }
-                    .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
-                    .valid { background: #fff3e0; padding: 10px; border-radius: 5px; margin: 20px 0; }
-                </style>
-            </head>
-            <body>
-                <div class="container">
-                    <div class="header">
-                        <div class="discount">${discountPercent}% DE RÉDUCTION</div>
-                        <p>Exclusif pour vous!</p>
-                    </div>
-                    <div class="content">
-                        <h2>${promoTitle}</h2>
-                        <p>${promoDescription}</p>
-                        <div class="valid">
-                            <strong>Valable jusqu'au:</strong> ${validUntil}<br>
-                            <strong>Code:</strong> ${promoCode}
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <style>
+                        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                        .header { background: linear-gradient(135deg, #e91e63, #ff5722); color: white; padding: 40px; text-align: center; border-radius: 10px 10px 0 0; }
+                        .discount { font-size: 48px; font-weight: bold; }
+                        .content { padding: 30px; background: #f9f9f9; text-align: center; }
+                        .btn { display: inline-block; padding: 15px 40px; background: #e91e63; color: white; text-decoration: none; border-radius: 30px; font-weight: bold; font-size: 18px; }
+                        .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
+                        .valid { background: #fff3e0; padding: 10px; border-radius: 5px; margin: 20px 0; }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <div class="header">
+                            <div class="discount">${discountPercent}% DE RÉDUCTION</div>
+                            <p>Exclusif pour vous!</p>
                         </div>
-                        <a href="${orderUrl}" class="btn">Commander</a>
+                        <div class="content">
+                            <h2>${promoTitle}</h2>
+                            <p>${promoDescription}</p>
+                            <div class="valid">
+                                <strong>Valable jusqu'au:</strong> ${validUntil}<br>
+                                <strong>Code:</strong> ${promoCode}
+                            </div>
+                            <a href="${orderUrl}" class="btn">Commander</a>
+                        </div>
+                        <div class="footer">
+                            <p>© ${year} ${restaurantName}. Tous droits réservés.</p>
+                            <p><a href="${unsubscribeUrl}">Se désabonner</a></p>
+                        </div>
                     </div>
-                    <div class="footer">
-                        <p>© ${year} ${restaurantName}. Tous droits réservés.</p>
-                        <p><a href="${unsubscribeUrl}">Se désabonner</a></p>
-                    </div>
-                </div>
-            </body>
-            </html>
-            """;
+                </body>
+                </html>
+                """;
     }
 
     private String getPromotionHtmlIt() {
         return """
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <meta charset="UTF-8">
-                <style>
-                    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-                    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-                    .header { background: linear-gradient(135deg, #e91e63, #ff5722); color: white; padding: 40px; text-align: center; border-radius: 10px 10px 0 0; }
-                    .discount { font-size: 48px; font-weight: bold; }
-                    .content { padding: 30px; background: #f9f9f9; text-align: center; }
-                    .btn { display: inline-block; padding: 15px 40px; background: #e91e63; color: white; text-decoration: none; border-radius: 30px; font-weight: bold; font-size: 18px; }
-                    .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
-                    .valid { background: #fff3e0; padding: 10px; border-radius: 5px; margin: 20px 0; }
-                </style>
-            </head>
-            <body>
-                <div class="container">
-                    <div class="header">
-                        <div class="discount">${discountPercent}% DI SCONTO</div>
-                        <p>Esclusivo per te!</p>
-                    </div>
-                    <div class="content">
-                        <h2>${promoTitle}</h2>
-                        <p>${promoDescription}</p>
-                        <div class="valid">
-                            <strong>Valido fino al:</strong> ${validUntil}<br>
-                            <strong>Codice:</strong> ${promoCode}
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <style>
+                        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                        .header { background: linear-gradient(135deg, #e91e63, #ff5722); color: white; padding: 40px; text-align: center; border-radius: 10px 10px 0 0; }
+                        .discount { font-size: 48px; font-weight: bold; }
+                        .content { padding: 30px; background: #f9f9f9; text-align: center; }
+                        .btn { display: inline-block; padding: 15px 40px; background: #e91e63; color: white; text-decoration: none; border-radius: 30px; font-weight: bold; font-size: 18px; }
+                        .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
+                        .valid { background: #fff3e0; padding: 10px; border-radius: 5px; margin: 20px 0; }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <div class="header">
+                            <div class="discount">${discountPercent}% DI SCONTO</div>
+                            <p>Esclusivo per te!</p>
                         </div>
-                        <a href="${orderUrl}" class="btn">Ordina ora</a>
+                        <div class="content">
+                            <h2>${promoTitle}</h2>
+                            <p>${promoDescription}</p>
+                            <div class="valid">
+                                <strong>Valido fino al:</strong> ${validUntil}<br>
+                                <strong>Codice:</strong> ${promoCode}
+                            </div>
+                            <a href="${orderUrl}" class="btn">Ordina ora</a>
+                        </div>
+                        <div class="footer">
+                            <p>© ${year} ${restaurantName}. Tutti i diritti riservati.</p>
+                            <p><a href="${unsubscribeUrl}">Annulla iscrizione</a></p>
+                        </div>
                     </div>
-                    <div class="footer">
-                        <p>© ${year} ${restaurantName}. Tutti i diritti riservati.</p>
-                        <p><a href="${unsubscribeUrl}">Annulla iscrizione</a></p>
-                    </div>
-                </div>
-            </body>
-            </html>
-            """;
+                </body>
+                </html>
+                """;
     }
 }

@@ -156,7 +156,7 @@ class ReceiptTemplateServiceTest {
     void resetTemplate_shouldResetToDefaults() {
         germanTemplate.setThankYouMessage("Custom message");
         germanTemplate.setShowLogo(false);
-        
+
         when(receiptTemplateRepository.findById(1L)).thenReturn(Optional.of(germanTemplate));
         when(receiptTemplateRepository.save(any(ReceiptTemplate.class))).thenAnswer(inv -> inv.getArgument(0));
 
@@ -171,13 +171,13 @@ class ReceiptTemplateServiceTest {
     void languageEnum_shouldHaveCorrectValues() {
         assertThat(Language.DE.getNativeName()).isEqualTo("Deutsch");
         assertThat(Language.DE.getEnglishName()).isEqualTo("German");
-        
+
         assertThat(Language.EN.getNativeName()).isEqualTo("English");
         assertThat(Language.EN.getEnglishName()).isEqualTo("English");
-        
+
         assertThat(Language.FR.getNativeName()).isEqualTo("Français");
         assertThat(Language.FR.getEnglishName()).isEqualTo("French");
-        
+
         assertThat(Language.IT.getNativeName()).isEqualTo("Italiano");
         assertThat(Language.IT.getEnglishName()).isEqualTo("Italian");
     }

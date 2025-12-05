@@ -36,8 +36,7 @@ public class ReceiptTemplateController {
                 .map(lang -> Map.of(
                         "code", lang.name(),
                         "nativeName", lang.getNativeName(),
-                        "englishName", lang.getEnglishName()
-                ))
+                        "englishName", lang.getEnglishName()))
                 .collect(Collectors.toList());
         return ResponseEntity.ok(languages);
     }

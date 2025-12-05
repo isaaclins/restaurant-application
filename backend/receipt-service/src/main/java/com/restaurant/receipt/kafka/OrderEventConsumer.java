@@ -134,7 +134,8 @@ public class OrderEventConsumer {
     }
 
     private OrderType parseOrderType(String type) {
-        if (type == null) return OrderType.PICKUP;
+        if (type == null)
+            return OrderType.PICKUP;
         try {
             return OrderType.valueOf(type.toUpperCase());
         } catch (IllegalArgumentException e) {

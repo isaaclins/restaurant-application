@@ -74,8 +74,7 @@ class EmailServiceTest {
                 variables,
                 1L,
                 1L,
-                null
-        );
+                null);
 
         ArgumentCaptor<Notification> captor = ArgumentCaptor.forClass(Notification.class);
         verify(notificationRepository).save(captor.capture());
@@ -102,8 +101,7 @@ class EmailServiceTest {
                 new HashMap<>(),
                 1L,
                 1L,
-                null
-        );
+                null);
 
         ArgumentCaptor<Notification> captor = ArgumentCaptor.forClass(Notification.class);
         verify(notificationRepository).save(captor.capture());
@@ -127,8 +125,7 @@ class EmailServiceTest {
                 new HashMap<>(),
                 null,
                 null,
-                "REC-001"
-        );
+                "REC-001");
 
         ArgumentCaptor<Notification> captor = ArgumentCaptor.forClass(Notification.class);
         verify(notificationRepository).save(captor.capture());
