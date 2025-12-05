@@ -960,10 +960,11 @@ function KDSPage() {
     },
   });
 
-  // Filter active orders (not delivered/picked up/cancelled)
+  // Filter active orders (not delivered/picked up/cancelled) and with items
   const activeOrders = useMemo(() => {
     return orders.filter(
-      (order) => !['DELIVERED', 'PICKED_UP', 'CANCELLED'].includes(order.status)
+      (order) => !['DELIVERED', 'PICKED_UP', 'CANCELLED'].includes(order.status) &&
+                 order.items && order.items.length > 0
     );
   }, [orders]);
 

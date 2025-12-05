@@ -144,6 +144,27 @@ function StatisticsPage() {
       .sort((a, b) => b.quantity - a.quantity)
       .slice(0, 10);
 
+    // Calculate average completion time (order created to delivered/picked_up)
+    const completedOrdersWithTime = orders.filter((o: Order) => 
+      (o.status === 'DELIVERED' || o.status === 'PICKED_UP') && o.createdAt && o.updatedAt
+    );
+    let avgCompletionTime = '- min';
+    if (completedOrdersWithTime.length > 0) {
+      const totalMinutes = completedOrdersWithTime.reduce((sum: number, o: Order) => {
+        const created = new Date(o.createdAt).getTime();
+        const completed = new Date(o.updatedAt!).getTime();
+        return sum + (completed - created) / (1000 * 60); // Convert to minutes
+      }, 0);
+      const avgMinutes = Math.round(totalMinutes / completedOrdersWithTime.length);
+      if (avgMinutes >= 60) {
+        const hours = Math.floor(avgMinutes / 60);
+        const mins = avgMinutes % 60;
+        avgCompletionTime = `${hours}h ${mins}m`;
+      } else {
+        avgCompletionTime = `${avgMinutes} min`;
+      }
+    }
+
     return {
       totalOrders,
       completedOrders,
@@ -155,6 +176,7 @@ function StatisticsPage() {
       ordersByType: { pickup: pickupOrders, delivery: deliveryOrders },
       ordersByHour,
       topProducts,
+      avgCompletionTime,
     };
   }, [ordersData, startDate, endDate]);
 
@@ -320,30 +342,21 @@ function StatisticsPage() {
             </div>
           </div>
 
-          {/* Emails Sent */}
+          {/* Average Completion Time */}
           <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl p-6 text-white shadow-lg">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-orange-100 text-sm font-medium">Emails Sent</p>
+                <p className="text-orange-100 text-sm font-medium">Avg Completion Time</p>
                 <p className="text-3xl font-bold mt-1">
-                  {notificationStats?.sent || 0}
+                  {orderStats?.avgCompletionTime || '- min'}
                 </p>
                 <p className="text-orange-200 text-sm mt-2 flex items-center gap-1">
-                  {(notificationStats?.failed || 0) > 0 ? (
-                    <>
-                      <XCircle className="w-4 h-4" />
-                      {notificationStats?.failed} failed
-                    </>
-                  ) : (
-                    <>
-                      <CheckCircle className="w-4 h-4" />
-                      All delivered
-                    </>
-                  )}
+                  <Clock className="w-4 h-4" />
+                  Order to ready
                 </p>
               </div>
               <div className="bg-white/20 p-3 rounded-lg">
-                <Mail className="w-8 h-8" />
+                <Clock className="w-8 h-8" />
               </div>
             </div>
           </div>

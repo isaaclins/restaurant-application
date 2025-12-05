@@ -20,6 +20,11 @@ export const ordersApi = {
     return response.data;
   },
 
+  // Delete order
+  deleteOrder: async (id: number): Promise<void> => {
+    await api.delete(`/api/orders/${id}`);
+  },
+
   // Create manual order (walk-in customer)
   createManualOrder: async (order: Partial<Order>): Promise<Order> => {
     const response = await api.post('/api/orders/manual', order);
