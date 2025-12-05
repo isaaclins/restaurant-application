@@ -504,14 +504,14 @@ run_tests() {
                 cd "$PROJECT_ROOT/backend/$service"
                 
                 if [ -f "mvnw" ]; then
-                    if ./mvnw test -q; then
+                    if ./mvnw test; then
                         print_success "$service tests passed"
                     else
                         print_error "$service tests failed"
                         test_failed=true
                     fi
                 elif [ -f "pom.xml" ]; then
-                    if mvn test -q; then
+                    if mvn test; then
                         print_success "$service tests passed"
                     else
                         print_error "$service tests failed"
@@ -538,7 +538,7 @@ run_tests() {
             
             # Check if test script exists
             if npm run 2>/dev/null | grep -q "test"; then
-                if npm run test -- --passWithNoTests 2>/dev/null || npm test -- --passWithNoTests 2>/dev/null; then
+                if npm run test -- --passWithNoTests || npm test -- --passWithNoTests; then
                     print_success "Client tests passed"
                 else
                     print_error "Client tests failed"
@@ -564,7 +564,7 @@ run_tests() {
             
             # Check if test script exists
             if npm run 2>/dev/null | grep -q "test"; then
-                if npm run test -- --passWithNoTests 2>/dev/null || npm test -- --passWithNoTests 2>/dev/null; then
+                if npm run test -- --passWithNoTests || npm test -- --passWithNoTests; then
                     print_success "Website tests passed"
                 else
                     print_error "Website tests failed"
