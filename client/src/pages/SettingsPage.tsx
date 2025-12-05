@@ -1890,11 +1890,26 @@ function DeveloperSettings() {
 
         const totalPrice = items.reduce((sum, item) => sum + item.totalPrice, 0);
 
-        // Random time offset for variety
-        const hoursAgo = Math.floor(Math.random() * 48); // Up to 48 hours ago
-        const orderTime = new Date(Date.now() - hoursAgo * 60 * 60 * 1000);
-        const pad = (n: number) => n.toString().padStart(2, '0');
-        const estimatedDelivery = `${orderTime.getFullYear()}-${pad(orderTime.getMonth() + 1)}-${pad(orderTime.getDate())}T${pad(orderTime.getHours() + 1)}:${pad(orderTime.getMinutes())}:${pad(orderTime.getSeconds())}`;
+        // For orders that will stay pending/in-progress, create them with future estimated times
+        // For completed orders, create them in the past
+        let orderTime: Date;
+        let estimatedDelivery: string;
+        
+        if (i < 8) {
+          // Active orders: created now with ETA in the future (10-45 minutes from now)
+          orderTime = new Date();
+          const futureMinutes = Math.floor(Math.random() * 35) + 10; // 10-45 minutes from now
+          const etaTime = new Date(Date.now() + futureMinutes * 60 * 1000);
+          const pad = (n: number) => n.toString().padStart(2, '0');
+          estimatedDelivery = `${etaTime.getFullYear()}-${pad(etaTime.getMonth() + 1)}-${pad(etaTime.getDate())}T${pad(etaTime.getHours())}:${pad(etaTime.getMinutes())}:${pad(etaTime.getSeconds())}`;
+        } else {
+          // Historical orders: created in the past
+          const hoursAgo = Math.floor(Math.random() * 48) + 1; // 1-48 hours ago
+          orderTime = new Date(Date.now() - hoursAgo * 60 * 60 * 1000);
+          const etaTime = new Date(orderTime.getTime() + 30 * 60 * 1000); // 30 min after order
+          const pad = (n: number) => n.toString().padStart(2, '0');
+          estimatedDelivery = `${etaTime.getFullYear()}-${pad(etaTime.getMonth() + 1)}-${pad(etaTime.getDate())}T${pad(etaTime.getHours())}:${pad(etaTime.getMinutes())}:${pad(etaTime.getSeconds())}`;
+        }
 
         const orderData = {
           customerName,
