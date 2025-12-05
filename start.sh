@@ -10,6 +10,7 @@
 #   --website   Start the React website dev server
 #   --infra     Start only infrastructure (Docker: MySQL, Redis, Kafka)
 #   --all       Start everything
+#   --test      Run tests as if in CI/CD pipeline
 #   --stop      Stop all running services
 #   --help      Show this help message
 #
@@ -18,6 +19,7 @@
 #   ./start.sh --client
 #   ./start.sh --all
 #   ./start.sh --infra
+#   ./start.sh --test
 #   ./start.sh --stop
 
 set -e
@@ -32,12 +34,48 @@ NC='\033[0m' # No Color
 # Project root directory
 PROJECT_ROOT="$(cd "$(dirname "$0")" && pwd)"
 
+# ============================================================================
+# Load Environment Variables from .env file
+# ============================================================================
+
+load_env() {
+    local env_file="$PROJECT_ROOT/.env"
+    
+    if [ -f "$env_file" ]; then
+        print_info "Loading environment variables from .env..."
+        
+        # Export all variables from .env file (ignore comments and empty lines)
+        set -a
+        while IFS='=' read -r key value; do
+            # Skip comments and empty lines
+            if [[ ! "$key" =~ ^# && -n "$key" ]]; then
+                # Remove leading/trailing whitespace and quotes
+                key=$(echo "$key" | xargs)
+                value=$(echo "$value" | xargs)
+                # Remove surrounding quotes if present
+                value="${value%\"}"
+                value="${value#\"}"
+                value="${value%\'}"
+                value="${value#\'}"
+                export "$key=$value"
+            fi
+        done < <(grep -v '^#' "$env_file" | grep -v '^$' | grep '=')
+        set +a
+        
+        print_success "Environment variables loaded"
+    else
+        print_warning ".env file not found at $env_file"
+        print_info "Copy .env.example to .env and configure your settings"
+    fi
+}
+
 # Flags
 START_BACKEND=false
 START_CLIENT=false
 START_WEBSITE=false
 START_INFRA=false
 STOP_ALL=false
+RUN_TESTS=false
 
 # ============================================================================
 # Helper Functions
@@ -78,6 +116,7 @@ show_help() {
     echo "  --website   Start the React website dev server"
     echo "  --infra     Start only infrastructure (Docker: MySQL, Redis, Kafka)"
     echo "  --all       Start everything"
+    echo "  --test      Run tests as if in CI/CD pipeline"
     echo "  --stop      Stop all running services"
     echo "  --help      Show this help message"
     echo ""
@@ -85,6 +124,7 @@ show_help() {
     echo "  ./start.sh --backend --website"
     echo "  ./start.sh --client"
     echo "  ./start.sh --all"
+    echo "  ./start.sh --test"
     echo "  ./start.sh --stop"
 }
 
@@ -250,10 +290,16 @@ stop_backend() {
 start_website() {
     print_header "Starting Website (React)"
     
-    cd "$PROJECT_ROOT/website"
-    
     if [ ! -d "$PROJECT_ROOT/website" ]; then
         print_warning "Website directory not found. Skipping..."
+        return
+    fi
+    
+    cd "$PROJECT_ROOT/website"
+    
+    # Check if package.json exists
+    if [ ! -f "package.json" ]; then
+        print_warning "Website package.json not found. Skipping..."
         return
     fi
     
@@ -288,10 +334,16 @@ stop_website() {
 start_client() {
     print_header "Starting Client (Tauri)"
     
-    cd "$PROJECT_ROOT/client"
-    
     if [ ! -d "$PROJECT_ROOT/client" ]; then
         print_warning "Client directory not found. Skipping..."
+        return
+    fi
+    
+    cd "$PROJECT_ROOT/client"
+    
+    # Check if package.json exists
+    if [ ! -f "package.json" ]; then
+        print_warning "Client package.json not found. Skipping..."
         return
     fi
     
@@ -316,6 +368,108 @@ stop_client() {
     pkill -f "tauri" 2>/dev/null || true
     
     print_success "Client stopped"
+}
+
+# ============================================================================
+# Run Tests (CI/CD Pipeline Mode)
+# ============================================================================
+
+run_tests() {
+    print_header "Running Tests (CI/CD Pipeline Mode)"
+    
+    local test_failed=false
+    
+    # Backend tests
+    if [ -d "$PROJECT_ROOT/backend" ]; then
+        print_info "Running backend tests..."
+        
+        local services=("eureka-server" "api-gateway" "product-service" "cart-service" "order-service" "payment-service" "auth-service")
+        
+        for service in "${services[@]}"; do
+            if [ -d "$PROJECT_ROOT/backend/$service" ]; then
+                print_info "Testing $service..."
+                cd "$PROJECT_ROOT/backend/$service"
+                
+                if [ -f "mvnw" ]; then
+                    if ./mvnw test -q; then
+                        print_success "$service tests passed"
+                    else
+                        print_error "$service tests failed"
+                        test_failed=true
+                    fi
+                elif [ -f "pom.xml" ]; then
+                    if mvn test -q; then
+                        print_success "$service tests passed"
+                    else
+                        print_error "$service tests failed"
+                        test_failed=true
+                    fi
+                else
+                    print_warning "$service: No test configuration found, skipping..."
+                fi
+            fi
+        done
+    fi
+    
+    # Client tests
+    if [ -d "$PROJECT_ROOT/client" ]; then
+        print_info "Running client tests..."
+        cd "$PROJECT_ROOT/client"
+        
+        if [ -f "package.json" ]; then
+            # Install dependencies if needed
+            if [ ! -d "node_modules" ]; then
+                print_info "Installing client dependencies..."
+                npm install
+            fi
+            
+            # Check if test script exists
+            if npm run 2>/dev/null | grep -q "test"; then
+                if npm run test -- --passWithNoTests 2>/dev/null || npm test -- --passWithNoTests 2>/dev/null; then
+                    print_success "Client tests passed"
+                else
+                    print_error "Client tests failed"
+                    test_failed=true
+                fi
+            else
+                print_warning "No test script found in client, skipping..."
+            fi
+        fi
+    fi
+    
+    # Website tests
+    if [ -d "$PROJECT_ROOT/website" ]; then
+        print_info "Running website tests..."
+        cd "$PROJECT_ROOT/website"
+        
+        if [ -f "package.json" ]; then
+            # Install dependencies if needed
+            if [ ! -d "node_modules" ]; then
+                print_info "Installing website dependencies..."
+                npm install
+            fi
+            
+            # Check if test script exists
+            if npm run 2>/dev/null | grep -q "test"; then
+                if npm run test -- --passWithNoTests 2>/dev/null || npm test -- --passWithNoTests 2>/dev/null; then
+                    print_success "Website tests passed"
+                else
+                    print_error "Website tests failed"
+                    test_failed=true
+                fi
+            else
+                print_warning "No test script found in website, skipping..."
+            fi
+        fi
+    fi
+    
+    echo ""
+    if [ "$test_failed" = true ]; then
+        print_error "Some tests failed!"
+        exit 1
+    else
+        print_success "All tests passed!"
+    fi
 }
 
 # ============================================================================
@@ -366,6 +520,10 @@ while [[ $# -gt 0 ]]; do
             START_WEBSITE=true
             shift
             ;;
+        --test)
+            RUN_TESTS=true
+            shift
+            ;;
         --stop)
             STOP_ALL=true
             shift
@@ -394,7 +552,15 @@ if [ "$STOP_ALL" = true ]; then
     exit 0
 fi
 
+if [ "$RUN_TESTS" = true ]; then
+    run_tests
+    exit 0
+fi
+
 check_requirements
+
+# Load environment variables from .env file
+load_env
 
 if [ "$START_INFRA" = true ]; then
     start_infrastructure

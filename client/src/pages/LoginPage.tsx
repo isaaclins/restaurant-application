@@ -3,7 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
 import { authApi } from '../api/auth';
 import { useAuthStore } from '../stores/authStore';
-import { ChefHat, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { ChefHat, Eye, EyeOff, Loader2, Zap } from 'lucide-react';
+
+// Demo credentials for development
+const DEMO_CREDENTIALS = {
+  email: 'admin@restaurant.com',
+  password: 'admin123',
+};
 
 function LoginPage() {
   const [email, setEmail] = useState('');
@@ -15,20 +21,28 @@ function LoginPage() {
   const login = useAuthStore((state) => state.login);
 
   const loginMutation = useMutation({
-    mutationFn: () => authApi.login({ email, password }),
+    mutationFn: (creds: { email: string; password: string }) => 
+      authApi.login({ email: creds.email, password: creds.password }),
     onSuccess: (data) => {
       login(data.user, data.accessToken, data.refreshToken);
       navigate('/kds');
     },
-    onError: () => {
-      setError('Invalid email or password');
+    onError: (err: any) => {
+      setError(err?.response?.data?.message || 'Invalid email or password. Make sure the backend is running.');
     },
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    loginMutation.mutate();
+    loginMutation.mutate({ email, password });
+  };
+
+  const handleDemoLogin = () => {
+    setEmail(DEMO_CREDENTIALS.email);
+    setPassword(DEMO_CREDENTIALS.password);
+    setError('');
+    loginMutation.mutate(DEMO_CREDENTIALS);
   };
 
   return (
@@ -104,9 +118,28 @@ function LoginPage() {
               'Sign In'
             )}
           </button>
+
+          {/* Demo Login Button */}
+          <button
+            type="button"
+            onClick={handleDemoLogin}
+            disabled={loginMutation.isPending}
+            className="w-full bg-purple-500 text-white py-3 rounded-lg font-medium hover:bg-purple-600 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+          >
+            <Zap className="w-5 h-5 mr-2" />
+            Quick Demo Login
+          </button>
         </form>
 
-        <p className="text-center text-gray-500 text-sm mt-6">
+        {/* Demo Credentials Info */}
+        <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+          <p className="text-xs text-gray-500 text-center mb-2">Demo Credentials:</p>
+          <p className="text-sm text-gray-700 text-center font-mono">
+            admin@restaurant.com / admin123
+          </p>
+        </div>
+
+        <p className="text-center text-gray-500 text-sm mt-4">
           Staff and admin access only
         </p>
       </div>

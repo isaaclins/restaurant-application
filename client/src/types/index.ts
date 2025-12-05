@@ -1,6 +1,7 @@
 // Order Types
-export type OrderStatus = 'PENDING' | 'CONFIRMED' | 'PREPARING' | 'READY' | 'COMPLETED' | 'CANCELLED';
-export type OrderType = 'PICKUP' | 'DELIVERY';
+// Matches backend: PENDING, CONFIRMED, IN_PROGRESS, READY, DELIVERED, PICKED_UP, CANCELLED
+export type OrderStatus = 'PENDING' | 'CONFIRMED' | 'IN_PROGRESS' | 'READY' | 'DELIVERED' | 'PICKED_UP' | 'CANCELLED';
+export type OrderType = 'PICKUP' | 'DELIVERY' | 'DINE_IN';
 
 export interface OrderItem {
   id: number;
@@ -17,17 +18,28 @@ export interface Order {
   orderNumber: string;
   customerId?: number;
   customerName: string;
+  customerEmail?: string;
   customerPhone?: string;
+  // Delivery address fields
+  deliveryStreet?: string;
+  deliveryCity?: string;
+  deliveryPostalCode?: string;
+  // Computed for backward compatibility
   customerAddress?: string;
   orderType: OrderType;
   status: OrderStatus;
   items: OrderItem[];
-  subtotal: number;
-  deliveryFee: number;
-  total: number;
+  totalPrice: number;
+  // Aliases for compatibility
+  subtotal?: number;
+  deliveryFee?: number;
+  total?: number;
+  paymentMethod?: string;
   notes?: string;
   createdAt: string;
-  updatedAt: string;
+  updatedAt?: string;
+  estimatedDelivery?: string;
+  // Alias
   estimatedReadyTime?: string;
 }
 

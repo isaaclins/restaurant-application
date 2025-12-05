@@ -1,301 +1,750 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ordersApi } from '../api/orders';
 import { Order, OrderStatus } from '../types';
-import { format, differenceInMinutes } from 'date-fns';
+import { differenceInSeconds, differenceInMinutes, addMinutes, format } from 'date-fns';
 import {
   Clock,
   MapPin,
-  Phone,
-  CheckCircle,
-  ChefHat,
-  Package,
-  Truck,
+  CreditCard,
+  Check,
+  Plus,
+  Settings,
+  ArrowUpDown,
   RefreshCw,
 } from 'lucide-react';
 
-const statusColors: Record<OrderStatus, string> = {
-  PENDING: 'bg-red-500',
-  CONFIRMED: 'bg-orange-500',
-  PREPARING: 'bg-yellow-500',
-  READY: 'bg-green-500',
-  COMPLETED: 'bg-gray-400',
-  CANCELLED: 'bg-gray-600',
+// =============================================================================
+// Types
+// =============================================================================
+
+interface SelectedOrder extends Order {
+  itemChecks: Record<number, boolean>;
+}
+
+type SortMode = 'time' | 'item';
+
+// =============================================================================
+// Utility Functions
+// =============================================================================
+
+// Calculate time remaining until ETA (or time elapsed since order)
+function getTimeInfo(order: Order) {
+  const now = new Date();
+  const createdAt = new Date(order.createdAt);
+  
+  // If ETA is set, use it; otherwise use 15 min from creation as default
+  // Backend uses 'estimatedDelivery', frontend might use 'estimatedReadyTime'
+  const eta = order.estimatedDelivery 
+    ? new Date(order.estimatedDelivery)
+    : order.estimatedReadyTime
+      ? new Date(order.estimatedReadyTime)
+      : addMinutes(createdAt, 15);
+  
+  const secondsRemaining = differenceInSeconds(eta, now);
+  const minutesElapsed = differenceInMinutes(now, createdAt);
+  
+  return {
+    secondsRemaining,
+    minutesElapsed,
+    isOverdue: secondsRemaining < 0,
+    eta,
+  };
+}
+
+// Format countdown timer (MM:SS)
+function formatCountdown(seconds: number): string {
+  const absSeconds = Math.abs(seconds);
+  const mins = Math.floor(absSeconds / 60);
+  const secs = absSeconds % 60;
+  const sign = seconds < 0 ? '-' : '';
+  return `${sign}${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+}
+
+// Get color based on time remaining
+function getTimeColor(secondsRemaining: number): 'red' | 'yellow' | 'green' | 'blue' {
+  if (secondsRemaining < 0) return 'red';      // Overdue
+  if (secondsRemaining < 300) return 'red';    // < 5 min
+  if (secondsRemaining < 600) return 'yellow'; // < 10 min
+  return 'green';                               // OK
+}
+
+// Color classes for order cards
+const cardColorClasses = {
+  red: {
+    header: 'bg-red-400',
+    headerText: 'text-white',
+  },
+  yellow: {
+    header: 'bg-yellow-400',
+    headerText: 'text-gray-800',
+  },
+  green: {
+    header: 'bg-green-400',
+    headerText: 'text-white',
+  },
+  blue: {
+    header: 'bg-blue-400',
+    headerText: 'text-white',
+  },
 };
 
-const statusLabels: Record<OrderStatus, string> = {
-  PENDING: 'New',
-  CONFIRMED: 'Confirmed',
-  PREPARING: 'Preparing',
-  READY: 'Ready',
-  COMPLETED: 'Completed',
-  CANCELLED: 'Cancelled',
-};
+// =============================================================================
+// Order Card Component (for grid view)
+// =============================================================================
 
-function OrderCard({ order, onStatusChange }: { order: Order; onStatusChange: (id: number, status: OrderStatus) => void }) {
-  const [elapsedMinutes, setElapsedMinutes] = useState(0);
+interface OrderCardProps {
+  order: Order;
+  isSelected: boolean;
+  onClick: () => void;
+}
 
+function OrderCard({ order, isSelected, onClick }: OrderCardProps) {
+  const [timeInfo, setTimeInfo] = useState(getTimeInfo(order));
+  
   useEffect(() => {
     const interval = setInterval(() => {
-      setElapsedMinutes(differenceInMinutes(new Date(), new Date(order.createdAt)));
-    }, 30000); // Update every 30 seconds
-
-    setElapsedMinutes(differenceInMinutes(new Date(), new Date(order.createdAt)));
+      setTimeInfo(getTimeInfo(order));
+    }, 1000);
     return () => clearInterval(interval);
-  }, [order.createdAt]);
+  }, [order]);
 
-  const getNextStatus = (): OrderStatus | null => {
-    const flow: OrderStatus[] = ['PENDING', 'CONFIRMED', 'PREPARING', 'READY', 'COMPLETED'];
-    const currentIndex = flow.indexOf(order.status);
-    return currentIndex < flow.length - 1 ? flow[currentIndex + 1] : null;
-  };
-
-  const nextStatus = getNextStatus();
-
-  const getTimerColor = () => {
-    if (elapsedMinutes > 30) return 'text-red-600 bg-red-100';
-    if (elapsedMinutes > 15) return 'text-yellow-600 bg-yellow-100';
-    return 'text-green-600 bg-green-100';
-  };
+  const color = isSelected ? 'blue' : getTimeColor(timeInfo.secondsRemaining);
+  const colorClasses = cardColorClasses[color];
+  const itemCount = order.items.reduce((sum, item) => sum + item.quantity, 0);
 
   return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden">
+    <div 
+      onClick={onClick}
+      className={`cursor-pointer rounded-lg overflow-hidden shadow-md transition-transform hover:scale-[1.02] ${
+        isSelected ? 'ring-2 ring-blue-500' : ''
+      }`}
+    >
       {/* Header */}
-      <div className={`${statusColors[order.status]} px-4 py-2 flex items-center justify-between`}>
-        <div className="flex items-center space-x-2">
-          <span className="text-white font-bold">#{order.orderNumber}</span>
-          {order.orderType === 'DELIVERY' ? (
-            <Truck className="w-4 h-4 text-white" />
-          ) : (
-            <Package className="w-4 h-4 text-white" />
-          )}
+      <div className={`${colorClasses.header} px-3 py-2`}>
+        <div className={`text-xs ${colorClasses.headerText} opacity-80`}>
+          #{order.orderNumber}
         </div>
-        <span className={`px-2 py-1 rounded text-xs font-medium ${getTimerColor()}`}>
-          <Clock className="w-3 h-3 inline mr-1" />
-          {elapsedMinutes}m
-        </span>
+        <div className={`text-lg font-bold ${colorClasses.headerText} font-mono`}>
+          {formatCountdown(timeInfo.secondsRemaining)}
+        </div>
+        <div className={`text-xs ${colorClasses.headerText} opacity-80 truncate`}>
+          {order.customerName}
+        </div>
       </div>
-
-      {/* Content */}
-      <div className="p-4">
-        {/* Customer Info */}
-        <div className="mb-3 pb-3 border-b border-gray-100">
-          <p className="font-medium text-gray-800">{order.customerName}</p>
-          {order.customerPhone && (
-            <p className="text-sm text-gray-500 flex items-center mt-1">
-              <Phone className="w-3 h-3 mr-1" /> {order.customerPhone}
-            </p>
-          )}
-          {order.orderType === 'DELIVERY' && order.customerAddress && (
-            <p className="text-sm text-gray-500 flex items-center mt-1">
-              <MapPin className="w-3 h-3 mr-1" /> {order.customerAddress}
-            </p>
-          )}
+      
+      {/* Body */}
+      <div className="bg-white px-3 py-2">
+        <div className="text-sm text-gray-700">
+          {itemCount} ITEMS
         </div>
-
-        {/* Items */}
-        <div className="space-y-2 mb-4">
-          {order.items.map((item) => (
-            <div key={item.id} className="flex items-start">
-              <span className="font-medium text-orange-500 mr-2">{item.quantity}x</span>
-              <div className="flex-1">
-                <span className="text-gray-800">{item.productName}</span>
-                {item.notes && (
-                  <p className="text-xs text-gray-500 italic">{item.notes}</p>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Notes */}
-        {order.notes && (
-          <div className="bg-yellow-50 border border-yellow-200 rounded p-2 mb-4">
-            <p className="text-sm text-yellow-800">{order.notes}</p>
-          </div>
-        )}
-
-        {/* Total */}
-        <div className="flex justify-between items-center pt-2 border-t border-gray-100">
-          <span className="text-sm text-gray-500">Total</span>
-          <span className="font-bold text-lg">CHF {order.total.toFixed(2)}</span>
-        </div>
-
-        {/* Action Button */}
-        {nextStatus && (
-          <button
-            onClick={() => onStatusChange(order.id, nextStatus)}
-            className="w-full mt-4 py-2 px-4 bg-orange-500 text-white rounded-lg font-medium hover:bg-orange-600 transition flex items-center justify-center"
-          >
-            {nextStatus === 'CONFIRMED' && <CheckCircle className="w-4 h-4 mr-2" />}
-            {nextStatus === 'PREPARING' && <ChefHat className="w-4 h-4 mr-2" />}
-            {nextStatus === 'READY' && <Package className="w-4 h-4 mr-2" />}
-            {nextStatus === 'COMPLETED' && <CheckCircle className="w-4 h-4 mr-2" />}
-            Mark as {statusLabels[nextStatus]}
-          </button>
-        )}
-      </div>
-
-      {/* Footer */}
-      <div className="px-4 py-2 bg-gray-50 text-xs text-gray-500">
-        {format(new Date(order.createdAt), 'HH:mm - dd.MM.yyyy')}
       </div>
     </div>
   );
 }
 
+// =============================================================================
+// Pickup Column Component (left side)
+// =============================================================================
+
+interface PickupColumnProps {
+  orders: Order[];
+  selectedOrderId: number | null;
+  onSelectOrder: (order: Order) => void;
+}
+
+function PickupColumn({ orders, selectedOrderId, onSelectOrder }: PickupColumnProps) {
+  // Group orders by ETA (rough time buckets)
+  const groupedByEta = useMemo(() => {
+    const groups: { eta: string; orders: Order[] }[] = [];
+    
+    // Sort by ETA
+    const sorted = [...orders].sort((a, b) => {
+      const etaA = a.estimatedDelivery || a.estimatedReadyTime ? new Date(a.estimatedDelivery || a.estimatedReadyTime!) : addMinutes(new Date(a.createdAt), 15);
+      const etaB = b.estimatedDelivery || b.estimatedReadyTime ? new Date(b.estimatedDelivery || b.estimatedReadyTime!) : addMinutes(new Date(b.createdAt), 15);
+      return etaA.getTime() - etaB.getTime();
+    });
+
+    // Group by similar ETA times (within 5 minutes)
+    sorted.forEach((order) => {
+      const eta = order.estimatedDelivery || order.estimatedReadyTime 
+        ? new Date(order.estimatedDelivery || order.estimatedReadyTime!) 
+        : addMinutes(new Date(order.createdAt), 15);
+      
+      const etaLabel = format(eta, 'HH:mm');
+      
+      const existingGroup = groups.find(g => g.eta === etaLabel);
+      if (existingGroup) {
+        existingGroup.orders.push(order);
+      } else {
+        groups.push({ eta: etaLabel, orders: [order] });
+      }
+    });
+
+    return groups;
+  }, [orders]);
+
+  return (
+    <div className="flex flex-col h-full border-r border-gray-200">
+      <div className="p-4 border-b border-gray-200">
+        <h2 className="text-2xl font-light text-gray-800">Pickup</h2>
+      </div>
+      
+      <div className="flex-1 overflow-auto p-4">
+        {groupedByEta.map((group) => (
+          <div key={group.eta} className="mb-6">
+            <div className="text-lg font-bold text-gray-700 mb-2">{group.eta}</div>
+            <div className="space-y-3">
+              {group.orders.map((order) => (
+                <OrderCard
+                  key={order.id}
+                  order={order}
+                  isSelected={selectedOrderId === order.id}
+                  onClick={() => onSelectOrder(order)}
+                />
+              ))}
+            </div>
+          </div>
+        ))}
+        
+        {orders.length === 0 && (
+          <div className="text-center text-gray-400 py-8">
+            No pickup orders
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// =============================================================================
+// Delivery Grid Component (center)
+// =============================================================================
+
+interface DeliveryGridProps {
+  orders: Order[];
+  selectedOrderId: number | null;
+  onSelectOrder: (order: Order) => void;
+}
+
+function DeliveryGrid({ orders, selectedOrderId, onSelectOrder }: DeliveryGridProps) {
+  return (
+    <div className="flex flex-col h-full">
+      <div className="p-4 border-b border-gray-200 bg-blue-50">
+        <h2 className="text-2xl font-light text-gray-800 text-center">Delivery</h2>
+      </div>
+      
+      <div className="flex-1 overflow-auto p-4">
+        <div className="grid grid-cols-4 gap-3">
+          {orders.map((order) => (
+            <OrderCard
+              key={order.id}
+              order={order}
+              isSelected={selectedOrderId === order.id}
+              onClick={() => onSelectOrder(order)}
+            />
+          ))}
+        </div>
+        
+        {orders.length === 0 && (
+          <div className="text-center text-gray-400 py-8">
+            No delivery orders
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// =============================================================================
+// Detail Panel Component (right side)
+// =============================================================================
+
+interface DetailPanelProps {
+  order: SelectedOrder | null;
+  onToggleItem: (itemId: number) => void;
+  onComplete: () => void;
+  onDelete: () => void;
+}
+
+function DetailPanel({ order, onToggleItem, onComplete, onDelete }: DetailPanelProps) {
+  const [timeInfo, setTimeInfo] = useState(order ? getTimeInfo(order) : null);
+  
+  useEffect(() => {
+    if (!order) return;
+    
+    const interval = setInterval(() => {
+      setTimeInfo(getTimeInfo(order));
+    }, 1000);
+    
+    setTimeInfo(getTimeInfo(order));
+    return () => clearInterval(interval);
+  }, [order]);
+
+  if (!order) {
+    return (
+      <div className="flex flex-col h-full border-l border-gray-200 bg-gray-50">
+        <div className="flex-1 flex items-center justify-center text-gray-400">
+          Select an order to view details
+        </div>
+      </div>
+    );
+  }
+
+  const allChecked = order.items.every((item) => order.itemChecks[item.id]);
+
+  return (
+    <div className="flex flex-col h-full border-l border-gray-200">
+      {/* Header */}
+      <div className="p-4 border-b border-gray-200 bg-blue-50">
+        <div className="text-center">
+          <div className="text-sm text-gray-600">Ticket #{order.orderNumber}</div>
+        </div>
+        <div className="text-center mt-2">
+          <div className="text-3xl font-mono font-bold text-blue-600">
+            {timeInfo && formatCountdown(timeInfo.secondsRemaining)}
+          </div>
+        </div>
+      </div>
+
+      {/* Items List */}
+      <div className="flex-1 overflow-auto p-4">
+        <div className="space-y-4">
+          {order.items.map((item) => (
+            <div key={item.id} className="flex items-start">
+              <div className="flex-1">
+                <div className="text-sm text-orange-600 font-medium">
+                  {item.quantity}x {item.productName}
+                </div>
+                {item.notes && (
+                  <div className="text-xs text-gray-500 ml-4">
+                    - {item.notes}
+                  </div>
+                )}
+              </div>
+              <button
+                onClick={() => onToggleItem(item.id)}
+                className={`w-6 h-6 rounded border-2 flex items-center justify-center transition ${
+                  order.itemChecks[item.id]
+                    ? 'bg-green-500 border-green-500 text-white'
+                    : 'border-gray-300 hover:border-gray-400'
+                }`}
+              >
+                {order.itemChecks[item.id] && <Check className="w-4 h-4" />}
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Footer Info */}
+      <div className="p-4 border-t border-gray-200 bg-gray-50">
+        {order.orderType === 'DELIVERY' && (order.deliveryStreet || order.customerAddress) && (
+          <div className="flex items-center text-sm text-gray-600 mb-2">
+            <MapPin className="w-4 h-4 mr-2" />
+            Location: {order.deliveryStreet 
+              ? `${order.deliveryStreet}, ${order.deliveryPostalCode} ${order.deliveryCity}`
+              : order.customerAddress}
+          </div>
+        )}
+        <div className="flex items-center text-sm text-gray-600">
+          <CreditCard className="w-4 h-4 mr-2" />
+          Payment: {order.paymentMethod || 'Card'}
+        </div>
+      </div>
+
+      {/* Action Buttons */}
+      <div className="p-4 border-t border-gray-200 flex space-x-3">
+        <button
+          onClick={onComplete}
+          disabled={!allChecked}
+          className={`flex-1 py-3 rounded-lg font-medium flex items-center justify-center transition ${
+            allChecked
+              ? 'bg-green-500 text-white hover:bg-green-600'
+              : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+          }`}
+        >
+          COMPLETE
+        </button>
+        <button
+          onClick={onDelete}
+          className="flex-1 py-3 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600 transition flex items-center justify-center"
+        >
+          DELETE
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// =============================================================================
+// Bottom Bar Component
+// =============================================================================
+
+interface BottomBarProps {
+  sortMode: SortMode;
+  onSortModeChange: (mode: SortMode) => void;
+  onManageStore: () => void;
+  onCreateOrder: () => void;
+}
+
+function BottomBar({ sortMode, onSortModeChange, onManageStore, onCreateOrder }: BottomBarProps) {
+  return (
+    <div className="bg-white border-t border-gray-200 px-4 py-3 flex items-center justify-between">
+      <div className="flex space-x-3">
+        <button
+          onClick={onManageStore}
+          className="px-4 py-2 bg-purple-100 text-purple-700 rounded-lg font-medium hover:bg-purple-200 transition flex items-center"
+        >
+          <Settings className="w-4 h-4 mr-2" />
+          MANAGE STORE
+        </button>
+        
+        <button
+          onClick={() => onSortModeChange('time')}
+          className={`px-4 py-2 rounded-lg font-medium transition flex items-center ${
+            sortMode === 'time'
+              ? 'bg-blue-100 text-blue-700'
+              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+          }`}
+        >
+          <Clock className="w-4 h-4 mr-2" />
+          SORT BY TIME
+        </button>
+        
+        <button
+          onClick={() => onSortModeChange('item')}
+          className={`px-4 py-2 rounded-lg font-medium transition flex items-center ${
+            sortMode === 'item'
+              ? 'bg-blue-100 text-blue-700'
+              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+          }`}
+        >
+          <ArrowUpDown className="w-4 h-4 mr-2" />
+          SORT BY ITEM
+        </button>
+      </div>
+
+      <button
+        onClick={onCreateOrder}
+        className="px-6 py-2 bg-blue-100 text-blue-700 rounded-lg font-medium hover:bg-blue-200 transition flex items-center"
+      >
+        <Plus className="w-4 h-4 mr-2" />
+        CREATE NEW ORDER
+      </button>
+    </div>
+  );
+}
+
+// =============================================================================
+// Create Order Modal
+// =============================================================================
+
+interface CreateOrderModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSubmit: (order: Partial<Order>) => void;
+}
+
+function CreateOrderModal({ isOpen, onClose, onSubmit }: CreateOrderModalProps) {
+  const [customerName, setCustomerName] = useState('');
+  const [customerPhone, setCustomerPhone] = useState('');
+  const [customerAddress, setCustomerAddress] = useState('');
+  const [orderType, setOrderType] = useState<'PICKUP' | 'DELIVERY'>('PICKUP');
+  const [notes, setNotes] = useState('');
+
+  if (!isOpen) return null;
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSubmit({
+      customerName,
+      customerPhone,
+      customerAddress: orderType === 'DELIVERY' ? customerAddress : undefined,
+      orderType,
+      notes,
+      items: [], // Items would be added via a product selector
+    });
+    onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
+        <div className="p-4 border-b border-gray-200">
+          <h2 className="text-lg font-bold">Create New Order</h2>
+        </div>
+        
+        <form onSubmit={handleSubmit} className="p-4 space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Customer Name *
+            </label>
+            <input
+              type="text"
+              value={customerName}
+              onChange={(e) => setCustomerName(e.target.value)}
+              required
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Phone
+            </label>
+            <input
+              type="tel"
+              value={customerPhone}
+              onChange={(e) => setCustomerPhone(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Order Type
+            </label>
+            <div className="flex space-x-4">
+              <label className="flex items-center">
+                <input
+                  type="radio"
+                  checked={orderType === 'PICKUP'}
+                  onChange={() => setOrderType('PICKUP')}
+                  className="mr-2"
+                />
+                Pickup
+              </label>
+              <label className="flex items-center">
+                <input
+                  type="radio"
+                  checked={orderType === 'DELIVERY'}
+                  onChange={() => setOrderType('DELIVERY')}
+                  className="mr-2"
+                />
+                Delivery
+              </label>
+            </div>
+          </div>
+
+          {orderType === 'DELIVERY' && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Delivery Address *
+              </label>
+              <input
+                type="text"
+                value={customerAddress}
+                onChange={(e) => setCustomerAddress(e.target.value)}
+                required={orderType === 'DELIVERY'}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+          )}
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Notes
+            </label>
+            <textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              rows={3}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
+
+          <div className="flex space-x-3 pt-4">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 py-2 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 transition"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="flex-1 py-2 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 transition"
+            >
+              Create Order
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+// =============================================================================
+// Main KDS Page Component
+// =============================================================================
+
 function KDSPage() {
   const queryClient = useQueryClient();
-  const [filter, setFilter] = useState<'all' | 'pickup' | 'delivery'>('all');
+  const [selectedOrder, setSelectedOrder] = useState<SelectedOrder | null>(null);
+  const [sortMode, setSortMode] = useState<SortMode>('time');
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
-  const { data: orders = [], isLoading, refetch } = useQuery({
+  // Fetch orders
+  const { data: orders = [], isLoading } = useQuery({
     queryKey: ['orders'],
     queryFn: () => ordersApi.getOrders(),
-    refetchInterval: 10000, // Refresh every 10 seconds
+    refetchInterval: 5000, // Refresh every 5 seconds for real-time updates
   });
 
+  // Update status mutation
   const updateStatusMutation = useMutation({
     mutationFn: ({ id, status }: { id: number; status: OrderStatus }) =>
       ordersApi.updateStatus(id, status),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['orders'] });
+      setSelectedOrder(null);
     },
   });
 
-  const handleStatusChange = (id: number, status: OrderStatus) => {
-    updateStatusMutation.mutate({ id, status });
-  };
-
-  const filteredOrders = orders.filter((order) => {
-    if (filter === 'pickup') return order.orderType === 'PICKUP';
-    if (filter === 'delivery') return order.orderType === 'DELIVERY';
-    return true;
+  // Create order mutation
+  const createOrderMutation = useMutation({
+    mutationFn: (order: Partial<Order>) => ordersApi.createManualOrder(order),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+    },
   });
 
-  const activeOrders = filteredOrders.filter(
-    (order) => !['COMPLETED', 'CANCELLED'].includes(order.status)
-  );
+  // Filter active orders (not delivered/picked up/cancelled)
+  const activeOrders = useMemo(() => {
+    return orders.filter(
+      (order) => !['DELIVERED', 'PICKED_UP', 'CANCELLED'].includes(order.status)
+    );
+  }, [orders]);
 
-  const groupedOrders = {
-    pending: activeOrders.filter((o) => o.status === 'PENDING'),
-    preparing: activeOrders.filter((o) => ['CONFIRMED', 'PREPARING'].includes(o.status)),
-    ready: activeOrders.filter((o) => o.status === 'READY'),
+  // Split by order type
+  const pickupOrders = useMemo(() => {
+    const filtered = activeOrders.filter((o) => o.orderType === 'PICKUP');
+    if (sortMode === 'time') {
+      return filtered.sort((a, b) => 
+        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+      );
+    }
+    // Sort by item count
+    return filtered.sort((a, b) => 
+      a.items.reduce((s, i) => s + i.quantity, 0) - b.items.reduce((s, i) => s + i.quantity, 0)
+    );
+  }, [activeOrders, sortMode]);
+
+  const deliveryOrders = useMemo(() => {
+    const filtered = activeOrders.filter((o) => o.orderType === 'DELIVERY');
+    if (sortMode === 'time') {
+      return filtered.sort((a, b) => 
+        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+      );
+    }
+    return filtered.sort((a, b) => 
+      a.items.reduce((s, i) => s + i.quantity, 0) - b.items.reduce((s, i) => s + i.quantity, 0)
+    );
+  }, [activeOrders, sortMode]);
+
+  // Handle order selection
+  const handleSelectOrder = (order: Order) => {
+    const itemChecks: Record<number, boolean> = {};
+    order.items.forEach((item) => {
+      itemChecks[item.id] = false;
+    });
+    setSelectedOrder({ ...order, itemChecks });
+  };
+
+  // Handle item toggle
+  const handleToggleItem = (itemId: number) => {
+    if (!selectedOrder) return;
+    setSelectedOrder({
+      ...selectedOrder,
+      itemChecks: {
+        ...selectedOrder.itemChecks,
+        [itemId]: !selectedOrder.itemChecks[itemId],
+      },
+    });
+  };
+
+  // Handle complete order
+  const handleComplete = () => {
+    if (!selectedOrder) return;
+    // Use PICKED_UP for pickup orders, DELIVERED for delivery orders
+    const completedStatus = selectedOrder.orderType === 'PICKUP' ? 'PICKED_UP' : 'DELIVERED';
+    updateStatusMutation.mutate({ id: selectedOrder.id, status: completedStatus });
+  };
+
+  // Handle delete/cancel order
+  const handleDelete = () => {
+    if (!selectedOrder) return;
+    if (confirm('Are you sure you want to cancel this order?')) {
+      updateStatusMutation.mutate({ id: selectedOrder.id, status: 'CANCELLED' });
+    }
+  };
+
+  // Handle create order
+  const handleCreateOrder = (order: Partial<Order>) => {
+    createOrderMutation.mutate(order);
+  };
+
+  // Navigate to settings
+  const handleManageStore = () => {
+    window.location.href = '/settings';
   };
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <RefreshCw className="w-8 h-8 text-orange-500 animate-spin" />
+      <div className="flex items-center justify-center h-screen bg-gray-100">
+        <RefreshCw className="w-12 h-12 text-blue-500 animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="h-full flex flex-col">
-      {/* Header */}
-      <div className="bg-white shadow px-6 py-4 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-800">Kitchen Display</h1>
-          <p className="text-sm text-gray-500">{activeOrders.length} active orders</p>
+    <div className="h-screen flex flex-col bg-gray-100">
+      {/* Main Content - 3 Column Layout */}
+      <div className="flex-1 flex overflow-hidden">
+        {/* Left Column - Pickup */}
+        <div className="w-64 bg-white flex-shrink-0">
+          <PickupColumn
+            orders={pickupOrders}
+            selectedOrderId={selectedOrder?.id ?? null}
+            onSelectOrder={handleSelectOrder}
+          />
         </div>
 
-        <div className="flex items-center space-x-4">
-          {/* Filter */}
-          <div className="flex bg-gray-100 rounded-lg p-1">
-            <button
-              onClick={() => setFilter('all')}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition ${
-                filter === 'all' ? 'bg-white shadow text-gray-800' : 'text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              All
-            </button>
-            <button
-              onClick={() => setFilter('pickup')}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition flex items-center ${
-                filter === 'pickup' ? 'bg-white shadow text-gray-800' : 'text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              <Package className="w-4 h-4 mr-1" /> Pickup
-            </button>
-            <button
-              onClick={() => setFilter('delivery')}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition flex items-center ${
-                filter === 'delivery' ? 'bg-white shadow text-gray-800' : 'text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              <Truck className="w-4 h-4 mr-1" /> Delivery
-            </button>
-          </div>
+        {/* Center - Delivery Grid */}
+        <div className="flex-1 bg-gray-50 border-x border-gray-200">
+          <DeliveryGrid
+            orders={deliveryOrders}
+            selectedOrderId={selectedOrder?.id ?? null}
+            onSelectOrder={handleSelectOrder}
+          />
+        </div>
 
-          {/* Refresh Button */}
-          <button
-            onClick={() => refetch()}
-            className="p-2 text-gray-500 hover:text-orange-500 hover:bg-orange-50 rounded-lg transition"
-          >
-            <RefreshCw className="w-5 h-5" />
-          </button>
+        {/* Right Column - Detail Panel */}
+        <div className="w-80 bg-white flex-shrink-0">
+          <DetailPanel
+            order={selectedOrder}
+            onToggleItem={handleToggleItem}
+            onComplete={handleComplete}
+            onDelete={handleDelete}
+          />
         </div>
       </div>
 
-      {/* KDS Grid */}
-      <div className="flex-1 p-6 overflow-auto">
-        <div className="grid grid-cols-3 gap-6 h-full">
-          {/* New Orders Column */}
-          <div className="flex flex-col">
-            <div className="flex items-center mb-4">
-              <div className="w-3 h-3 rounded-full bg-red-500 mr-2" />
-              <h2 className="font-bold text-gray-800">New ({groupedOrders.pending.length})</h2>
-            </div>
-            <div className="flex-1 space-y-4 overflow-auto">
-              {groupedOrders.pending.map((order) => (
-                <OrderCard key={order.id} order={order} onStatusChange={handleStatusChange} />
-              ))}
-              {groupedOrders.pending.length === 0 && (
-                <div className="text-center text-gray-400 py-8">
-                  No new orders
-                </div>
-              )}
-            </div>
-          </div>
+      {/* Bottom Bar */}
+      <BottomBar
+        sortMode={sortMode}
+        onSortModeChange={setSortMode}
+        onManageStore={handleManageStore}
+        onCreateOrder={() => setShowCreateModal(true)}
+      />
 
-          {/* Preparing Column */}
-          <div className="flex flex-col">
-            <div className="flex items-center mb-4">
-              <div className="w-3 h-3 rounded-full bg-yellow-500 mr-2" />
-              <h2 className="font-bold text-gray-800">Preparing ({groupedOrders.preparing.length})</h2>
-            </div>
-            <div className="flex-1 space-y-4 overflow-auto">
-              {groupedOrders.preparing.map((order) => (
-                <OrderCard key={order.id} order={order} onStatusChange={handleStatusChange} />
-              ))}
-              {groupedOrders.preparing.length === 0 && (
-                <div className="text-center text-gray-400 py-8">
-                  No orders in preparation
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Ready Column */}
-          <div className="flex flex-col">
-            <div className="flex items-center mb-4">
-              <div className="w-3 h-3 rounded-full bg-green-500 mr-2" />
-              <h2 className="font-bold text-gray-800">Ready ({groupedOrders.ready.length})</h2>
-            </div>
-            <div className="flex-1 space-y-4 overflow-auto">
-              {groupedOrders.ready.map((order) => (
-                <OrderCard key={order.id} order={order} onStatusChange={handleStatusChange} />
-              ))}
-              {groupedOrders.ready.length === 0 && (
-                <div className="text-center text-gray-400 py-8">
-                  No orders ready
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
+      {/* Create Order Modal */}
+      <CreateOrderModal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onSubmit={handleCreateOrder}
+      />
     </div>
   );
 }

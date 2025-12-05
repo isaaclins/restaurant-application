@@ -497,6 +497,197 @@ npm run tauri dev  # Native Tauri App
 
 ---
 
+### Tag 2 – 05.12.2025 | Start-Script Verbesserungen (Nacht-Session)
+
+#### ✅ Erfolge
+
+- [x] **`./start.sh --test`** Option hinzugefügt für CI/CD-ähnliche Test-Ausführung
+- [x] **Bug Fix**: `--all` Befehl repariert (Website ohne package.json crashte)
+- [x] Robuste Prüfungen für `package.json` Existenz in Website/Client
+
+**start.sh Änderungen:**
+
+```bash
+# Neue Option
+./start.sh --test    # Führt alle Tests aus (Backend Maven, Client/Website npm)
+
+# Bug Fixes
+- start_website() prüft jetzt package.json vor npm install
+- start_client() prüft jetzt package.json vor npm install
+- Directory-Check VOR cd statt danach
+```
+
+**Test-Runner Features:**
+
+- Läuft durch alle Backend-Services (eureka, gateway, product, cart, order, payment, auth)
+- Führt `./mvnw test -q` für jeden Service aus
+- Reportet Pass/Fail Status pro Service
+- Prüft Client/Website auf npm test Script
+- Exit Code 1 bei fehlgeschlagenen Tests
+
+#### 🐛 Probleme & Lösungen
+
+**Problem:** `./start.sh --all` crashte mit npm error
+
+```
+npm error path /Users/.../website/package.json
+npm error enoent Could not read package.json
+```
+
+**Ursache:** Website-Ordner enthält nur `package-lock.json` aber kein `package.json`
+
+**Lösung:**
+
+- Check für `package.json` Existenz vor `npm install`
+- Graceful Skip mit Warning statt Crash
+
+#### 📝 Nächste Schritte
+
+- [ ] KDS (Kitchen Display System) UI überarbeiten (neues Wireframe)
+- [ ] Pickup/Delivery Spalten-Layout implementieren
+
+---
+
+### Tag 2 – 05.12.2025 | Infrastructure & Configuration Fixes (Nacht-Session 2)
+
+#### 🐛 Probleme & Lösungen
+
+**Problem 1: MySQL Access Denied**
+
+```
+Access denied for user 'restaurant'@'172.18.0.x' (using password: YES)
+```
+
+**Ursache:** `init-db/01-init.sql` hatte `GRANT` Statements aber kein `CREATE USER`.
+
+**Lösung:**
+
+```sql
+-- BEFORE (broken)
+GRANT ALL PRIVILEGES ON product_db.* TO 'restaurant'@'%';
+
+-- AFTER (fixed)
+CREATE USER IF NOT EXISTS 'restaurant'@'%' IDENTIFIED BY 'RestaurantDev2025!';
+GRANT ALL PRIVILEGES ON product_db.* TO 'restaurant'@'%';
+```
+
+**Datei:** `backend/init-db/01-init.sql`
+
+---
+
+**Problem 2: JWT Refresh Token Property Missing**
+
+```
+Could not resolve placeholder 'jwt.refresh-expiration' in value "${jwt.refresh-expiration}"
+```
+
+**Ursache:** Auth-Service erwartete die Property, aber sie war nicht in `application.yml` definiert.
+
+**Lösung:**
+
+```yaml
+jwt:
+  secret: ${JWT_SECRET}
+  expiration: ${JWT_EXPIRATION_MS:86400000}
+  refresh-expiration: ${JWT_REFRESH_EXPIRATION_MS:604800000} # ← hinzugefügt
+```
+
+**Datei:** `backend/auth-service/src/main/resources/application.yml`
+
+---
+
+**Problem 3: API-Gateway CircuitBreaker Dependency**
+
+```
+Unable to find GatewayFilterFactory with name CircuitBreaker
+```
+
+**Ursache:** Spring Cloud Gateway ist reaktiv (WebFlux), braucht die reaktive CircuitBreaker-Library.
+
+**Lösung:**
+
+```xml
+<!-- BEFORE (blocking version - wrong for Gateway) -->
+<artifactId>spring-cloud-starter-circuitbreaker-resilience4j</artifactId>
+
+<!-- AFTER (reactive version - correct) -->
+<artifactId>spring-cloud-starter-circuitbreaker-reactor-resilience4j</artifactId>
+```
+
+**Datei:** `backend/api-gateway/pom.xml`
+
+---
+
+**Problem 4: Manuelle Environment-Variablen nervig**
+
+**Ursache:** Jedes Mal beim Service-Start mussten Umgebungsvariablen manuell gesetzt werden:
+
+```bash
+# Fish Shell - manuell
+set -gx JWT_SECRET "..."
+set -gx MYSQL_PASSWORD "..."
+# ... 10+ Variablen
+```
+
+**Lösung:** `start.sh` um `load_env()` Funktion erweitert die automatisch `.env` lädt:
+
+```bash
+load_env() {
+    if [ -f ".env" ]; then
+        echo "→ Loading environment variables from .env..."
+        set -o allexport
+        source .env
+        set +o allexport
+        echo "✓ Environment variables loaded"
+    fi
+}
+```
+
+**Datei:** `start.sh`
+
+---
+
+#### ✅ Erfolge
+
+- [x] **MySQL Init-Script** fixed – User wird jetzt korrekt erstellt
+- [x] **JWT Refresh Token** konfiguriert – Default 7 Tage (604800000ms)
+- [x] **API-Gateway CircuitBreaker** fixed – Reaktive Dependency
+- [x] **start.sh Auto-Environment** – `.env` wird automatisch geladen
+- [x] **Alle Services starten** – 6 Services in Eureka registriert
+- [x] **Login funktioniert** – JWT Token wird korrekt generiert
+
+#### ✅ Verifiziert
+
+```bash
+# Eureka zeigt alle Services
+curl -s http://localhost:8761/eureka/apps | grep "<application>"
+# → API-GATEWAY, AUTH-SERVICE, CART-SERVICE, ORDER-SERVICE, PAYMENT-SERVICE, PRODUCT-SERVICE
+
+# Login funktioniert
+curl -X POST http://localhost:8085/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"admin@restaurant.com","password":"admin123"}'
+# → {"accessToken":"eyJhbG...","user":{"email":"admin@restaurant.com","role":"RESTAURANT_ADMIN"}}
+```
+
+#### 📁 Geänderte Dateien
+
+| Datei                                      | Änderung                               |
+| ------------------------------------------ | -------------------------------------- |
+| `backend/init-db/01-init.sql`              | CREATE USER hinzugefügt                |
+| `backend/auth-service/.../application.yml` | jwt.refresh-expiration hinzugefügt     |
+| `backend/api-gateway/pom.xml`              | Reaktive CircuitBreaker Dependency     |
+| `start.sh`                                 | load_env() Funktion für .env Auto-Load |
+
+#### 🔍 Erkenntnisse
+
+- Docker MySQL Init-Scripts werden nur beim **ersten Start** ausgeführt → `docker volume rm` für Reset
+- Spring Cloud Gateway ist **reaktiv** (WebFlux) → braucht `-reactor-` Dependencies
+- Fish Shell: `source .env` funktioniert nicht direkt → start.sh nutzt Bash-Kompatibilität
+- DataLoader erstellt Demo-User automatisch beim Start (admin@restaurant.com / admin123)
+
+---
+
 ### Tag 3 – [DATUM]
 
 ## 🏁 Meilensteine
