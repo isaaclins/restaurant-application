@@ -819,9 +819,9 @@ const CHECKBOX_EXPIRY_MS = 30 * 60 * 1000;
 
 #### 🎯 Identifizierte Fixes (TODO)
 
-1. [ ] `start.sh` um `receipt-service` und `settings-service` erweitern
-2. [ ] Gateway-Routing korrigieren für Settings und Receipts
-3. [ ] Optional: Status-Shortcut-Buttons im KDS (z.B. direkt zu READY)
+1. [x] `start.sh` um `receipt-service` und `settings-service` erweitern ✅
+2. [x] Gateway-Routing korrigieren für Settings und Receipts ✅
+3. [x] Status-Shortcut: IN_PROGRESS → DELIVERED/PICKED_UP direkt erlauben ✅
 
 #### 🔍 Erkenntnisse
 
@@ -831,6 +831,154 @@ const CHECKBOX_EXPIRY_MS = 30 * 60 * 1000;
 - **Gateway-Routing**: Wurde als Fallback zu falschen Services konfiguriert
 - **localStorage für UI-State**: Praktisch für temporäre Zustände die Server nicht kennen muss
 - **Checkbox-Expiry**: Verhindert Stale-Data bei lange offenen Browser-Tabs
+
+---
+
+### Tag 3 – 05.12.2025 | Bugfixes, KDS Features & Infrastructure (Nachmittag-Session)
+
+#### ✅ Infrastruktur-Fixes
+
+- [x] **API Gateway Routing** korrigiert
+  - Settings-Service jetzt korrekt zu `lb://SETTINGS-SERVICE` geroutet
+  - Receipt-Service jetzt korrekt zu `lb://RECEIPT-SERVICE` geroutet
+  - Eureka Registry-Fetch-Interval auf 5 Sekunden reduziert
+- [x] **start.sh erweitert**
+  - `--full` Option für kompletten Reset (Stop, DB-Volumes löschen, Neustart)
+  - Eureka wird zuerst gestartet und wartet auf Ready-Status
+  - `settings-service` und `receipt-service` zur Service-Liste hinzugefügt
+- [x] **Order-Service Status-Workflow gelockert**
+  - `IN_PROGRESS → DELIVERED/PICKED_UP` direkt erlaubt (READY überspringbar)
+  - Kommentar dokumentiert warum READY noch existiert (Future Use Cases)
+
+#### ✅ Product-Service Bugfixes
+
+- [x] **Product "Unavailable" Bug gefixt**
+  - Backend-Feld `available` → Frontend erwartete `isAvailable`
+  - `ProductResponse.java`: Feld umbenannt zu `isAvailable`
+  - `isActive` Feld hinzugefügt (immer `true` für aktive Produkte)
+- [x] **preparationTime Feld fehlte**
+  - `Product.java`: `private Integer preparationTime;` hinzugefügt
+  - `ProductRequest.java`: Feld hinzugefügt für Create/Update
+  - `ProductResponse.java`: Mapping von Entity zu Response
+  - `ProductService.java`: Create und Update Methoden erweitert
+- [x] **Image Upload** verbessert
+  - URL oder File Upload Toggle
+  - Base64 Encoding für lokale Bilder
+  - Max 2MB, PNG/JPEG/GIF/WebP unterstützt
+  - Preview mit Clear-Button
+
+#### ✅ KDS Features & Verbesserungen
+
+- [x] **Items nach Kategorie gruppiert** im Ticket-Detail
+  - Kategorien alphabetisch sortiert
+  - Innerhalb Kategorie: Unchecked first, checked at bottom
+  - Kategorie-Header mit Trennlinie
+- [x] **Completed Categories sinken nach unten**
+  - Wenn alle Items einer Kategorie abgehakt sind
+  - Kategorie wird halbtransparent + grünes Häkchen
+  - Incomplete Categories bleiben oben (alphabetisch)
+- [x] **Status Badge** im Detail-Panel zeigt aktuellen Order-Status
+- [x] **Complete-Button** nur aktiv wenn Order IN_PROGRESS oder READY ist
+- [x] **Auto-Start Feature**: Order wird automatisch auf IN_PROGRESS gesetzt wenn ausgewählt
+- [x] **Auto-Confirm**: PENDING Orders werden automatisch CONFIRMED wenn sie im KDS erscheinen
+
+#### ✅ Categories Page
+
+- [x] **Neue Seite**: `/categories` für Kategorie-Verwaltung
+- [x] Navigation in Sidebar hinzugefügt (FolderOpen Icon)
+- [x] CRUD für Kategorien (Create, Edit, Delete)
+- [x] Toggle Active/Hidden für Kategorien
+- [x] **"Order: X" zu "X Products" geändert**
+  - Produkte werden pro Kategorie gezählt
+  - Singular/Plural korrekt ("1 Product" vs "3 Products")
+
+#### ✅ Developer Fake Order Generator
+
+- [x] **Neuer Tab** in Settings: "Developer"
+- [x] Generiert 1-50 Fake-Orders mit zufälligen Daten
+- [x] Zufällige Produkte, Kunden, Adressen
+- [x] **Timer-Problem gefixt**: Zeiten waren 1 Stunde in der Vergangenheit
+  - Ursache: `toISOString()` gibt UTC, Schweiz ist UTC+1
+  - Fix: Lokale Zeit manuell formatiert statt `.toISOString().slice(0,19)`
+- [x] Timer-Range: -5 Minuten bis +20 Minuten
+
+#### 🐛 Probleme & Lösungen
+
+**Problem 1: Fake Orders hatten alte Zeiten (-57:28 etc.)**
+
+```typescript
+// VORHER (UTC Zeit - 1 Stunde falsch in CH!)
+const estimatedDelivery = estimatedTime.toISOString().slice(0, 19);
+
+// NACHHER (Lokale Zeit korrekt)
+const pad = (n: number) => n.toString().padStart(2, "0");
+const estimatedDelivery = `${estimatedTime.getFullYear()}-${pad(
+  estimatedTime.getMonth() + 1
+)}-${pad(estimatedTime.getDate())}T${pad(estimatedTime.getHours())}:${pad(
+  estimatedTime.getMinutes()
+)}:${pad(estimatedTime.getSeconds())}`;
+```
+
+**Ursache:** JavaScript's `toISOString()` gibt immer UTC. Die Schweiz ist UTC+1, also waren alle Zeiten 1 Stunde in der Vergangenheit.
+
+---
+
+**Problem 2: Backend akzeptierte `estimatedDelivery` nicht**
+
+**Lösung:**
+
+- `CreateOrderRequest.java`: `private LocalDateTime estimatedDelivery;` hinzugefügt
+- `OrderService.java`: Verwendet Request-Wert wenn vorhanden, sonst `now + 45min`
+- `application.yml`: Jackson konfiguriert für ISO-Timestamps statt Epoch
+
+---
+
+**Problem 3: Categories Page zeigte "Order: 0"**
+
+**Gewünschtes Verhalten:** Zeige Anzahl Produkte pro Kategorie
+
+**Lösung:**
+
+- Products Query hinzugefügt zu CategoriesPage
+- `productCountByCategory` Map berechnet mit `useMemo`
+- Anzeige geändert zu "X Products"
+
+#### 📁 Geänderte/Neue Dateien
+
+**Backend:**
+| Datei | Änderung |
+|-------|----------|
+| `api-gateway/application.yml` | Gateway-Routing korrigiert |
+| `order-service/CreateOrderRequest.java` | `estimatedDelivery` Feld |
+| `order-service/OrderService.java` | Status-Workflow gelockert, estimatedDelivery Support |
+| `order-service/application.yml` | Jackson Timestamp-Konfiguration |
+| `product-service/Product.java` | `preparationTime` Feld |
+| `product-service/ProductRequest.java` | `preparationTime` Feld |
+| `product-service/ProductResponse.java` | `isAvailable`, `isActive`, `preparationTime` |
+| `product-service/ProductService.java` | preparationTime in create/update |
+| `receipt-service/application.yml` | Eureka-Konfiguration |
+| `settings-service/application.yml` | Eureka-Konfiguration |
+| `start.sh` | `--full` Option, Services erweitert |
+
+**Frontend (Client):**
+| Datei | Änderung |
+|-------|----------|
+| `App.tsx` | CategoriesPage Route |
+| `Layout.tsx` | Categories in Navigation |
+| `KDSPage.tsx` | Kategorie-Gruppierung, Auto-Start, Status-Badge |
+| `ProductsPage.tsx` | Image Upload UI verbessert |
+| `SettingsPage.tsx` | Developer Tab mit Fake Order Generator |
+| `CategoriesPage.tsx` | **NEU** - Vollständige Kategorie-Verwaltung |
+| `api/products.ts` | Category API Erweiterungen |
+| `types/index.ts` | Category Interface erweitert |
+
+#### 🔍 Erkenntnisse
+
+- **Timezone-Handling**: JavaScript Dates sind tricky - immer explizit formatieren!
+- **LocalDateTime vs Instant**: Java LocalDateTime hat keine Timezone, perfekt für lokale Zeiten
+- **Kategorie-Gruppierung**: Verbessert UX massiv für Küchenpersonal
+- **Visual Feedback**: Halbtransparente completed Categories zeigen Fortschritt
+- **Auto-Start**: Reduziert Klicks im Workflow (CONFIRMED → IN_PROGRESS automatisch)
 
 ---
 
