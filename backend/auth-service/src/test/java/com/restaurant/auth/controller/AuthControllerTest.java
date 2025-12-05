@@ -75,8 +75,8 @@ class AuthControllerTest {
             request.setPhone("+41791234567");
 
             mockMvc.perform(post("/api/auth/register")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isCreated())
                     .andExpect(jsonPath("$.accessToken", notNullValue()))
                     .andExpect(jsonPath("$.refreshToken", notNullValue()))
@@ -95,8 +95,8 @@ class AuthControllerTest {
             request.setPassword("password123");
 
             mockMvc.perform(post("/api/auth/register")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isBadRequest());
         }
 
@@ -108,8 +108,8 @@ class AuthControllerTest {
             request.setPassword("password123");
 
             mockMvc.perform(post("/api/auth/register")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isBadRequest());
         }
 
@@ -121,8 +121,8 @@ class AuthControllerTest {
             request.setPassword("short");
 
             mockMvc.perform(post("/api/auth/register")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isBadRequest());
         }
 
@@ -136,8 +136,8 @@ class AuthControllerTest {
             request.setPassword("password123");
 
             mockMvc.perform(post("/api/auth/register")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isConflict());
         }
     }
@@ -156,8 +156,8 @@ class AuthControllerTest {
             request.setPassword("password123");
 
             mockMvc.perform(post("/api/auth/login")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.accessToken", notNullValue()))
                     .andExpect(jsonPath("$.refreshToken", notNullValue()))
@@ -176,8 +176,8 @@ class AuthControllerTest {
             request.setPassword("wrongpassword");
 
             mockMvc.perform(post("/api/auth/login")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isUnauthorized());
         }
 
@@ -189,8 +189,8 @@ class AuthControllerTest {
             request.setPassword("password123");
 
             mockMvc.perform(post("/api/auth/login")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isUnauthorized());
         }
 
@@ -202,8 +202,8 @@ class AuthControllerTest {
             request.setPassword("password123");
 
             mockMvc.perform(post("/api/auth/login")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isBadRequest());
         }
     }
@@ -222,9 +222,9 @@ class AuthControllerTest {
             request.setNewPassword("newpassword123");
 
             mockMvc.perform(put("/api/auth/password")
-                            .header("X-User-ID", user.getId())
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
+                    .header("X-User-ID", user.getId())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk());
 
             // Verify password changed
@@ -242,9 +242,9 @@ class AuthControllerTest {
             request.setNewPassword("newpassword123");
 
             mockMvc.perform(put("/api/auth/password")
-                            .header("X-User-ID", user.getId())
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
+                    .header("X-User-ID", user.getId())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isUnauthorized());
         }
 
@@ -258,9 +258,9 @@ class AuthControllerTest {
             request.setNewPassword("short");
 
             mockMvc.perform(put("/api/auth/password")
-                            .header("X-User-ID", user.getId())
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
+                    .header("X-User-ID", user.getId())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isBadRequest());
         }
 
@@ -272,8 +272,8 @@ class AuthControllerTest {
             request.setNewPassword("newpassword123");
 
             mockMvc.perform(put("/api/auth/password")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isForbidden());
         }
     }
@@ -288,7 +288,7 @@ class AuthControllerTest {
             User user = createTestUser("user@example.com", "password123");
 
             mockMvc.perform(get("/api/auth/me")
-                            .header("X-User-ID", user.getId()))
+                    .header("X-User-ID", user.getId()))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.id", is(user.getId().intValue())))
                     .andExpect(jsonPath("$.email", is("user@example.com")))
@@ -300,7 +300,7 @@ class AuthControllerTest {
         @DisplayName("should return 404 when user not found")
         void shouldReturn404WhenUserNotFound() throws Exception {
             mockMvc.perform(get("/api/auth/me")
-                            .header("X-User-ID", 999L))
+                    .header("X-User-ID", 999L))
                     .andExpect(status().isNotFound());
         }
 

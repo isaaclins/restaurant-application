@@ -69,7 +69,7 @@ class CartControllerTest {
             when(cartService.getCart(SESSION_ID)).thenReturn(emptyCart);
 
             mockMvc.perform(get("/api/cart")
-                            .header("X-Session-ID", SESSION_ID))
+                    .header("X-Session-ID", SESSION_ID))
                     .andExpect(status().isOk())
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                     .andExpect(jsonPath("$.sessionId", is(SESSION_ID)))
@@ -88,7 +88,7 @@ class CartControllerTest {
             when(cartService.getCart(SESSION_ID)).thenReturn(cart);
 
             mockMvc.perform(get("/api/cart")
-                            .header("X-Session-ID", SESSION_ID))
+                    .header("X-Session-ID", SESSION_ID))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.items", hasSize(2)))
                     .andExpect(jsonPath("$.items[0].productName", is("Pizza")))
@@ -119,9 +119,9 @@ class CartControllerTest {
             when(cartService.addItem(eq(SESSION_ID), any(AddToCartRequest.class))).thenReturn(updatedCart);
 
             mockMvc.perform(post("/api/cart/items")
-                            .header("X-Session-ID", SESSION_ID)
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
+                    .header("X-Session-ID", SESSION_ID)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.items", hasSize(1)))
                     .andExpect(jsonPath("$.items[0].productId", is(1)))
@@ -136,9 +136,9 @@ class CartControllerTest {
             AddToCartRequest request = new AddToCartRequest(null, 2);
 
             mockMvc.perform(post("/api/cart/items")
-                            .header("X-Session-ID", SESSION_ID)
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
+                    .header("X-Session-ID", SESSION_ID)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isBadRequest());
         }
 
@@ -148,9 +148,9 @@ class CartControllerTest {
             AddToCartRequest request = new AddToCartRequest(1L, 0);
 
             mockMvc.perform(post("/api/cart/items")
-                            .header("X-Session-ID", SESSION_ID)
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
+                    .header("X-Session-ID", SESSION_ID)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isBadRequest());
         }
 
@@ -160,8 +160,8 @@ class CartControllerTest {
             AddToCartRequest request = new AddToCartRequest(1L, 2);
 
             mockMvc.perform(post("/api/cart/items")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isBadRequest());
         }
     }
@@ -178,7 +178,7 @@ class CartControllerTest {
             when(cartService.removeItem(SESSION_ID, 1L)).thenReturn(updatedCart);
 
             mockMvc.perform(delete("/api/cart/items/{productId}", 1L)
-                            .header("X-Session-ID", SESSION_ID))
+                    .header("X-Session-ID", SESSION_ID))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.items", hasSize(0)));
 
@@ -203,7 +203,7 @@ class CartControllerTest {
             doNothing().when(cartService).clearCart(SESSION_ID);
 
             mockMvc.perform(delete("/api/cart")
-                            .header("X-Session-ID", SESSION_ID))
+                    .header("X-Session-ID", SESSION_ID))
                     .andExpect(status().isNoContent());
 
             verify(cartService).clearCart(SESSION_ID);

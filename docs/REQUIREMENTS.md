@@ -790,8 +790,8 @@ resilience4j:
 
 **Status**: ✅ Abgeschlossen (102 Tests bestanden)
 
-| Task   | Beschreibung               | Status |
-| ------ | -------------------------- | ------ |
+| Task   | Beschreibung               | Status        |
+| ------ | -------------------------- | ------------- |
 | 10.1.1 | Product Service Unit Tests | ✅ (38 Tests) |
 | 10.1.2 | Cart Service Unit Tests    | ✅ (20 Tests) |
 | 10.1.3 | Order Service Unit Tests   | ✅ (16 Tests) |

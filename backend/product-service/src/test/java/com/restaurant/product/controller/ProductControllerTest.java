@@ -117,7 +117,7 @@ class ProductControllerTest {
             productRepository.save(pastaProduct);
 
             mockMvc.perform(get("/api/products")
-                            .param("categoryId", testCategory.getId().toString()))
+                    .param("categoryId", testCategory.getId().toString()))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$", hasSize(1)))
                     .andExpect(jsonPath("$[0].name", is("Margherita")));
@@ -130,7 +130,7 @@ class ProductControllerTest {
             createTestProduct("Pepperoni", new BigDecimal("14.00"), false);
 
             mockMvc.perform(get("/api/products")
-                            .param("available", "true"))
+                    .param("available", "true"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$", hasSize(1)))
                     .andExpect(jsonPath("$[0].name", is("Margherita")));
@@ -143,8 +143,8 @@ class ProductControllerTest {
             createTestProduct("Pepperoni", new BigDecimal("14.00"), false);
 
             mockMvc.perform(get("/api/products")
-                            .param("categoryId", testCategory.getId().toString())
-                            .param("available", "false"))
+                    .param("categoryId", testCategory.getId().toString())
+                    .param("available", "false"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$", hasSize(1)))
                     .andExpect(jsonPath("$[0].name", is("Pepperoni")));
@@ -194,8 +194,8 @@ class ProductControllerTest {
                     .build();
 
             mockMvc.perform(post("/api/products")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isCreated())
                     .andExpect(jsonPath("$.name", is("New Pizza")))
                     .andExpect(jsonPath("$.description", is("A delicious new pizza")))
@@ -216,8 +216,8 @@ class ProductControllerTest {
                     .build();
 
             mockMvc.perform(post("/api/products")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isBadRequest());
         }
 
@@ -230,8 +230,8 @@ class ProductControllerTest {
                     .build();
 
             mockMvc.perform(post("/api/products")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isBadRequest());
         }
 
@@ -245,8 +245,8 @@ class ProductControllerTest {
                     .build();
 
             mockMvc.perform(post("/api/products")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isBadRequest());
         }
 
@@ -259,8 +259,8 @@ class ProductControllerTest {
                     .build();
 
             mockMvc.perform(post("/api/products")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isBadRequest());
         }
 
@@ -274,8 +274,8 @@ class ProductControllerTest {
                     .build();
 
             mockMvc.perform(post("/api/products")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isNotFound());
         }
     }
@@ -298,8 +298,8 @@ class ProductControllerTest {
                     .build();
 
             mockMvc.perform(put("/api/products/{id}", product.getId())
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.name", is("Updated Name")))
                     .andExpect(jsonPath("$.description", is("Updated description")))
@@ -317,8 +317,8 @@ class ProductControllerTest {
                     .build();
 
             mockMvc.perform(put("/api/products/{id}", 999L)
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isNotFound());
         }
 
@@ -340,8 +340,8 @@ class ProductControllerTest {
                     .build();
 
             mockMvc.perform(put("/api/products/{id}", product.getId())
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.categoryName", is("Specials")));
         }
@@ -360,8 +360,8 @@ class ProductControllerTest {
             request.setAvailable(false);
 
             mockMvc.perform(put("/api/products/{id}/availability", product.getId())
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.available", is(false)));
         }
@@ -375,8 +375,8 @@ class ProductControllerTest {
             request.setAvailable(true);
 
             mockMvc.perform(put("/api/products/{id}/availability", product.getId())
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.available", is(true)));
         }
@@ -388,8 +388,8 @@ class ProductControllerTest {
             request.setAvailable(false);
 
             mockMvc.perform(put("/api/products/{id}/availability", 999L)
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isNotFound());
         }
     }

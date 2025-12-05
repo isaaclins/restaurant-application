@@ -168,8 +168,8 @@ class CategoryControllerTest {
             request.setColorCode("#00FF00");
 
             mockMvc.perform(post("/api/categories")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isCreated())
                     .andExpect(jsonPath("$.name", is("New Category")))
                     .andExpect(jsonPath("$.description", is("A new category")))
@@ -186,8 +186,8 @@ class CategoryControllerTest {
             request.setName("");
 
             mockMvc.perform(post("/api/categories")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isBadRequest());
         }
 
@@ -200,8 +200,8 @@ class CategoryControllerTest {
             request.setName("Pizza");
 
             mockMvc.perform(post("/api/categories")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isBadRequest());
         }
     }
@@ -221,8 +221,8 @@ class CategoryControllerTest {
             request.setDisplayOrder(10);
 
             mockMvc.perform(put("/api/categories/{id}", category.getId())
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.name", is("New Name")))
                     .andExpect(jsonPath("$.description", is("Updated description")))
@@ -236,8 +236,8 @@ class CategoryControllerTest {
             request.setName("Updated");
 
             mockMvc.perform(put("/api/categories/{id}", 999L)
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isNotFound());
         }
     }
@@ -308,8 +308,8 @@ class CategoryControllerTest {
             List<Long> newOrder = List.of(cat3.getId(), cat1.getId(), cat2.getId());
 
             mockMvc.perform(put("/api/categories/reorder")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(newOrder)))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(newOrder)))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$[0].name", is("Third")))
                     .andExpect(jsonPath("$[0].displayOrder", is(0)))

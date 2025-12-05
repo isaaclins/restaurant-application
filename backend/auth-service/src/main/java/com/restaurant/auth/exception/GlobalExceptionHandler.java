@@ -18,13 +18,13 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ErrorResponse> handleIllegalArgumentException(IllegalArgumentException ex) {
         String message = ex.getMessage();
-        
+
         HttpStatus status;
         if (message != null) {
             if (message.contains("Email already exists")) {
                 status = HttpStatus.CONFLICT;
-            } else if (message.contains("Invalid credentials") || 
-                       message.contains("Current password is incorrect")) {
+            } else if (message.contains("Invalid credentials") ||
+                    message.contains("Current password is incorrect")) {
                 status = HttpStatus.UNAUTHORIZED;
             } else if (message.contains("User not found")) {
                 status = HttpStatus.NOT_FOUND;
@@ -38,8 +38,7 @@ public class GlobalExceptionHandler {
         ErrorResponse error = new ErrorResponse(
                 status.value(),
                 message,
-                LocalDateTime.now()
-        );
+                LocalDateTime.now());
 
         return ResponseEntity.status(status).body(error);
     }
@@ -53,8 +52,7 @@ public class GlobalExceptionHandler {
         ErrorResponse error = new ErrorResponse(
                 HttpStatus.BAD_REQUEST.value(),
                 message,
-                LocalDateTime.now()
-        );
+                LocalDateTime.now());
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
@@ -64,8 +62,7 @@ public class GlobalExceptionHandler {
         ErrorResponse error = new ErrorResponse(
                 HttpStatus.BAD_REQUEST.value(),
                 "Required header is missing: " + ex.getHeaderName(),
-                LocalDateTime.now()
-        );
+                LocalDateTime.now());
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
@@ -75,8 +72,7 @@ public class GlobalExceptionHandler {
         ErrorResponse error = new ErrorResponse(
                 HttpStatus.INTERNAL_SERVER_ERROR.value(),
                 "An unexpected error occurred",
-                LocalDateTime.now()
-        );
+                LocalDateTime.now());
 
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
     }

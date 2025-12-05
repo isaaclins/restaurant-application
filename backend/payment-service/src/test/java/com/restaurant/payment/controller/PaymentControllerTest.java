@@ -54,8 +54,8 @@ class PaymentControllerTest {
             PaymentRequest request = createValidPaymentRequest();
 
             mockMvc.perform(post("/api/payments")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.paymentId", startsWith("PAY-")))
                     .andExpect(jsonPath("$.transactionId", startsWith("TXN-")))
@@ -72,8 +72,8 @@ class PaymentControllerTest {
             request.setCardNumber(DECLINE_TEST_CARD);
 
             mockMvc.perform(post("/api/payments")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isPaymentRequired()) // 402
                     .andExpect(jsonPath("$.paymentId", startsWith("PAY-")))
                     .andExpect(jsonPath("$.status", is("FAILED")))
@@ -89,8 +89,8 @@ class PaymentControllerTest {
             request.setMethod("CASH");
 
             mockMvc.perform(post("/api/payments")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.status", is("COMPLETED")));
         }
@@ -102,8 +102,8 @@ class PaymentControllerTest {
             request.setOrderId(null);
 
             mockMvc.perform(post("/api/payments")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isBadRequest());
         }
 
@@ -114,8 +114,8 @@ class PaymentControllerTest {
             request.setAmount(null);
 
             mockMvc.perform(post("/api/payments")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isBadRequest());
         }
 
@@ -126,8 +126,8 @@ class PaymentControllerTest {
             request.setAmount(new BigDecimal("-10.00"));
 
             mockMvc.perform(post("/api/payments")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isBadRequest());
         }
 
@@ -138,8 +138,8 @@ class PaymentControllerTest {
             request.setAmount(BigDecimal.ZERO);
 
             mockMvc.perform(post("/api/payments")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isBadRequest());
         }
     }

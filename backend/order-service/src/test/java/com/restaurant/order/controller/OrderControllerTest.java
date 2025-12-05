@@ -113,8 +113,8 @@ class OrderControllerTest {
             CreateOrderRequest request = buildCreateOrderRequest();
 
             mockMvc.perform(post("/api/orders")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isCreated())
                     .andExpect(jsonPath("$.customerName", is("John Doe")))
                     .andExpect(jsonPath("$.orderType", is("PICKUP")))
@@ -138,8 +138,8 @@ class OrderControllerTest {
             request.setDeliveryAddress(address);
 
             mockMvc.perform(post("/api/orders")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isCreated())
                     .andExpect(jsonPath("$.orderType", is("DELIVERY")));
         }
@@ -151,8 +151,8 @@ class OrderControllerTest {
             request.setCustomerName(null);
 
             mockMvc.perform(post("/api/orders")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isBadRequest());
         }
 
@@ -163,8 +163,8 @@ class OrderControllerTest {
             request.setOrderType(null);
 
             mockMvc.perform(post("/api/orders")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isBadRequest());
         }
 
@@ -175,8 +175,8 @@ class OrderControllerTest {
             request.setTotalPrice(null);
 
             mockMvc.perform(post("/api/orders")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isBadRequest());
         }
     }
@@ -238,7 +238,7 @@ class OrderControllerTest {
             createTestOrder("Customer 3", OrderType.DINE_IN, OrderStatus.PENDING);
 
             mockMvc.perform(get("/api/orders")
-                            .param("status", "PENDING"))
+                    .param("status", "PENDING"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$", hasSize(2)));
         }
@@ -250,7 +250,7 @@ class OrderControllerTest {
             createTestOrder("Customer 2", OrderType.DELIVERY, OrderStatus.CONFIRMED);
 
             mockMvc.perform(get("/api/orders")
-                            .param("date", LocalDate.now().toString()))
+                    .param("date", LocalDate.now().toString()))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$", hasSize(2)));
         }
@@ -269,8 +269,8 @@ class OrderControllerTest {
             request.setStatus(OrderStatus.CONFIRMED);
 
             mockMvc.perform(put("/api/orders/{id}/status", order.getId())
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.status", is("CONFIRMED")));
 
@@ -286,32 +286,32 @@ class OrderControllerTest {
             // PENDING -> CONFIRMED
             UpdateStatusRequest confirmRequest = new UpdateStatusRequest(OrderStatus.CONFIRMED);
             mockMvc.perform(put("/api/orders/{id}/status", order.getId())
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(confirmRequest)))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(confirmRequest)))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.status", is("CONFIRMED")));
 
             // CONFIRMED -> IN_PROGRESS
             UpdateStatusRequest progressRequest = new UpdateStatusRequest(OrderStatus.IN_PROGRESS);
             mockMvc.perform(put("/api/orders/{id}/status", order.getId())
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(progressRequest)))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(progressRequest)))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.status", is("IN_PROGRESS")));
 
             // IN_PROGRESS -> READY
             UpdateStatusRequest readyRequest = new UpdateStatusRequest(OrderStatus.READY);
             mockMvc.perform(put("/api/orders/{id}/status", order.getId())
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(readyRequest)))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(readyRequest)))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.status", is("READY")));
 
             // READY -> PICKED_UP
             UpdateStatusRequest pickedUpRequest = new UpdateStatusRequest(OrderStatus.PICKED_UP);
             mockMvc.perform(put("/api/orders/{id}/status", order.getId())
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(pickedUpRequest)))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(pickedUpRequest)))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.status", is("PICKED_UP")));
         }
@@ -324,8 +324,8 @@ class OrderControllerTest {
             UpdateStatusRequest request = new UpdateStatusRequest(OrderStatus.CANCELLED);
 
             mockMvc.perform(put("/api/orders/{id}/status", order.getId())
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.status", is("CANCELLED")));
         }
@@ -336,8 +336,8 @@ class OrderControllerTest {
             UpdateStatusRequest request = new UpdateStatusRequest(OrderStatus.CONFIRMED);
 
             mockMvc.perform(put("/api/orders/{id}/status", 999L)
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isNotFound());
         }
 
@@ -350,8 +350,8 @@ class OrderControllerTest {
             request.setStatus(null);
 
             mockMvc.perform(put("/api/orders/{id}/status", order.getId())
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(request)))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isBadRequest());
         }
     }

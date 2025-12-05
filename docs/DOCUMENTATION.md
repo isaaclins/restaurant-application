@@ -330,15 +330,15 @@
 
 #### ✅ Test-Ergebnisse (Final)
 
-| Service | Tests | Status |
-|---------|-------|--------|
-| Product Service | 38 | ✅ PASS |
-| Cart Service | 20 | ✅ PASS |
-| Order Service | 16 | ✅ PASS |
-| Payment Service | 9 | ✅ PASS |
-| Auth Service | 16 | ✅ PASS |
-| API Gateway | 3 | ✅ PASS |
-| **Total** | **102** | ✅ **ALL PASS** |
+| Service         | Tests   | Status          |
+| --------------- | ------- | --------------- |
+| Product Service | 38      | ✅ PASS         |
+| Cart Service    | 20      | ✅ PASS         |
+| Order Service   | 16      | ✅ PASS         |
+| Payment Service | 9       | ✅ PASS         |
+| Auth Service    | 16      | ✅ PASS         |
+| API Gateway     | 3       | ✅ PASS         |
+| **Total**       | **102** | ✅ **ALL PASS** |
 
 #### 🔍 Erkenntnisse
 
