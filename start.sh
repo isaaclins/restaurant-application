@@ -10,6 +10,7 @@
 #   --website   Start the React website dev server
 #   --infra     Start only infrastructure (Docker: MySQL, Redis, Kafka)
 #   --all       Start everything
+#   --full      Full reset: stop all, delete DB volumes, restart everything
 #   --test      Run tests as if in CI/CD pipeline
 #   --stop      Stop all running services
 #   --help      Show this help message
@@ -76,6 +77,7 @@ START_WEBSITE=false
 START_INFRA=false
 STOP_ALL=false
 RUN_TESTS=false
+FULL_RESET=false
 
 # ============================================================================
 # Helper Functions
@@ -116,6 +118,7 @@ show_help() {
     echo "  --website   Start the React website dev server"
     echo "  --infra     Start only infrastructure (Docker: MySQL, Redis, Kafka)"
     echo "  --all       Start everything"
+    echo "  --full      Full reset: stop all, delete DB volumes, restart everything"
     echo "  --test      Run tests as if in CI/CD pipeline"
     echo "  --stop      Stop all running services"
     echo "  --help      Show this help message"
@@ -241,8 +244,26 @@ start_backend() {
         return
     fi
     
-    # Start each service in background
-    local services=("eureka-server" "api-gateway" "product-service" "cart-service" "order-service" "payment-service" "auth-service")
+    # Start Eureka first and wait for it to be ready
+    print_info "Starting eureka-server (Service Discovery)..."
+    cd "$PROJECT_ROOT/backend/eureka-server"
+    ./mvnw spring-boot:run &
+    
+    print_info "Waiting for Eureka to be ready..."
+    local max_attempts=60
+    local attempt=0
+    while ! curl -s http://localhost:8761/actuator/health > /dev/null 2>&1; do
+        attempt=$((attempt + 1))
+        if [ $attempt -ge $max_attempts ]; then
+            print_error "Eureka failed to start within 60 seconds"
+            return 1
+        fi
+        sleep 1
+    done
+    print_success "Eureka is ready!"
+    
+    # Start remaining services
+    local services=("api-gateway" "product-service" "cart-service" "order-service" "payment-service" "auth-service" "settings-service" "receipt-service")
     
     for service in "${services[@]}"; do
         if [ -d "$PROJECT_ROOT/backend/$service" ]; then
@@ -383,7 +404,7 @@ run_tests() {
     if [ -d "$PROJECT_ROOT/backend" ]; then
         print_info "Running backend tests..."
         
-        local services=("eureka-server" "api-gateway" "product-service" "cart-service" "order-service" "payment-service" "auth-service")
+        local services=("eureka-server" "api-gateway" "product-service" "cart-service" "order-service" "payment-service" "auth-service" "settings-service" "receipt-service")
         
         for service in "${services[@]}"; do
             if [ -d "$PROJECT_ROOT/backend/$service" ]; then
@@ -488,6 +509,53 @@ stop_all() {
 }
 
 # ============================================================================
+# Full Reset (Stop, Delete DB, Restart)
+# ============================================================================
+
+full_reset() {
+    print_header "🔄 Full Reset - Resetting Everything"
+    
+    # Stop all services first
+    print_info "Stopping all services..."
+    stop_client
+    stop_website
+    stop_backend
+    
+    # Stop infrastructure and delete volumes
+    print_info "Stopping infrastructure and deleting database volumes..."
+    cd "$PROJECT_ROOT"
+    docker-compose down -v 2>/dev/null || docker compose down -v 2>/dev/null || true
+    
+    print_success "All data volumes deleted (database reset)"
+    
+    # Wait a moment for cleanup
+    sleep 2
+    
+    # Restart everything
+    print_header "🚀 Starting Fresh"
+    
+    check_requirements
+    load_env
+    
+    # Start infrastructure (will recreate volumes)
+    start_infrastructure
+    
+    # Start backend
+    start_backend
+    
+    # Start client
+    start_client
+    
+    print_header "✅ Full Reset Complete"
+    echo "All services are running with a fresh database."
+    echo ""
+    echo "  Default admin login:"
+    echo "  • Email:    admin@restaurant.com"
+    echo "  • Password: admin123"
+    echo ""
+}
+
+# ============================================================================
 # Parse Arguments
 # ============================================================================
 
@@ -524,6 +592,10 @@ while [[ $# -gt 0 ]]; do
             RUN_TESTS=true
             shift
             ;;
+        --full)
+            FULL_RESET=true
+            shift
+            ;;
         --stop)
             STOP_ALL=true
             shift
@@ -549,6 +621,11 @@ print_header "🍕 Restaurant Application Starter"
 
 if [ "$STOP_ALL" = true ]; then
     stop_all
+    exit 0
+fi
+
+if [ "$FULL_RESET" = true ]; then
+    full_reset
     exit 0
 fi
 

@@ -73,15 +73,15 @@ spring:
           predicates:
             - Path=/api/customers/**
 
-        # Settings (routed to Product Service)
+        # Settings Service
         - id: settings-service
-          uri: lb://PRODUCT-SERVICE
+          uri: lb://SETTINGS-SERVICE
           predicates:
             - Path=/api/settings/**
 
-        # Receipts (routed to Order Service)
+        # Receipt Service
         - id: receipts-service
-          uri: lb://ORDER-SERVICE
+          uri: lb://RECEIPT-SERVICE
           predicates:
             - Path=/api/receipts/**
 
@@ -91,6 +91,7 @@ eureka:
       defaultZone: http://${EUREKA_HOST:localhost}:${EUREKA_PORT:8761}/eureka/
     fetch-registry: true
     register-with-eureka: true
+    registry-fetch-interval-seconds: 5
   instance:
     prefer-ip-address: true
 
