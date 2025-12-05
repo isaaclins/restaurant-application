@@ -1,7 +1,8 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ordersApi } from '../api/orders';
-import { Order, OrderStatus } from '../types';
+import { productsApi } from '../api/products';
+import { Order, OrderStatus, Product } from '../types';
 import { differenceInSeconds, differenceInMinutes, addMinutes, format } from 'date-fns';
 import {
   Clock,
@@ -336,8 +337,46 @@ interface DetailPanelProps {
   onDelete: () => void;
 }
 
-function DetailPanel({ order, onToggleItem, onComplete, onDelete }: DetailPanelProps) {
+// Helper to get status label
+function getStatusLabel(status: OrderStatus): string {
+  switch (status) {
+    case 'PENDING': return 'Pending';
+    case 'CONFIRMED': return 'Confirmed';
+    case 'IN_PROGRESS': return 'In Progress';
+    case 'READY': return 'Ready';
+    case 'DELIVERED': return 'Delivered';
+    case 'PICKED_UP': return 'Picked Up';
+    case 'CANCELLED': return 'Cancelled';
+    default: return status;
+  }
+}
+
+// Helper to get status color
+function getStatusColor(status: OrderStatus): string {
+  switch (status) {
+    case 'PENDING': return 'bg-yellow-100 text-yellow-800';
+    case 'CONFIRMED': return 'bg-blue-100 text-blue-800';
+    case 'IN_PROGRESS': return 'bg-purple-100 text-purple-800';
+    case 'READY': return 'bg-green-100 text-green-800';
+    default: return 'bg-gray-100 text-gray-800';
+  }
+}
+
+interface DetailPanelPropsWithProducts extends DetailPanelProps {
+  products: Product[];
+}
+
+function DetailPanel({ order, onToggleItem, onComplete, onDelete, products }: DetailPanelPropsWithProducts) {
   const [timeInfo, setTimeInfo] = useState(order ? getTimeInfo(order) : null);
+  
+  // Build a map of productId -> categoryName for sorting
+  const productCategoryMap = useMemo(() => {
+    const map: Record<number, string> = {};
+    products.forEach(p => {
+      map[p.id] = p.categoryName || 'Other';
+    });
+    return map;
+  }, [products]);
   
   useEffect(() => {
     if (!order) return;
@@ -377,57 +416,114 @@ function DetailPanel({ order, onToggleItem, onComplete, onDelete }: DetailPanelP
             {timeInfo && formatCountdown(timeInfo.secondsRemaining)}
           </div>
         </div>
+        {/* Status Badge */}
+        <div className="text-center mt-2">
+          <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(order.status)}`}>
+            {getStatusLabel(order.status)}
+          </span>
+        </div>
       </div>
 
-      {/* Items List */}
+      {/* Items List - Grouped by Category */}
       <div className="flex-1 overflow-auto p-4">
         <div className="space-y-4">
-          {/* Sort items: unchecked first, checked (completed) at bottom */}
-          {[...order.items]
-            .map((item, index) => ({ item, index, itemKey: `${index}-${item.productId}` }))
-            .sort((a, b) => {
-              const aChecked = order.itemChecks[a.itemKey] ? 1 : 0;
-              const bChecked = order.itemChecks[b.itemKey] ? 1 : 0;
-              return aChecked - bChecked;
-            })
-            .map(({ item, itemKey }) => {
-              const isChecked = order.itemChecks[itemKey];
+          {/* Group items by category, then sort: unchecked first, checked at bottom within each category */}
+          {(() => {
+            // Add category info to items
+            const itemsWithCategory = order.items.map((item, index) => ({
+              item,
+              index,
+              itemKey: `${index}-${item.productId}`,
+              category: productCategoryMap[item.productId] || 'Other',
+            }));
+
+            // Get unique categories
+            const categories = [...new Set(itemsWithCategory.map(i => i.category))];
+            
+            // Sort categories: incomplete categories first (alphabetically), then completed categories (alphabetically)
+            categories.sort((a, b) => {
+              const aItems = itemsWithCategory.filter(i => i.category === a);
+              const bItems = itemsWithCategory.filter(i => i.category === b);
+              const aAllChecked = aItems.every(i => order.itemChecks[i.itemKey]);
+              const bAllChecked = bItems.every(i => order.itemChecks[i.itemKey]);
+              
+              // Completed categories go to bottom
+              if (aAllChecked !== bAllChecked) {
+                return aAllChecked ? 1 : -1;
+              }
+              // Within same completion status, sort alphabetically
+              return a.localeCompare(b);
+            });
+
+            return categories.map(category => {
+              const categoryItems = itemsWithCategory
+                .filter(i => i.category === category)
+                .sort((a, b) => {
+                  // First sort by checked status
+                  const aChecked = order.itemChecks[a.itemKey] ? 1 : 0;
+                  const bChecked = order.itemChecks[b.itemKey] ? 1 : 0;
+                  if (aChecked !== bChecked) return aChecked - bChecked;
+                  // Then alphabetically by product name
+                  return a.item.productName.localeCompare(b.item.productName);
+                });
+              
+              // Check if all items in this category are completed
+              const allCategoryItemsChecked = categoryItems.every(i => order.itemChecks[i.itemKey]);
+
               return (
-                <div 
-                  key={itemKey} 
-                  className={`flex items-start transition-all duration-300 ${
-                    isChecked ? 'opacity-50' : ''
-                  }`}
-                >
-                  <div className="flex-1">
-                    <div className={`text-sm font-medium ${
-                      isChecked 
-                        ? 'text-gray-400 line-through' 
-                        : 'text-orange-600'
-                    }`}>
-                      {item.quantity}x {item.productName}
-                    </div>
-                    {item.notes && (
-                      <div className={`text-xs ml-4 ${
-                        isChecked ? 'text-gray-300 line-through' : 'text-gray-500'
-                      }`}>
-                        - {item.notes}
-                      </div>
-                    )}
+                <div key={category} className={`mb-4 transition-all duration-300 ${allCategoryItemsChecked ? 'opacity-50' : ''}`}>
+                  <div className={`text-xs font-semibold uppercase tracking-wider mb-2 border-b pb-1 flex items-center justify-between ${
+                    allCategoryItemsChecked 
+                      ? 'text-gray-400 border-gray-100' 
+                      : 'text-gray-500 border-gray-200'
+                  }`}>
+                    <span>{category}</span>
+                    {allCategoryItemsChecked && <Check className="w-3 h-3 text-green-500" />}
                   </div>
-                  <button
-                    onClick={() => onToggleItem(itemKey)}
-                    className={`w-6 h-6 rounded border-2 flex items-center justify-center transition ${
-                      isChecked
-                        ? 'bg-green-500 border-green-500 text-white'
-                        : 'border-gray-300 hover:border-gray-400'
-                    }`}
-                  >
-                    {isChecked && <Check className="w-4 h-4" />}
-                  </button>
+                  <div className="space-y-3">
+                    {categoryItems.map(({ item, itemKey }) => {
+                      const isChecked = order.itemChecks[itemKey];
+                      return (
+                        <div 
+                          key={itemKey} 
+                          className={`flex items-start transition-all duration-300 ${
+                            isChecked ? 'opacity-50' : ''
+                          }`}
+                        >
+                          <div className="flex-1">
+                            <div className={`text-sm font-medium ${
+                              isChecked 
+                                ? 'text-gray-400 line-through' 
+                                : 'text-orange-600'
+                            }`}>
+                              {item.quantity}x {item.productName}
+                            </div>
+                            {item.notes && (
+                              <div className={`text-xs ml-4 ${
+                                isChecked ? 'text-gray-300 line-through' : 'text-gray-500'
+                              }`}>
+                                - {item.notes}
+                              </div>
+                            )}
+                          </div>
+                          <button
+                            onClick={() => onToggleItem(itemKey)}
+                            className={`w-6 h-6 rounded border-2 flex items-center justify-center transition ${
+                              isChecked
+                                ? 'bg-green-500 border-green-500 text-white'
+                                : 'border-gray-300 hover:border-gray-400'
+                            }`}
+                          >
+                            {isChecked && <Check className="w-4 h-4" />}
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               );
-            })}
+            });
+          })()}
         </div>
       </div>
 
@@ -448,24 +544,28 @@ function DetailPanel({ order, onToggleItem, onComplete, onDelete }: DetailPanelP
       </div>
 
       {/* Action Buttons */}
-      <div className="p-4 border-t border-gray-200 flex space-x-3">
-        <button
-          onClick={onComplete}
-          disabled={!allChecked}
-          className={`flex-1 py-3 rounded-lg font-medium flex items-center justify-center transition ${
-            allChecked
-              ? 'bg-green-500 text-white hover:bg-green-600'
-              : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-          }`}
-        >
-          COMPLETE
-        </button>
-        <button
-          onClick={onDelete}
-          className="flex-1 py-3 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600 transition flex items-center justify-center"
-        >
-          DELETE
-        </button>
+      <div className="p-4 border-t border-gray-200 space-y-2">
+        {/* Complete & Delete Buttons - Complete works from IN_PROGRESS or READY */}
+        <div className="flex space-x-3">
+          <button
+            onClick={onComplete}
+            disabled={!allChecked || !['IN_PROGRESS', 'READY'].includes(order.status)}
+            className={`flex-1 py-3 rounded-lg font-medium flex items-center justify-center transition ${
+              allChecked && ['IN_PROGRESS', 'READY'].includes(order.status)
+                ? 'bg-green-500 text-white hover:bg-green-600'
+                : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+            }`}
+            title={!['IN_PROGRESS', 'READY'].includes(order.status) ? `Order must be IN_PROGRESS or READY (current: ${order.status})` : ''}
+          >
+            COMPLETE
+          </button>
+          <button
+            onClick={onDelete}
+            className="flex-1 py-3 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600 transition flex items-center justify-center"
+          >
+            DELETE
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -691,15 +791,33 @@ function KDSPage() {
     refetchInterval: 5000, // Refresh every 5 seconds for real-time updates
   });
 
-  // Update status mutation
+  // Fetch products for category grouping
+  const { data: products = [] } = useQuery({
+    queryKey: ['products'],
+    queryFn: () => productsApi.getProducts(),
+    staleTime: 60000, // Cache for 1 minute
+  });
+
+  // Update status mutation (don't clear selection for auto-updates)
   const updateStatusMutation = useMutation({
     mutationFn: ({ id, status }: { id: number; status: OrderStatus }) =>
       ordersApi.updateStatus(id, status),
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['orders'] });
-      setSelectedOrder(null);
+      // Only clear selection if it's a completion/cancellation
+      if (['DELIVERED', 'PICKED_UP', 'CANCELLED'].includes(variables.status)) {
+        setSelectedOrder(null);
+      }
     },
   });
+
+  // Auto-confirm PENDING orders when they appear in the KDS
+  useEffect(() => {
+    const pendingOrders = orders.filter(o => o.status === 'PENDING');
+    pendingOrders.forEach(order => {
+      updateStatusMutation.mutate({ id: order.id, status: 'CONFIRMED' });
+    });
+  }, [orders]);
 
   // Create order mutation
   const createOrderMutation = useMutation({
@@ -743,6 +861,7 @@ function KDSPage() {
   }, [activeOrders, sortMode]);
 
   // Handle order selection - restore checks from localStorage if available
+  // Auto-start: If order is CONFIRMED, automatically set to IN_PROGRESS when selected
   const handleSelectOrder = (order: Order) => {
     const storedChecks = getOrderChecks(order.id);
     const itemChecks: Record<string, boolean> = {};
@@ -753,7 +872,13 @@ function KDSPage() {
       itemChecks[itemKey] = storedChecks?.[itemKey] ?? false;
     });
     
-    setSelectedOrder({ ...order, itemChecks });
+    // Auto-start: Set to IN_PROGRESS if CONFIRMED
+    if (order.status === 'CONFIRMED') {
+      updateStatusMutation.mutate({ id: order.id, status: 'IN_PROGRESS' });
+      setSelectedOrder({ ...order, status: 'IN_PROGRESS', itemChecks });
+    } else {
+      setSelectedOrder({ ...order, itemChecks });
+    }
   };
 
   // Handle item toggle - save to localStorage
@@ -775,8 +900,14 @@ function KDSPage() {
   };
 
   // Handle complete order - remove checks from localStorage
+  // Note: Can complete from IN_PROGRESS (skipping READY) or from READY
   const handleComplete = () => {
     if (!selectedOrder) return;
+    // Allow completion from IN_PROGRESS or READY
+    if (!['IN_PROGRESS', 'READY'].includes(selectedOrder.status)) {
+      alert(`Order must be IN_PROGRESS or READY to complete. Current status: ${selectedOrder.status}`);
+      return;
+    }
     // Remove checks from localStorage
     removeOrderChecks(selectedOrder.id);
     // Use PICKED_UP for pickup orders, DELIVERED for delivery orders
@@ -841,6 +972,7 @@ function KDSPage() {
             onToggleItem={handleToggleItem}
             onComplete={handleComplete}
             onDelete={handleDelete}
+            products={products}
           />
         </div>
       </div>
