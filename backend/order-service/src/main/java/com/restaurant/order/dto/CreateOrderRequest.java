@@ -9,6 +9,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
@@ -36,4 +37,7 @@ public class CreateOrderRequest {
 
     @NotNull(message = "Total price is required")
     private BigDecimal totalPrice;
+
+    // Optional: If not provided, defaults to now + 45 minutes
+    private LocalDateTime estimatedDelivery;
 }

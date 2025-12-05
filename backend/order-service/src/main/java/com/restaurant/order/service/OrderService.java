@@ -57,7 +57,9 @@ public class OrderService {
                 .notes(request.getNotes())
                 .status(OrderStatus.PENDING)
                 .totalPrice(request.getTotalPrice())
-                .estimatedDelivery(LocalDateTime.now().plusMinutes(45))
+                .estimatedDelivery(request.getEstimatedDelivery() != null 
+                        ? request.getEstimatedDelivery() 
+                        : LocalDateTime.now().plusMinutes(45))
                 .build();
 
         // Add items
@@ -180,12 +182,16 @@ public class OrderService {
 
     /**
      * Validate status transition
+     * Note: IN_PROGRESS can go directly to DELIVERED/PICKED_UP (skipping READY)
+     * READY is kept for future use cases (customer notifications, multi-station kitchens)
      */
     private boolean isValidTransition(OrderStatus current, OrderStatus next) {
         return switch (current) {
             case PENDING -> next == OrderStatus.CONFIRMED || next == OrderStatus.CANCELLED;
             case CONFIRMED -> next == OrderStatus.IN_PROGRESS || next == OrderStatus.CANCELLED;
-            case IN_PROGRESS -> next == OrderStatus.READY || next == OrderStatus.CANCELLED;
+            // Allow skipping READY - go directly to DELIVERED/PICKED_UP from IN_PROGRESS
+            case IN_PROGRESS -> next == OrderStatus.READY || next == OrderStatus.DELIVERED 
+                    || next == OrderStatus.PICKED_UP || next == OrderStatus.CANCELLED;
             case READY -> next == OrderStatus.DELIVERED || next == OrderStatus.PICKED_UP;
             case DELIVERED, PICKED_UP, CANCELLED -> false;
         };
