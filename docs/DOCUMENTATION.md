@@ -1315,49 +1315,159 @@ new PageImpl<>(notifications, pageRequest, notifications.size())
 - [x] Optionale Felder hinzugefügt für Backend-Kompatibilität
 - [x] Null-Safety in ReceiptsPage und StatisticsPage
 
-#### 📁 Neue/Geänderte Dateien
+---
+
+### 05.12.2025 | Receipt Items Bug Fix & Demo Data Feature (Nachmittag)
+
+#### 🐛 Probleme & Lösungen
+
+**Problem 1: Receipts zeigen "0 items" an**
+
+**Symptom:** Alle Receipts in der Liste zeigten "0 items", obwohl Bestellungen Items hatten.
+
+**Ursache:** Das `OrderEvent` im order-service enthielt nur `itemCount` aber nicht die tatsächliche `items`-Liste. Wenn Receipts via Kafka erstellt wurden, kamen keine Items an.
+
+**Lösung:**
+
+```java
+// order-service/kafka/OrderEvent.java - VORHER
+private Integer itemCount;
+
+// order-service/kafka/OrderEvent.java - NACHHER
+private Integer itemCount;
+private List<OrderItemEvent> items;  // NEU
+
+@Data
+public static class OrderItemEvent {
+    private Long productId;
+    private String productName;
+    private Integer quantity;
+    private BigDecimal unitPrice;
+    private BigDecimal totalPrice;
+    private String notes;
+}
+```
+
+**Zusätzlich** wurde `buildEvent()` in `OrderService.java` erweitert:
+
+- Mappt jetzt alle Order-Items zu `OrderItemEvent` Objekten
+- Inkludiert Customer-Details (email, phone, customerId)
+- Subtotal und paymentMethod werden übertragen
+
+---
+
+**Problem 2: PDF Download funktioniert nicht im Frontend**
+
+**Symptom:** Klick auf Download-Button machte nichts.
+
+**Analyse:** Backend-API funktionierte korrekt (getestet mit curl → PDF wird generiert).
+
+**Lösung:** Error-Handling zum Download hinzugefügt:
+
+```typescript
+const handleDownload = async (receipt: Receipt) => {
+  try {
+    await receiptsApi.downloadReceiptPdf(receipt.id, receipt.receiptNumber);
+  } catch (error) {
+    console.error("Failed to download PDF:", error);
+    alert("Failed to download PDF. Please try again.");
+  }
+};
+```
+
+---
+
+#### ✅ Erfolge - Developer Tools Erweiterung
+
+**Neue "Populate Demo Data" Funktion:**
+
+- [x] Neuer Button in Settings → Developer Tab
+- [x] Erstellt komplettes Restaurant-Demo mit einem Klick
+- [x] **6 Kategorien:** Pizzas, Pasta, Salads, Burgers, Desserts, Drinks
+- [x] **24 Produkte** mit realistischen Namen, Beschreibungen, Preisen:
+  - Pizzas: Margherita (CHF 18.50), Quattro Formaggi (CHF 22.00), Diavola, etc.
+  - Pasta: Spaghetti Carbonara (CHF 19.50), Penne Arrabiata, etc.
+  - Salads: Caesar Salad (CHF 14.50), Caprese, Greek Salad
+  - Burgers: Classic Cheeseburger (CHF 17.50), Bacon BBQ Burger, etc.
+  - Desserts: Tiramisu (CHF 9.50), Panna Cotta, Chocolate Fondant
+  - Drinks: Coca-Cola (CHF 4.00), Espresso, Cappuccino, etc.
+- [x] **15 Sample-Orders** mit verschiedenen Status (PENDING bis DELIVERED)
+- [x] Fortschrittsanzeige während der Erstellung
+- [x] Überspringt bereits existierende Items (idempotent)
+- [x] Automatisches Refresh aller Seiten nach Abschluss
+
+**UI Features:**
+
+- Zeigt Vorschau: 6 Categories, 24 Products, 15 Orders
+- Info-Box erklärt was erstellt wird
+- Progress Bar mit Status-Text
+- Erfolgs-/Fehler-Meldungen
+
+#### 📁 Geänderte Dateien
+
+**Backend (order-service):**
+| Datei | Änderung |
+|-------|----------|
+| `kafka/OrderEvent.java` | Items-Liste und OrderItemEvent inner class hinzugefügt |
+| `service/OrderService.java` | buildEvent() mappt jetzt alle Items |
 
 **Frontend:**
 | Datei | Änderung |
 |-------|----------|
-| `client/src/pages/StatisticsPage.tsx` | **NEU** - Vollständiges Dashboard |
-| `client/src/api/statistics.ts` | **NEU** - Statistics API Types |
-| `client/src/App.tsx` | StatisticsPage Route hinzugefügt |
-| `client/src/components/Layout.tsx` | Statistics Navigation Item |
-| `client/src/pages/ReceiptsPage.tsx` | Date Range Filter Buttons |
-| `client/src/types/index.ts` | Receipt Interface Update |
-
-**Backend:**
-| Datei | Änderung |
-|-------|----------|
-| `receipt-service/ReceiptController.java` | Neue Endpoints |
-| `receipt-service/ReceiptService.java` | getAllReceipts, getByDateRange |
-| `receipt-service/OrderEventConsumer.java` | generateReceiptPdf Fix |
-| `receipt-service/application.yml` | Kafka Type-Mapping |
+| `pages/SettingsPage.tsx` | Demo Data Populate Feature mit 24 Produkten |
+| `pages/ReceiptsPage.tsx` | Error handling für PDF Download |
 
 #### 🔍 Erkenntnisse
 
-- **Receipt vs Total:** Backend sendet `totalAmount`, Frontend erwartete `total`
-- **Kafka Type-Mapping:** Bei Class-Renaming muss `spring.json.type.mapping` konfiguriert werden
-- **Date Range UX:** Konsistente Filter-Buttons verbessern Benutzererfahrung erheblich
-- **useMemo für Berechnungen:** Wichtig für Performance bei komplexen Statistik-Aggregationen
+- **Kafka Event Design:** Events sollten alle benötigten Daten enthalten, nicht nur IDs
+- **Idempotente Operationen:** Demo-Daten prüfen ob Items bereits existieren
+- **User Feedback:** Progress-Bars und Status-Meldungen verbessern UX erheblich
+- **Realistische Demo-Daten:** Schweizer Preise und deutsche Namen für authentisches Gefühl
+
+#### 📊 Aktueller Stand
+
+| Komponente           | Status     | Details                |
+| -------------------- | ---------- | ---------------------- |
+| Eureka Server        | ✅ Running | Port 8761              |
+| API Gateway          | ✅ Running | Port 8080              |
+| Auth Service         | ✅ Running | Port 8085              |
+| Product Service      | ✅ Running | Port 8081              |
+| Cart Service         | ✅ Running | Port 8082              |
+| Order Service        | ✅ Running | Port 8083              |
+| Payment Service      | ✅ Running | Port 8084              |
+| Receipt Service      | ✅ Running | Port 8086              |
+| Settings Service     | ✅ Running | Port 8087              |
+| Notification Service | ✅ Running | Port 8088              |
+| **KDS Client**       | ✅ Running | Port 1420 (Tauri/Vite) |
+
+**Frontend Pages:**
+
+- ✅ Login Page
+- ✅ KDS (Kitchen Display) mit 3-Spalten-Layout
+- ✅ Products Page mit CRUD
+- ✅ Categories Page mit Sortierung
+- ✅ Receipts Page mit Date Filters
+- ✅ Statistics Page mit Dashboard
+- ✅ Settings Page mit 5 Tabs (General, Hours, Delivery, Email, Developer)
 
 ---
 
 ## 🏁 Meilensteine
 
-| #   | Meilenstein                          | Zieldatum  | Status | Notizen                     |
-| --- | ------------------------------------ | ---------- | ------ | --------------------------- |
-| 1   | Projektdefinition & Architektur      | 04.12.2025 | ✅     | README, Plan, Docs erstellt |
-| 2   | KDS Wireframe & Feature-Definition   | 04.12.2025 | ✅     | 3-Spalten Layout definiert  |
-| 3   | API-Dokumentation & Auth-Flow        | 04.12.2025 | ✅     | 30+ Endpoints dokumentiert  |
-| 4   | Infrastruktur (Docker, MySQL, Kafka) | 05.12.2025 | ✅     | docker-compose.yml erstellt |
-| 5   | Backend Microservices                | 05.12.2025 | ✅     | 9 Services, 146 Tests       |
-| 6   | Restaurant Client (Tauri KDS App)    | 05.12.2025 | ✅     | 5 Pages, API Integration    |
-| 7   | Receipt & Notification System        | 06.12.2025 | ✅     | Multi-Format, 4 Sprachen    |
-| 8   | Website (Kunden-Portal)              | TBD        | ⬜     |                             |
-| 9   | Integration & Testing                | TBD        | ⬜     |                             |
-| 10  | Endabgabe                            | Juli 2025  | ⬜     |                             |
+| #   | Meilenstein                          | Zieldatum  | Status | Notizen                        |
+| --- | ------------------------------------ | ---------- | ------ | ------------------------------ |
+| 1   | Projektdefinition & Architektur      | 04.12.2025 | ✅     | README, Plan, Docs erstellt    |
+| 2   | KDS Wireframe & Feature-Definition   | 04.12.2025 | ✅     | 3-Spalten Layout definiert     |
+| 3   | API-Dokumentation & Auth-Flow        | 04.12.2025 | ✅     | 30+ Endpoints dokumentiert     |
+| 4   | Infrastruktur (Docker, MySQL, Kafka) | 05.12.2025 | ✅     | docker-compose.yml erstellt    |
+| 5   | Backend Microservices                | 05.12.2025 | ✅     | 10 Services, 150+ Tests        |
+| 6   | Restaurant Client (Tauri KDS App)    | 05.12.2025 | ✅     | 7 Pages, vollständige Features |
+| 7   | Receipt & Notification System        | 05.12.2025 | ✅     | Multi-Format, 4 Sprachen       |
+| 8   | Statistics Dashboard                 | 05.12.2025 | ✅     | Vollständiges Analytics        |
+| 9   | Demo Data & Developer Tools          | 05.12.2025 | ✅     | 24 Produkte, Auto-Populate     |
+| 10  | Website (Kunden-Portal)              | TBD        | ⬜     |                                |
+| 11  | Integration & Testing                | TBD        | ⬜     |                                |
+| 12  | Endabgabe                            | Juli 2025  | ⬜     |                                |
 
 ---
 
@@ -1597,39 +1707,69 @@ docs/requests/
 
 ### Technische Learnings
 
-1. **[DATUM] - [Thema]**
-   - _Was wurde gelernt_
+1. **05.12.2025 - Kafka Event Design**
+
+   - Events sollten alle benötigten Daten enthalten, nicht nur IDs/Counts
+   - Type-Mapping wichtig bei Klassenänderungen
+
+2. **05.12.2025 - CORS in Microservices**
+
+   - Nur an EINEM Ort konfigurieren (API Gateway)
+   - Doppelte CORS-Header werden vom Browser abgelehnt
+
+3. **05.12.2025 - Spring Boot Testing**
+   - PageImpl braucht vollständige Konstruktor-Parameter für Jackson
+   - H2 für Tests mit `defer-datasource-initialization: true`
 
 ### Prozess-Learnings
 
-1. **[DATUM] - [Thema]**
-   - _Was wurde gelernt_
+1. **04.12.2025 - API-First Entwicklung**
 
-### Team-Learnings
+   - Endpoints dokumentieren BEVOR Implementation
+   - Verhindert Inkonsistenzen zwischen Backend und Frontend
 
-1. **[DATUM] - [Thema]**
-   - _Was wurde gelernt_
+2. **05.12.2025 - Iterative Entwicklung**
+   - Kleine, testbare Änderungen statt grosser Refactorings
+   - Continuous Documentation während der Entwicklung
 
 ---
 
 ## 📊 Statistiken
 
-### Code-Metriken (wird aktualisiert)
+### Code-Metriken (Stand: 05.12.2025)
 
-| Metrik          | Wert          | Datum      |
-| --------------- | ------------- | ---------- |
-| Backend Tests   | 146           | 12.06.2025 |
-| Anzahl Services | 9 (+ 2 Infra) | 12.06.2025 |
-| Test Coverage   | TBD           |            |
-| API Endpoints   | ~50+          | 12.06.2025 |
+| Metrik                | Wert | Details                                                          |
+| --------------------- | ---- | ---------------------------------------------------------------- |
+| Backend Services      | 10   | + Eureka, Gateway                                                |
+| Backend Tests         | 150+ | Unit & Integration Tests                                         |
+| Frontend Pages        | 7    | Login, KDS, Products, Categories, Receipts, Statistics, Settings |
+| API Endpoints         | 60+  | REST APIs für alle Services                                      |
+| Demo Produkte         | 24   | Pizzas, Pasta, Salads, Burgers, etc.                             |
+| Unterstützte Sprachen | 4    | DE, EN, FR, IT (Email Templates)                                 |
+
+### Service-Ports
+
+| Service              | Port | Status |
+| -------------------- | ---- | ------ |
+| Eureka Server        | 8761 | ✅     |
+| API Gateway          | 8080 | ✅     |
+| Product Service      | 8081 | ✅     |
+| Cart Service         | 8082 | ✅     |
+| Order Service        | 8083 | ✅     |
+| Payment Service      | 8084 | ✅     |
+| Auth Service         | 8085 | ✅     |
+| Receipt Service      | 8086 | ✅     |
+| Settings Service     | 8087 | ✅     |
+| Notification Service | 8088 | ✅     |
+| KDS Client (Tauri)   | 1420 | ✅     |
 
 ### Zeitaufwand
 
-| Woche | Datum      | Stunden | Fokus             |
-| ----- | ---------- | ------- | ----------------- |
-| 1     | 04.12.2025 | TBD     | Projektdefinition |
-| 2     |            |         |                   |
-| 3     |            |         |                   |
+| Tag       | Datum      | ~Stunden | Fokus                                    |
+| --------- | ---------- | -------- | ---------------------------------------- |
+| Tag 1     | 04.12.2025 | 8+       | Projektdefinition, Architektur, API-Docs |
+| Tag 2     | 05.12.2025 | 12+      | Backend komplett, Frontend, Testing      |
+| **Total** |            | **20+**  | MVP funktionsfähig                       |
 
 ---
 
@@ -1655,4 +1795,4 @@ docs/requests/
 
 ---
 
-_Letzte Aktualisierung: 12.06.2025_
+_Letzte Aktualisierung: 05.12.2025_
