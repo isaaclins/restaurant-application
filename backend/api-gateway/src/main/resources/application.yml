@@ -6,6 +6,30 @@ spring:
     name: api-gateway
   cloud:
     gateway:
+      # Global CORS Configuration
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOriginPatterns:
+              - "http://localhost:*"
+              - "http://127.0.0.1:*"
+              - "tauri://localhost"
+              - "tauri://*"
+              - "ipc://localhost"
+              - "https://tauri.localhost"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - PATCH
+              - OPTIONS
+            allowedHeaders: "*"
+            exposedHeaders:
+              - Authorization
+              - X-Session-ID
+            allowCredentials: true
+            maxAge: 3600
       discovery:
         locator:
           enabled: true
@@ -84,6 +108,18 @@ spring:
           uri: lb://RECEIPT-SERVICE
           predicates:
             - Path=/api/receipts/**
+
+        # Receipt Templates (routed to Settings Service)
+        - id: receipt-templates-service
+          uri: lb://SETTINGS-SERVICE
+          predicates:
+            - Path=/api/receipt-templates/**
+
+        # Notification Service
+        - id: notification-service
+          uri: lb://NOTIFICATION-SERVICE
+          predicates:
+            - Path=/api/notifications/**
 
 eureka:
   client:

@@ -72,6 +72,9 @@ public class Receipt {
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal totalAmount;
 
+    @Builder.Default
+    private String currency = "CHF";
+
     // Items as JSON or separate table
     @OneToMany(mappedBy = "receipt", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
@@ -91,5 +94,10 @@ public class Receipt {
     public void addItem(ReceiptItem item) {
         items.add(item);
         item.setReceipt(this);
+    }
+
+    // Alias for totalAmount
+    public BigDecimal getTotal() {
+        return totalAmount;
     }
 }

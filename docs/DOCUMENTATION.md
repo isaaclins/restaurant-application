@@ -548,6 +548,43 @@ npm error enoent Could not read package.json
 
 ---
 
+### Tag 2 – 05.12.2025 | Email Templates, SMTP Config & Settings UI (Nachmittag)
+
+#### ✅ Erfolge
+
+- [x] **Email Template Preview** - HTML-Vorschau Modal mit Live-Rendering und Platzhalter-Ersetzung
+- [x] **Test Email Button** - Sendet Test-E-Mails mit Sample-Daten zum Testen
+- [x] **Neue Template-Typen** - Welcome, Password Reset, Promotion Templates (alle in DE/EN/FR/IT)
+- [x] **SMTP Configuration UI** - Vollständige SMTP-Konfiguration mit Quick Presets
+- [x] **Settings Page Performance** - Error Handling und Loading States verbessert
+- [x] **28 Email Templates** - 7 Typen × 4 Sprachen automatisch erstellt
+
+#### 🔧 Neue Features
+
+**Frontend (SettingsPage.tsx):**
+- Email Template Preview Modal mit iframe-basierter HTML-Vorschau
+- Test Email Modal mit E-Mail-Adresse-Eingabe
+- SMTP Settings Tab mit Host, Port, User, Password, TLS/SSL
+- Quick Presets für Gmail, Microsoft 365, SendGrid, Mailgun, AWS SES
+- Verbessertes Error Handling für alle API-Calls
+
+**Backend (notification-service):**
+- `POST /api/notifications/test-email` - Test-E-Mail senden
+- `GET /api/notifications/smtp-config` - SMTP-Konfiguration abrufen
+- `PUT /api/notifications/smtp-config` - SMTP-Konfiguration aktualisieren
+- `POST /api/notifications/smtp-config/test` - SMTP-Verbindung testen
+- 12 neue Email-Templates (Welcome, Password Reset, Promotion) in 4 Sprachen
+
+#### 📁 Geänderte Dateien
+
+- `client/src/pages/SettingsPage.tsx` - Email/SMTP UI erweitert
+- `client/src/api/settings.ts` - Neue API-Typen und Methoden
+- `backend/notification-service/.../NotificationController.java` - Neue Endpoints
+- `backend/notification-service/.../EmailService.java` - SMTP Config & Test
+- `backend/notification-service/.../EmailTemplateService.java` - Neue Templates
+
+---
+
 ### Tag 2 – 05.12.2025 | Infrastructure & Configuration Fixes (Nacht-Session 2)
 
 #### 🐛 Probleme & Lösungen
@@ -978,6 +1015,238 @@ const estimatedDelivery = `${estimatedTime.getFullYear()}-${pad(estimatedTime.ge
 
 ---
 
+### Tag 4 – 06.12.2025 | Receipt System & Notification Service
+
+#### ✅ Erfolge
+
+**Neues Receipt Template System (Settings-Service):**
+- [x] `ReceiptTemplate` Entity mit vollständiger Lokalisierung
+- [x] 4 Sprachen unterstützt: **DE/EN/FR/IT**
+- [x] Alle Labels anpassbar (Quittung, Total, MwSt., etc.)
+- [x] Währungs-Formatierung konfigurierbar (CHF 45.50 vs 45.50 CHF)
+- [x] Header/Footer-Texte anpassbar pro Sprache
+- [x] Logo-Toggle Option
+- [x] Default-Templates werden automatisch bei Service-Start erstellt
+- [x] CRUD-Endpoints über REST API
+
+**Neuer Notification-Service (Port 8088):**
+- [x] Vollständiger neuer Microservice
+- [x] E-Mail-Versand mit Spring Mail + Thymeleaf Templates
+- [x] 4-sprachige E-Mail-Templates (DE/EN/FR/IT):
+  - Order Confirmation
+  - Order Ready
+  - Payment Received
+  - Receipt Ready
+- [x] Kafka Consumer für automatische Notifications:
+  - `order-events` Topic
+  - `payment-events` Topic  
+  - `receipt-events` Topic
+- [x] Notification-Logging mit Retry-Mechanismus
+- [x] REST API für manuellen Versand und Template-Management
+- [x] Statistik-Endpoints
+
+**Receipt-Service Erweiterungen:**
+- [x] **PNG Export** - Quittungen als Bild (150 DPI Standard, 300 DPI High-Quality)
+- [x] **ESC/POS Export** - Für Thermodrucker (80mm Papier)
+- [x] **Kitchen Ticket ESC/POS** - Grössere Schrift, nur relevante Infos
+- [x] PDFBox Integration für PDF-zu-PNG Konvertierung
+
+**API Gateway Updates:**
+- [x] Route für `/api/receipt-templates/**` → Settings-Service
+- [x] Route für `/api/notifications/**` → Notification-Service
+
+#### 📁 Neue Dateien
+
+**Settings-Service (Receipt Templates):**
+| Datei | Beschreibung |
+|-------|--------------|
+| `entity/Language.java` | Enum: DE, EN, FR, IT mit Namen |
+| `entity/CurrencyPosition.java` | Enum: BEFORE, AFTER |
+| `entity/ReceiptTemplate.java` | Vollständiges Template Entity |
+| `repository/ReceiptTemplateRepository.java` | JPA Repository |
+| `service/ReceiptTemplateService.java` | Business Logic + Defaults |
+| `controller/ReceiptTemplateController.java` | REST Endpoints |
+| `dto/ReceiptTemplateResponse.java` | Response DTO |
+| `dto/UpdateReceiptTemplateRequest.java` | Update Request DTO |
+
+**Notification-Service (Komplett neu):**
+| Datei | Beschreibung |
+|-------|--------------|
+| `pom.xml` | Maven Dependencies |
+| `Dockerfile` | Container Build |
+| `application.yml` | Konfiguration (SMTP, Kafka, Eureka) |
+| `NotificationServiceApplication.java` | Main Class |
+| `entity/Notification.java` | Log Entity |
+| `entity/EmailTemplate.java` | Template Entity |
+| `entity/NotificationType.java` | Event Types Enum |
+| `entity/NotificationChannel.java` | Channel Enum |
+| `entity/NotificationStatus.java` | Status Enum |
+| `repository/NotificationRepository.java` | Log Repository |
+| `repository/EmailTemplateRepository.java` | Template Repository |
+| `service/EmailService.java` | E-Mail Versand |
+| `service/EmailTemplateService.java` | Template Rendering |
+| `service/NotificationEventConsumer.java` | Kafka Consumer |
+| `controller/NotificationController.java` | REST API |
+| `dto/OrderEvent.java` | Kafka Event DTO |
+| `dto/ReceiptEvent.java` | Kafka Event DTO |
+| `dto/SendNotificationRequest.java` | Manual Send DTO |
+
+**Receipt-Service (Erweiterungen):**
+| Datei | Beschreibung |
+|-------|--------------|
+| `service/ImageService.java` | PNG Generation |
+| `service/EscPosService.java` | Thermodrucker Format |
+| `pom.xml` | PDFBox Dependency |
+
+#### 🔍 Erkenntnisse
+
+- **ESC/POS** ist der Standard für Thermodrucker (Epson, Star, etc.)
+- **Thymeleaf** eignet sich gut für E-Mail Templates
+- **Multi-Language Support** von Anfang an einbauen spart später Aufwand
+- **Kafka Topics** für Events: Lose Kopplung zwischen Services
+
+#### 🎯 Nächste Schritte
+
+1. ~~Frontend-Integration für Receipt-Template-Editor~~ ✅
+2. ~~E-Mail-Template-Editor im Settings-Bereich~~ ✅
+3. Notification-Preferences pro Kunde
+4. PDF/PNG Download Buttons im KDS
+
+#### 🧪 Tests (Abend-Session)
+
+**Settings-Service Tests:**
+- [x] `ReceiptTemplateServiceTest` - Service Layer Tests
+- [x] `ReceiptTemplateControllerTest` - REST API Tests
+
+**Notification-Service Tests:**
+- [x] `EmailServiceTest` - E-Mail Versand Tests
+- [x] `EmailTemplateServiceTest` - Template Rendering Tests
+- [x] `NotificationControllerTest` - REST API Tests
+
+**Receipt-Service Tests:**
+- [x] `EscPosServiceTest` - Thermodrucker Format Tests
+- [x] `ImageServiceTest` - PNG Generation Tests
+
+#### 🖥️ KDS Email & Receipt Settings (Abend-Session)
+
+**Neuer Tab "Email & Receipts" in Settings:**
+- [x] Tab-Navigation erweitert mit Mail-Icon
+- [x] 3 Sub-Tabs: Receipt Templates, Email Templates, Notification Stats
+- [x] **Receipt Template Editor:**
+  - Sprach-Auswahl (DE/EN/FR/IT) mit Flaggen
+  - Default-Template markierung mit Stern
+  - Alle Labels editierbar im Formular
+  - Währungs-Symbol und Position konfigurierbar
+  - Logo-Toggle Checkbox
+  - Header/Footer/Thank-You Textfelder
+  - Reset-to-Default Button
+  - Set-as-Default Button
+- [x] **Email Template Editor:**
+  - Gruppiert nach Typ (Order Confirmation, Payment, etc.)
+  - Subject Line editierbar
+  - HTML Template Editor (monospace)
+  - Plain Text Fallback Editor
+  - Placeholder-Hinweise
+- [x] **Notification Stats Dashboard:**
+  - Sent/Pending/Failed Counter Cards
+  - By-Type Breakdown
+  - Retry Failed Button für fehlgeschlagene Mails
+  - Auto-Refresh alle 30 Sekunden
+
+**API Methods (client/src/api/settings.ts):**
+```typescript
+// Receipt Templates
+getReceiptTemplates()
+getReceiptTemplateByLanguage(language)
+updateReceiptTemplate(id, template)
+resetReceiptTemplate(id)
+setDefaultReceiptTemplate(id)
+getLanguages()
+
+// Email Templates
+getEmailTemplates()
+getEmailTemplatesByLanguage(language)
+updateEmailTemplate(id, template)
+
+// Notification Stats
+getNotificationStats()
+retryFailedNotifications()
+```
+
+---
+
+### Tag 2 – 05.12.2025 | CORS Fix, HTTPS Production Setup & Tests (Nachmittag)
+
+#### 🐛 Probleme & Lösungen
+
+**Problem 1: Frontend zeigt "Email Templates Not Found" trotz funktionierender API**
+
+**Symptom:** `curl` funktioniert, aber Frontend bekommt Network Error.
+
+**Ursache:** **Doppelte CORS-Header!** 
+- API Gateway hatte globale CORS-Config
+- NotificationController und ReceiptTemplateController hatten zusätzlich `@CrossOrigin(origins = "*")`
+- Browser lehnt Response mit doppelten `Access-Control-Allow-Origin` Headers ab
+
+**Lösung:** `@CrossOrigin` Annotation von beiden Controllern entfernt:
+- `NotificationController.java` - Annotation entfernt
+- `ReceiptTemplateController.java` - Annotation entfernt
+- CORS wird jetzt zentral nur im API Gateway gehandhabt
+
+---
+
+**Problem 2: Notification-Service Tests schlagen fehl (2 von 21)**
+
+**Symptom:** `HttpMessageNotWritableException: UnsupportedOperationException` bei JSON Serialisierung
+
+**Ursache:** `PageImpl` wurde ohne `Pageable` und `totalElements` erstellt. Spring's Jackson Serializer braucht diese für korrekte Page-Struktur.
+
+**Lösung:**
+```java
+// VORHER (fehlerhaft):
+new PageImpl<>(notifications)
+
+// NACHHER (korrekt):
+PageRequest pageRequest = PageRequest.of(0, 20);
+new PageImpl<>(notifications, pageRequest, notifications.size())
+```
+
+**Datei:** `NotificationControllerTest.java`
+
+**Ergebnis:** ✅ Alle 21 Tests bestanden
+
+#### ✅ Erfolge
+
+- [x] **CORS-Bug gefixt** – Doppelte Header entfernt, zentrale Gateway-Config
+- [x] **Settings Page funktioniert** – Email Templates, Stats, SMTP Config laden korrekt
+- [x] **Notification-Service Tests** – 21/21 Tests grün
+- [x] **HTTPS Production Setup** erstellt:
+  - `docker-compose.prod.yml` mit Traefik Reverse Proxy
+  - Automatische Let's Encrypt SSL-Zertifikate
+  - Alle Services hinter HTTPS
+  - `.env.prod.example` Template
+  - `application-prod.yml` für API Gateway (HTTPS-only CORS)
+
+#### 📁 Geänderte/Neue Dateien
+
+| Datei | Änderung |
+|-------|----------|
+| `backend/notification-service/.../NotificationController.java` | `@CrossOrigin` entfernt |
+| `backend/settings-service/.../ReceiptTemplateController.java` | `@CrossOrigin` entfernt |
+| `backend/notification-service/.../NotificationControllerTest.java` | PageImpl Fix mit PageRequest |
+| `docker-compose.prod.yml` | **NEU** - Production Stack mit Traefik SSL |
+| `.env.prod.example` | **NEU** - Production Environment Template |
+| `backend/api-gateway/.../application-prod.yml` | **NEU** - HTTPS-only CORS Config |
+
+#### 🔍 Erkenntnisse
+
+- **CORS doppelte Header**: Browser lehnen Responses mit mehreren `Access-Control-Allow-Origin` ab
+- **Zentrale CORS-Config**: Besser im Gateway als in jedem Controller
+- **PageImpl Serialisierung**: Braucht vollständige Konstruktor-Parameter für Jackson
+- **Traefik**: Moderner Reverse Proxy mit automatischem Let's Encrypt Support
+
+---
+
 ## 🏁 Meilensteine
 
 | #   | Meilenstein                          | Zieldatum  | Status | Notizen                     |
@@ -988,9 +1257,10 @@ const estimatedDelivery = `${estimatedTime.getFullYear()}-${pad(estimatedTime.ge
 | 4   | Infrastruktur (Docker, MySQL, Kafka) | 05.12.2025 | ✅     | docker-compose.yml erstellt |
 | 5   | Backend Microservices                | 05.12.2025 | ✅     | 9 Services, 146 Tests       |
 | 6   | Restaurant Client (Tauri KDS App)    | 05.12.2025 | ✅     | 5 Pages, API Integration    |
-| 7   | Website (Kunden-Portal)              | TBD        | ⬜     |                             |
-| 8   | Integration & Testing                | TBD        | ⬜     |                             |
-| 9   | Endabgabe                            | Juli 2025  | ⬜     |                             |
+| 7   | Receipt & Notification System        | 06.12.2025 | ✅     | Multi-Format, 4 Sprachen    |
+| 8   | Website (Kunden-Portal)              | TBD        | ⬜     |                             |
+| 9   | Integration & Testing                | TBD        | ⬜     |                             |
+| 10  | Endabgabe                            | Juli 2025  | ⬜     |                             |
 
 ---
 

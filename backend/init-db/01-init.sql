@@ -4,6 +4,7 @@ CREATE DATABASE IF NOT EXISTS order_db;
 CREATE DATABASE IF NOT EXISTS auth_db;
 CREATE DATABASE IF NOT EXISTS receipt_db;
 CREATE DATABASE IF NOT EXISTS settings_db;
+CREATE DATABASE IF NOT EXISTS notification_db;
 
 -- Create user if not exists (MySQL 8.0+ syntax)
 -- Note: The 'restaurant' user is also created by Docker's MYSQL_USER env var,
@@ -17,11 +18,13 @@ GRANT ALL PRIVILEGES ON order_db.* TO 'restaurant'@'%';
 GRANT ALL PRIVILEGES ON auth_db.* TO 'restaurant'@'%';
 GRANT ALL PRIVILEGES ON receipt_db.* TO 'restaurant'@'%';
 GRANT ALL PRIVILEGES ON settings_db.* TO 'restaurant'@'%';
+GRANT ALL PRIVILEGES ON notification_db.* TO 'restaurant'@'%';
 
 GRANT ALL PRIVILEGES ON product_db.* TO 'restaurant'@'localhost';
 GRANT ALL PRIVILEGES ON order_db.* TO 'restaurant'@'localhost';
 GRANT ALL PRIVILEGES ON auth_db.* TO 'restaurant'@'localhost';
 GRANT ALL PRIVILEGES ON receipt_db.* TO 'restaurant'@'localhost';
 GRANT ALL PRIVILEGES ON settings_db.* TO 'restaurant'@'localhost';
+GRANT ALL PRIVILEGES ON notification_db.* TO 'restaurant'@'localhost';
 
 FLUSH PRIVILEGES;

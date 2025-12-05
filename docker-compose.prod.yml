@@ -1,0 +1,382 @@
+# =============================================================================
+# PRODUCTION Docker Compose - Restaurant Application
+# =============================================================================
+# Features:
+# - HTTPS via Traefik + Let's Encrypt (automatic SSL certificates)
+# - All services behind reverse proxy
+# - No exposed ports except 80/443
+# - Health checks on all services
+# =============================================================================
+
+services:
+  # ===========================================================================
+  # REVERSE PROXY - Traefik (SSL Termination)
+  # ===========================================================================
+  
+  traefik:
+    image: traefik:v3.0
+    container_name: restaurant-traefik
+    restart: unless-stopped
+    command:
+      # API & Dashboard
+      - "--api.dashboard=true"
+      - "--api.insecure=false"
+      
+      # Entrypoints
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      
+      # Redirect HTTP to HTTPS
+      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
+      
+      # Let's Encrypt
+      - "--certificatesresolvers.letsencrypt.acme.tlschallenge=true"
+      - "--certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL}"
+      - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
+      
+      # Docker provider
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--providers.docker.network=restaurant-network"
+      
+      # Logging
+      - "--log.level=INFO"
+      - "--accesslog=true"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - traefik_letsencrypt:/letsencrypt
+    networks:
+      - restaurant-network
+    labels:
+      # Dashboard
+      - "traefik.enable=true"
+      - "traefik.http.routers.traefik-dashboard.rule=Host(`traefik.${DOMAIN}`)"
+      - "traefik.http.routers.traefik-dashboard.entrypoints=websecure"
+      - "traefik.http.routers.traefik-dashboard.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.traefik-dashboard.service=api@internal"
+      - "traefik.http.routers.traefik-dashboard.middlewares=auth"
+      - "traefik.http.middlewares.auth.basicauth.users=${TRAEFIK_DASHBOARD_AUTH}"
+
+  # ===========================================================================
+  # DATABASES
+  # ===========================================================================
+  
+  mysql:
+    image: mysql:8.0
+    container_name: restaurant-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./backend/init-db:/docker-entrypoint-initdb.d
+    networks:
+      - restaurant-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    # NO PORTS EXPOSED - internal only
+
+  redis:
+    image: redis:7-alpine
+    container_name: restaurant-redis
+    restart: unless-stopped
+    command: redis-server --requirepass ${REDIS_PASSWORD}
+    volumes:
+      - redis_data:/data
+    networks:
+      - restaurant-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    # NO PORTS EXPOSED - internal only
+
+  # ===========================================================================
+  # KAFKA & ZOOKEEPER
+  # ===========================================================================
+  
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: restaurant-zookeeper
+    restart: unless-stopped
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - restaurant-network
+    # NO PORTS EXPOSED - internal only
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: restaurant-kafka
+    restart: unless-stopped
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    networks:
+      - restaurant-network
+    # NO PORTS EXPOSED - internal only
+
+  # ===========================================================================
+  # MICROSERVICES
+  # ===========================================================================
+
+  eureka-server:
+    build: ./backend/eureka-server
+    container_name: restaurant-eureka
+    restart: unless-stopped
+    environment:
+      - EUREKA_HOST=eureka-server
+      - EUREKA_PORT=8761
+    networks:
+      - restaurant-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8761/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.eureka.rule=Host(`eureka.${DOMAIN}`)"
+      - "traefik.http.routers.eureka.entrypoints=websecure"
+      - "traefik.http.routers.eureka.tls.certresolver=letsencrypt"
+      - "traefik.http.services.eureka.loadbalancer.server.port=8761"
+      - "traefik.http.routers.eureka.middlewares=auth"
+
+  api-gateway:
+    build: ./backend/api-gateway
+    container_name: restaurant-gateway
+    restart: unless-stopped
+    environment:
+      - EUREKA_HOST=eureka-server
+      - EUREKA_PORT=8761
+      - SPRING_PROFILES_ACTIVE=prod
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+    networks:
+      - restaurant-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.api.rule=Host(`api.${DOMAIN}`)"
+      - "traefik.http.routers.api.entrypoints=websecure"
+      - "traefik.http.routers.api.tls.certresolver=letsencrypt"
+      - "traefik.http.services.api.loadbalancer.server.port=8080"
+      # CORS Headers
+      - "traefik.http.middlewares.cors.headers.accesscontrolallowmethods=GET,POST,PUT,DELETE,PATCH,OPTIONS"
+      - "traefik.http.middlewares.cors.headers.accesscontrolallowheaders=*"
+      - "traefik.http.middlewares.cors.headers.accesscontrolalloworiginlist=https://${DOMAIN},https://www.${DOMAIN}"
+      - "traefik.http.middlewares.cors.headers.accesscontrolallowcredentials=true"
+      - "traefik.http.middlewares.cors.headers.accesscontrolmaxage=100"
+      - "traefik.http.routers.api.middlewares=cors"
+
+  product-service:
+    build: ./backend/product-service
+    container_name: restaurant-products
+    restart: unless-stopped
+    environment:
+      - EUREKA_HOST=eureka-server
+      - MYSQL_HOST=mysql
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - SPRING_PROFILES_ACTIVE=prod
+    depends_on:
+      mysql:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    networks:
+      - restaurant-network
+
+  cart-service:
+    build: ./backend/cart-service
+    container_name: restaurant-cart
+    restart: unless-stopped
+    environment:
+      - EUREKA_HOST=eureka-server
+      - REDIS_HOST=redis
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - SPRING_PROFILES_ACTIVE=prod
+    depends_on:
+      redis:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    networks:
+      - restaurant-network
+
+  order-service:
+    build: ./backend/order-service
+    container_name: restaurant-orders
+    restart: unless-stopped
+    environment:
+      - EUREKA_HOST=eureka-server
+      - MYSQL_HOST=mysql
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:29092
+      - SPRING_PROFILES_ACTIVE=prod
+    depends_on:
+      mysql:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+      eureka-server:
+        condition: service_healthy
+    networks:
+      - restaurant-network
+
+  payment-service:
+    build: ./backend/payment-service
+    container_name: restaurant-payments
+    restart: unless-stopped
+    environment:
+      - EUREKA_HOST=eureka-server
+      - MYSQL_HOST=mysql
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:29092
+      - SPRING_PROFILES_ACTIVE=prod
+    depends_on:
+      mysql:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+      eureka-server:
+        condition: service_healthy
+    networks:
+      - restaurant-network
+
+  auth-service:
+    build: ./backend/auth-service
+    container_name: restaurant-auth
+    restart: unless-stopped
+    environment:
+      - EUREKA_HOST=eureka-server
+      - MYSQL_HOST=mysql
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - JWT_SECRET=${JWT_SECRET}
+      - SPRING_PROFILES_ACTIVE=prod
+    depends_on:
+      mysql:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    networks:
+      - restaurant-network
+
+  settings-service:
+    build: ./backend/settings-service
+    container_name: restaurant-settings
+    restart: unless-stopped
+    environment:
+      - EUREKA_HOST=eureka-server
+      - MYSQL_HOST=mysql
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - SPRING_PROFILES_ACTIVE=prod
+    depends_on:
+      mysql:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    networks:
+      - restaurant-network
+
+  notification-service:
+    build: ./backend/notification-service
+    container_name: restaurant-notifications
+    restart: unless-stopped
+    environment:
+      - EUREKA_HOST=eureka-server
+      - MYSQL_HOST=mysql
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:29092
+      - SMTP_HOST=${SMTP_HOST}
+      - SMTP_PORT=${SMTP_PORT}
+      - SMTP_USERNAME=${SMTP_USERNAME}
+      - SMTP_PASSWORD=${SMTP_PASSWORD}
+      - SPRING_PROFILES_ACTIVE=prod
+    depends_on:
+      mysql:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+      eureka-server:
+        condition: service_healthy
+    networks:
+      - restaurant-network
+
+  receipt-service:
+    build: ./backend/receipt-service
+    container_name: restaurant-receipts
+    restart: unless-stopped
+    environment:
+      - EUREKA_HOST=eureka-server
+      - MYSQL_HOST=mysql
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:29092
+      - SPRING_PROFILES_ACTIVE=prod
+    depends_on:
+      mysql:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+      eureka-server:
+        condition: service_healthy
+    networks:
+      - restaurant-network
+
+  # ===========================================================================
+  # FRONTEND - Static Files served by Nginx
+  # ===========================================================================
+
+  website:
+    build: ./website
+    container_name: restaurant-website
+    restart: unless-stopped
+    networks:
+      - restaurant-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.website.rule=Host(`${DOMAIN}`) || Host(`www.${DOMAIN}`)"
+      - "traefik.http.routers.website.entrypoints=websecure"
+      - "traefik.http.routers.website.tls.certresolver=letsencrypt"
+      - "traefik.http.services.website.loadbalancer.server.port=80"
+
+# =============================================================================
+# NETWORKS & VOLUMES
+# =============================================================================
+
+networks:
+  restaurant-network:
+    driver: bridge
+
+volumes:
+  mysql_data:
+  redis_data:
+  traefik_letsencrypt:

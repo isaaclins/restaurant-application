@@ -263,7 +263,7 @@ start_backend() {
     print_success "Eureka is ready!"
     
     # Start remaining services
-    local services=("api-gateway" "product-service" "cart-service" "order-service" "payment-service" "auth-service" "settings-service" "receipt-service")
+    local services=("api-gateway" "product-service" "cart-service" "order-service" "payment-service" "auth-service" "settings-service" "receipt-service" "notification-service")
     
     for service in "${services[@]}"; do
         if [ -d "$PROJECT_ROOT/backend/$service" ]; then
@@ -285,13 +285,16 @@ start_backend() {
     print_success "Backend services starting..."
     echo ""
     echo "  Services:"
-    echo "  • Eureka:    http://localhost:8761"
-    echo "  • Gateway:   http://localhost:8080"
-    echo "  • Products:  http://localhost:8081"
-    echo "  • Cart:      http://localhost:8082"
-    echo "  • Orders:    http://localhost:8083"
-    echo "  • Payments:  http://localhost:8084"
-    echo "  • Auth:      http://localhost:8085"
+    echo "  • Eureka:        http://localhost:8761"
+    echo "  • Gateway:       http://localhost:8080"
+    echo "  • Products:      http://localhost:8081"
+    echo "  • Cart:          http://localhost:8082"
+    echo "  • Orders:        http://localhost:8083"
+    echo "  • Payments:      http://localhost:8084"
+    echo "  • Auth:          http://localhost:8085"
+    echo "  • Receipt:       http://localhost:8086"
+    echo "  • Settings:      http://localhost:8087"
+    echo "  • Notifications: http://localhost:8088"
 }
 
 stop_backend() {

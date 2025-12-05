@@ -3,6 +3,8 @@ package com.restaurant.receipt.controller;
 import com.restaurant.receipt.dto.CreateReceiptRequest;
 import com.restaurant.receipt.dto.DailyReportResponse;
 import com.restaurant.receipt.dto.ReceiptResponse;
+import com.restaurant.receipt.service.EscPosService;
+import com.restaurant.receipt.service.ImageService;
 import com.restaurant.receipt.service.ReceiptService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -24,10 +26,12 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/receipts")
 @RequiredArgsConstructor
-@Tag(name = "Receipts", description = "Receipt management and PDF generation")
+@Tag(name = "Receipts", description = "Receipt management and multi-format generation")
 public class ReceiptController {
 
     private final ReceiptService receiptService;
+    private final ImageService imageService;
+    private final EscPosService escPosService;
 
     @PostMapping
     @Operation(summary = "Create a new receipt")
@@ -66,6 +70,62 @@ public class ReceiptController {
         headers.setContentLength(pdfData.length);
 
         return new ResponseEntity<>(pdfData, headers, HttpStatus.OK);
+    }
+
+    @GetMapping("/{id}/png")
+    @Operation(summary = "Download receipt as PNG image")
+    public ResponseEntity<byte[]> getReceiptPng(@PathVariable Long id) {
+        byte[] pngData = receiptService.getReceiptPng(id);
+        ReceiptResponse receipt = receiptService.getReceiptById(id);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.IMAGE_PNG);
+        headers.setContentDispositionFormData("attachment", "receipt-" + receipt.getReceiptNumber() + ".png");
+        headers.setContentLength(pngData.length);
+
+        return new ResponseEntity<>(pngData, headers, HttpStatus.OK);
+    }
+
+    @GetMapping("/{id}/png/high-quality")
+    @Operation(summary = "Download receipt as high-quality PNG (300 DPI)")
+    public ResponseEntity<byte[]> getReceiptPngHighQuality(@PathVariable Long id) {
+        byte[] pngData = receiptService.getReceiptPngHighQuality(id);
+        ReceiptResponse receipt = receiptService.getReceiptById(id);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.IMAGE_PNG);
+        headers.setContentDispositionFormData("attachment", "receipt-" + receipt.getReceiptNumber() + "-hq.png");
+        headers.setContentLength(pngData.length);
+
+        return new ResponseEntity<>(pngData, headers, HttpStatus.OK);
+    }
+
+    @GetMapping("/{id}/escpos")
+    @Operation(summary = "Download receipt as ESC/POS thermal printer format")
+    public ResponseEntity<byte[]> getReceiptEscPos(@PathVariable Long id) {
+        byte[] escPosData = receiptService.getReceiptEscPos(id);
+        ReceiptResponse receipt = receiptService.getReceiptById(id);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+        headers.setContentDispositionFormData("attachment", "receipt-" + receipt.getReceiptNumber() + ".bin");
+        headers.setContentLength(escPosData.length);
+
+        return new ResponseEntity<>(escPosData, headers, HttpStatus.OK);
+    }
+
+    @GetMapping("/{id}/kitchen-ticket")
+    @Operation(summary = "Download kitchen ticket as ESC/POS format")
+    public ResponseEntity<byte[]> getKitchenTicket(@PathVariable Long id) {
+        byte[] escPosData = receiptService.getKitchenTicketEscPos(id);
+        ReceiptResponse receipt = receiptService.getReceiptById(id);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+        headers.setContentDispositionFormData("attachment", "kitchen-" + receipt.getReceiptNumber() + ".bin");
+        headers.setContentLength(escPosData.length);
+
+        return new ResponseEntity<>(escPosData, headers, HttpStatus.OK);
     }
 
     @GetMapping("/customer/{customerId}")

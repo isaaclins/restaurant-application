@@ -31,6 +31,8 @@ public class ReceiptService {
 
     private final ReceiptRepository receiptRepository;
     private final PdfService pdfService;
+    private final ImageService imageService;
+    private final EscPosService escPosService;
     private final RestaurantConfig restaurantConfig;
 
     /**
@@ -144,6 +146,42 @@ public class ReceiptService {
         }
 
         return receipt.getPdfData();
+    }
+
+    /**
+     * Get PNG image for receipt
+     */
+    public byte[] getReceiptPng(Long id) {
+        Receipt receipt = receiptRepository.findById(id)
+                .orElseThrow(() -> new ReceiptNotFoundException(id));
+        return imageService.generateReceiptPng(receipt);
+    }
+
+    /**
+     * Get high-quality PNG image for receipt (300 DPI)
+     */
+    public byte[] getReceiptPngHighQuality(Long id) {
+        Receipt receipt = receiptRepository.findById(id)
+                .orElseThrow(() -> new ReceiptNotFoundException(id));
+        return imageService.generateHighQualityPng(receipt);
+    }
+
+    /**
+     * Get ESC/POS format for thermal printer
+     */
+    public byte[] getReceiptEscPos(Long id) {
+        Receipt receipt = receiptRepository.findById(id)
+                .orElseThrow(() -> new ReceiptNotFoundException(id));
+        return escPosService.generateEscPos(receipt);
+    }
+
+    /**
+     * Get kitchen ticket in ESC/POS format
+     */
+    public byte[] getKitchenTicketEscPos(Long id) {
+        Receipt receipt = receiptRepository.findById(id)
+                .orElseThrow(() -> new ReceiptNotFoundException(id));
+        return escPosService.generateKitchenTicket(receipt);
     }
 
     /**
