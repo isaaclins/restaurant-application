@@ -18,7 +18,16 @@ export const receiptsApi = {
   getReceiptPdf: async (id: number): Promise<Blob> => {
     const response = await api.get(`/api/receipts/${id}/pdf`, {
       responseType: 'blob',
+      headers: {
+        'Accept': 'application/pdf',
+      },
     });
+    // Check if the response is actually a PDF
+    if (response.data.type === 'application/json') {
+      // Error response was returned as blob, parse it
+      const text = await response.data.text();
+      throw new Error(JSON.parse(text).message || 'Failed to fetch PDF');
+    }
     return response.data;
   },
 
@@ -31,14 +40,30 @@ export const receiptsApi = {
 
   // Download receipt PDF
   downloadReceiptPdf: async (id: number, receiptNumber: string): Promise<void> => {
-    const blob = await receiptsApi.getReceiptPdf(id);
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `receipt-${receiptNumber}.pdf`;
-    document.body.appendChild(a);
-    a.click();
-    window.URL.revokeObjectURL(url);
-    document.body.removeChild(a);
+    try {
+      const blob = await receiptsApi.getReceiptPdf(id);
+      
+      // Validate blob
+      if (!blob || blob.size === 0) {
+        throw new Error('Received empty PDF');
+      }
+      
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `receipt-${receiptNumber}.pdf`;
+      a.style.display = 'none';
+      document.body.appendChild(a);
+      a.click();
+      
+      // Cleanup after a short delay to ensure download starts
+      setTimeout(() => {
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      }, 100);
+    } catch (error) {
+      console.error('PDF download failed:', error);
+      throw error;
+    }
   },
 };

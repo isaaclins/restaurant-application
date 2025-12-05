@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ordersApi } from '../api/orders';
 import { productsApi } from '../api/products';
+import { receiptsApi } from '../api/receipts';
 import { Order, OrderStatus, Product } from '../types';
 import { differenceInSeconds, differenceInMinutes, addMinutes, format } from 'date-fns';
 import {
@@ -13,6 +14,12 @@ import {
   Settings,
   ArrowUpDown,
   RefreshCw,
+  User,
+  Phone,
+  Mail,
+  Download,
+  Truck,
+  Store,
 } from 'lucide-react';
 
 // =============================================================================
@@ -24,6 +31,7 @@ interface SelectedOrder extends Order {
 }
 
 type SortMode = 'time' | 'item';
+type SortDirection = 'asc' | 'desc';
 
 // =============================================================================
 // LocalStorage Helpers for Item Checks
@@ -527,24 +535,129 @@ function DetailPanel({ order, onToggleItem, onComplete, onDelete, products }: De
         </div>
       </div>
 
-      {/* Footer Info */}
-      <div className="p-4 border-t border-gray-200 bg-gray-50">
-        {order.orderType === 'DELIVERY' && (order.deliveryStreet || order.customerAddress) && (
-          <div className="flex items-center text-sm text-gray-600 mb-2">
-            <MapPin className="w-4 h-4 mr-2" />
-            Location: {order.deliveryStreet 
-              ? `${order.deliveryStreet}, ${order.deliveryPostalCode} ${order.deliveryCity}`
-              : order.customerAddress}
+      {/* Footer Info - Enhanced with more details */}
+      <div className="p-4 border-t border-gray-200 bg-gray-50 space-y-3">
+        {/* Order Type Badge */}
+        <div className="flex items-center justify-between">
+          <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+            order.orderType === 'DELIVERY' 
+              ? 'bg-purple-100 text-purple-700' 
+              : order.orderType === 'DINE_IN'
+              ? 'bg-blue-100 text-blue-700'
+              : 'bg-orange-100 text-orange-700'
+          }`}>
+            {order.orderType === 'DELIVERY' ? (
+              <><Truck className="w-4 h-4 mr-1" /> Delivery</>
+            ) : order.orderType === 'DINE_IN' ? (
+              <><Store className="w-4 h-4 mr-1" /> Dine-In</>
+            ) : (
+              <><Store className="w-4 h-4 mr-1" /> Pickup</>
+            )}
+          </div>
+          <div className="text-sm text-gray-500">
+            {format(new Date(order.createdAt), 'HH:mm')}
+          </div>
+        </div>
+
+        {/* Customer Info */}
+        <div className="space-y-1">
+          <div className="flex items-center text-sm text-gray-700">
+            <User className="w-4 h-4 mr-2 text-gray-400" />
+            <span className="font-medium">{order.customerName}</span>
+          </div>
+          {order.customerPhone && (
+            <div className="flex items-center text-sm text-gray-600">
+              <Phone className="w-4 h-4 mr-2 text-gray-400" />
+              {order.customerPhone}
+            </div>
+          )}
+          {order.customerEmail && (
+            <div className="flex items-center text-sm text-gray-600">
+              <Mail className="w-4 h-4 mr-2 text-gray-400" />
+              {order.customerEmail}
+            </div>
+          )}
+        </div>
+
+        {/* Delivery Location (for delivery orders) */}
+        {order.orderType === 'DELIVERY' && (
+          <div className="p-2 bg-purple-50 rounded-lg border border-purple-100">
+            <div className="flex items-start text-sm text-purple-800">
+              <MapPin className="w-4 h-4 mr-2 mt-0.5 text-purple-500 flex-shrink-0" />
+              <div>
+                <div className="font-medium">Delivery Address</div>
+                <div className="text-purple-700">
+                  {order.deliveryStreet 
+                    ? `${order.deliveryStreet}`
+                    : order.customerAddress || 'No address provided'}
+                </div>
+                {(order.deliveryPostalCode || order.deliveryCity) && (
+                  <div className="text-purple-600">
+                    {order.deliveryPostalCode} {order.deliveryCity}
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         )}
-        <div className="flex items-center text-sm text-gray-600">
-          <CreditCard className="w-4 h-4 mr-2" />
-          Payment: {order.paymentMethod || 'Card'}
+
+        {/* Pickup/Dine-in notice */}
+        {order.orderType === 'PICKUP' && (
+          <div className="p-2 bg-orange-50 rounded-lg border border-orange-100">
+            <div className="flex items-center text-sm text-orange-800">
+              <Store className="w-4 h-4 mr-2 text-orange-500" />
+              <span>Customer will pick up at counter</span>
+            </div>
+          </div>
+        )}
+
+        {/* Payment Info */}
+        <div className="flex items-center justify-between text-sm">
+          <div className="flex items-center text-gray-600">
+            <CreditCard className="w-4 h-4 mr-2 text-gray-400" />
+            {order.paymentMethod || 'Card'}
+          </div>
+          <div className="font-semibold text-gray-800">
+            CHF {(order.totalPrice || 0).toFixed(2)}
+          </div>
         </div>
+
+        {/* Notes if any */}
+        {order.notes && (
+          <div className="p-2 bg-yellow-50 rounded-lg border border-yellow-200">
+            <div className="text-sm text-yellow-800">
+              <span className="font-medium">Note: </span>{order.notes}
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Action Buttons */}
+      {/* Receipt & Action Buttons */}
       <div className="p-4 border-t border-gray-200 space-y-2">
+        {/* View/Download Receipt (only for completed orders) */}
+        {['DELIVERED', 'PICKED_UP'].includes(order.status) && (
+          <button
+            onClick={async () => {
+              try {
+                // Try to download receipt PDF by order ID
+                const receipts = await receiptsApi.getReceipts();
+                const receipt = receipts.find(r => r.orderId === order.id);
+                if (receipt) {
+                  await receiptsApi.downloadReceiptPdf(receipt.id, receipt.receiptNumber);
+                } else {
+                  alert('Receipt not found for this order');
+                }
+              } catch (err) {
+                console.error('Failed to download receipt:', err);
+                alert('Failed to download receipt. Please try again.');
+              }
+            }}
+            className="w-full py-2 bg-blue-50 text-blue-700 rounded-lg font-medium hover:bg-blue-100 transition flex items-center justify-center"
+          >
+            <Download className="w-4 h-4 mr-2" />
+            Download Receipt
+          </button>
+        )}
         {/* Complete & Delete Buttons - Complete works from IN_PROGRESS or READY */}
         <div className="flex space-x-3">
           <button
@@ -577,12 +690,19 @@ function DetailPanel({ order, onToggleItem, onComplete, onDelete, products }: De
 
 interface BottomBarProps {
   sortMode: SortMode;
-  onSortModeChange: (mode: SortMode) => void;
+  sortDirection: SortDirection;
+  onSortToggle: (mode: SortMode) => void;
   onManageStore: () => void;
   onCreateOrder: () => void;
 }
 
-function BottomBar({ sortMode, onSortModeChange, onManageStore, onCreateOrder }: BottomBarProps) {
+function BottomBar({ sortMode, sortDirection, onSortToggle, onManageStore, onCreateOrder }: BottomBarProps) {
+  // Get arrow indicator based on direction
+  const getArrowIndicator = (mode: SortMode) => {
+    if (sortMode !== mode) return null;
+    return sortDirection === 'asc' ? '↑' : '↓';
+  };
+
   return (
     <div className="bg-white border-t border-gray-200 px-4 py-3 flex items-center justify-between">
       <div className="flex space-x-3">
@@ -595,7 +715,7 @@ function BottomBar({ sortMode, onSortModeChange, onManageStore, onCreateOrder }:
         </button>
         
         <button
-          onClick={() => onSortModeChange('time')}
+          onClick={() => onSortToggle('time')}
           className={`px-4 py-2 rounded-lg font-medium transition flex items-center ${
             sortMode === 'time'
               ? 'bg-blue-100 text-blue-700'
@@ -603,11 +723,11 @@ function BottomBar({ sortMode, onSortModeChange, onManageStore, onCreateOrder }:
           }`}
         >
           <Clock className="w-4 h-4 mr-2" />
-          SORT BY TIME
+          SORT BY TIME {getArrowIndicator('time')}
         </button>
         
         <button
-          onClick={() => onSortModeChange('item')}
+          onClick={() => onSortToggle('item')}
           className={`px-4 py-2 rounded-lg font-medium transition flex items-center ${
             sortMode === 'item'
               ? 'bg-blue-100 text-blue-700'
@@ -615,7 +735,7 @@ function BottomBar({ sortMode, onSortModeChange, onManageStore, onCreateOrder }:
           }`}
         >
           <ArrowUpDown className="w-4 h-4 mr-2" />
-          SORT BY ITEM
+          SORT BY ITEM {getArrowIndicator('item')}
         </button>
       </div>
 
@@ -777,7 +897,20 @@ function KDSPage() {
   const queryClient = useQueryClient();
   const [selectedOrder, setSelectedOrder] = useState<SelectedOrder | null>(null);
   const [sortMode, setSortMode] = useState<SortMode>('time');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [showCreateModal, setShowCreateModal] = useState(false);
+
+  // Toggle sort mode or direction
+  const handleSortToggle = (mode: SortMode) => {
+    if (sortMode === mode) {
+      // Same mode clicked - toggle direction
+      setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+    } else {
+      // Different mode - switch to it with ascending
+      setSortMode(mode);
+      setSortDirection('asc');
+    }
+  };
 
   // Cleanup expired checks on mount
   useEffect(() => {
@@ -837,28 +970,54 @@ function KDSPage() {
   // Split by order type
   const pickupOrders = useMemo(() => {
     const filtered = activeOrders.filter((o) => o.orderType === 'PICKUP');
+    const multiplier = sortDirection === 'asc' ? 1 : -1;
+    
     if (sortMode === 'time') {
-      return filtered.sort((a, b) => 
-        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-      );
+      // Sort by estimatedDelivery (timer)
+      return filtered.sort((a, b) => {
+        const etaA = a.estimatedDelivery 
+          ? new Date(a.estimatedDelivery).getTime()
+          : a.estimatedReadyTime 
+            ? new Date(a.estimatedReadyTime).getTime()
+            : new Date(a.createdAt).getTime() + 15 * 60 * 1000;
+        const etaB = b.estimatedDelivery 
+          ? new Date(b.estimatedDelivery).getTime()
+          : b.estimatedReadyTime 
+            ? new Date(b.estimatedReadyTime).getTime()
+            : new Date(b.createdAt).getTime() + 15 * 60 * 1000;
+        return (etaA - etaB) * multiplier;
+      });
     }
     // Sort by item count
     return filtered.sort((a, b) => 
-      a.items.reduce((s, i) => s + i.quantity, 0) - b.items.reduce((s, i) => s + i.quantity, 0)
+      (a.items.reduce((s, i) => s + i.quantity, 0) - b.items.reduce((s, i) => s + i.quantity, 0)) * multiplier
     );
-  }, [activeOrders, sortMode]);
+  }, [activeOrders, sortMode, sortDirection]);
 
   const deliveryOrders = useMemo(() => {
     const filtered = activeOrders.filter((o) => o.orderType === 'DELIVERY');
+    const multiplier = sortDirection === 'asc' ? 1 : -1;
+    
     if (sortMode === 'time') {
-      return filtered.sort((a, b) => 
-        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-      );
+      // Sort by estimatedDelivery (timer)
+      return filtered.sort((a, b) => {
+        const etaA = a.estimatedDelivery 
+          ? new Date(a.estimatedDelivery).getTime()
+          : a.estimatedReadyTime 
+            ? new Date(a.estimatedReadyTime).getTime()
+            : new Date(a.createdAt).getTime() + 15 * 60 * 1000;
+        const etaB = b.estimatedDelivery 
+          ? new Date(b.estimatedDelivery).getTime()
+          : b.estimatedReadyTime 
+            ? new Date(b.estimatedReadyTime).getTime()
+            : new Date(b.createdAt).getTime() + 15 * 60 * 1000;
+        return (etaA - etaB) * multiplier;
+      });
     }
     return filtered.sort((a, b) => 
-      a.items.reduce((s, i) => s + i.quantity, 0) - b.items.reduce((s, i) => s + i.quantity, 0)
+      (a.items.reduce((s, i) => s + i.quantity, 0) - b.items.reduce((s, i) => s + i.quantity, 0)) * multiplier
     );
-  }, [activeOrders, sortMode]);
+  }, [activeOrders, sortMode, sortDirection]);
 
   // Handle order selection - restore checks from localStorage if available
   // Auto-start: If order is CONFIRMED, automatically set to IN_PROGRESS when selected
@@ -980,7 +1139,8 @@ function KDSPage() {
       {/* Bottom Bar */}
       <BottomBar
         sortMode={sortMode}
-        onSortModeChange={setSortMode}
+        sortDirection={sortDirection}
+        onSortToggle={handleSortToggle}
         onManageStore={handleManageStore}
         onCreateOrder={() => setShowCreateModal(true)}
       />

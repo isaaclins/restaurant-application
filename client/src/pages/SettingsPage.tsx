@@ -1707,6 +1707,13 @@ function DeveloperSettings() {
   const [populateProgress, setPopulateProgress] = useState(0);
   const [populateError, setPopulateError] = useState<string | null>(null);
   const [populateSuccess, setPopulateSuccess] = useState(false);
+  // Demo data options (checkboxes)
+  const [demoOptions, setDemoOptions] = useState({
+    createCategories: true,
+    createProducts: true,
+    createOrders: true,
+    clearExistingOrders: false, // New option to clear old orders first
+  });
 
   // Service health state
   interface ServiceHealth {
@@ -1799,9 +1806,6 @@ function DeveloperSettings() {
     setPopulateProgress(0);
 
     try {
-      // Step 1: Create categories (if they don't exist)
-      setPopulateStatus('Creating categories...');
-      const existingCategoryNames = categories.map((c: { name: string }) => c.name.toLowerCase());
       const categoryMap: Record<string, number> = {};
       
       // Map existing categories
@@ -1809,19 +1813,42 @@ function DeveloperSettings() {
         categoryMap[c.name] = c.id;
       });
 
-      let createdCategories = 0;
-      for (const cat of DEMO_CATEGORIES) {
-        if (!existingCategoryNames.includes(cat.name.toLowerCase())) {
-          try {
-            const response = await api.post('/api/categories', cat);
-            categoryMap[cat.name] = response.data.id;
-            createdCategories++;
-          } catch (err) {
-            console.log(`Category ${cat.name} might already exist`);
+      // Step 0: Clear existing orders if requested
+      if (demoOptions.clearExistingOrders) {
+        setPopulateStatus('Clearing existing orders...');
+        try {
+          // Fetch all orders and delete them
+          const existingOrders = await api.get('/api/orders');
+          for (const order of existingOrders.data) {
+            try {
+              await api.delete(`/api/orders/${order.id}`);
+            } catch (err) {
+              console.log(`Could not delete order ${order.id}`);
+            }
+          }
+        } catch (err) {
+          console.log('Could not fetch orders to clear');
+        }
+      }
+      setPopulateProgress(10);
+
+      // Step 1: Create categories (if they don't exist)
+      if (demoOptions.createCategories) {
+        setPopulateStatus('Creating categories...');
+        const existingCategoryNames = categories.map((c: { name: string }) => c.name.toLowerCase());
+
+        for (const cat of DEMO_CATEGORIES) {
+          if (!existingCategoryNames.includes(cat.name.toLowerCase())) {
+            try {
+              const response = await api.post('/api/categories', cat);
+              categoryMap[cat.name] = response.data.id;
+            } catch (err) {
+              console.log(`Category ${cat.name} might already exist`);
+            }
           }
         }
       }
-      setPopulateProgress(15);
+      setPopulateProgress(20);
 
       // Refetch categories to get updated IDs
       await refetchCategories();
@@ -1831,26 +1858,26 @@ function DeveloperSettings() {
       });
 
       // Step 2: Create products
-      setPopulateStatus('Creating products...');
-      const existingProductNames = products.map((p: Product) => p.name.toLowerCase());
-      let createdProducts = 0;
+      if (demoOptions.createProducts) {
+        setPopulateStatus('Creating products...');
+        const existingProductNames = products.map((p: Product) => p.name.toLowerCase());
 
-      for (const product of DEMO_PRODUCTS) {
-        if (!existingProductNames.includes(product.name.toLowerCase())) {
-          const categoryId = categoryMap[product.category];
-          if (categoryId) {
-            try {
-              await api.post('/api/products', {
-                name: product.name,
-                description: product.description,
-                price: product.price,
-                categoryId,
-                preparationTime: product.preparationTime,
-                isAvailable: true,
-              });
-              createdProducts++;
-            } catch (err) {
-              console.log(`Product ${product.name} might already exist`);
+        for (const product of DEMO_PRODUCTS) {
+          if (!existingProductNames.includes(product.name.toLowerCase())) {
+            const categoryId = categoryMap[product.category];
+            if (categoryId) {
+              try {
+                await api.post('/api/products', {
+                  name: product.name,
+                  description: product.description,
+                  price: product.price,
+                  categoryId,
+                  preparationTime: product.preparationTime,
+                  isAvailable: true,
+                });
+              } catch (err) {
+                console.log(`Product ${product.name} might already exist`);
+              }
             }
           }
         }
@@ -1862,86 +1889,96 @@ function DeveloperSettings() {
       const allProducts = await productsApi.getProducts();
 
       // Step 3: Create sample orders
-      setPopulateStatus('Creating orders...');
-      const orderStatuses = ['PENDING', 'CONFIRMED', 'IN_PROGRESS', 'READY', 'DELIVERED', 'PICKED_UP'];
-      let createdOrders = 0;
+      if (demoOptions.createOrders) {
+        setPopulateStatus('Creating orders...');
+        const orderStatuses = ['PENDING', 'CONFIRMED', 'IN_PROGRESS', 'READY', 'DELIVERED', 'PICKED_UP'];
 
-      for (let i = 0; i < 15; i++) {
-        const orderType = Math.random() > 0.5 ? 'DELIVERY' : 'PICKUP';
-        const customerName = FAKE_NAMES[Math.floor(Math.random() * FAKE_NAMES.length)];
-        const cityInfo = FAKE_CITIES[Math.floor(Math.random() * FAKE_CITIES.length)];
-        const street = FAKE_STREETS[Math.floor(Math.random() * FAKE_STREETS.length)];
+        for (let i = 0; i < 15; i++) {
+          const orderType = Math.random() > 0.5 ? 'DELIVERY' : 'PICKUP';
+          const customerName = FAKE_NAMES[Math.floor(Math.random() * FAKE_NAMES.length)];
+          const cityInfo = FAKE_CITIES[Math.floor(Math.random() * FAKE_CITIES.length)];
+          const street = FAKE_STREETS[Math.floor(Math.random() * FAKE_STREETS.length)];
 
-        // Random 1-4 items
-        const itemCount = Math.floor(Math.random() * 4) + 1;
-        const shuffledProducts = [...allProducts].sort(() => Math.random() - 0.5);
-        const selectedProducts = shuffledProducts.slice(0, Math.min(itemCount, allProducts.length));
+          // Random 1-4 items
+          const itemCount = Math.floor(Math.random() * 4) + 1;
+          const shuffledProducts = [...allProducts].sort(() => Math.random() - 0.5);
+          const selectedProducts = shuffledProducts.slice(0, Math.min(itemCount, allProducts.length));
 
-        const items = selectedProducts.map((product: Product) => {
-          const quantity = Math.floor(Math.random() * 3) + 1;
-          return {
-            productId: product.id,
-            productName: product.name,
-            quantity,
-            unitPrice: product.price,
-            totalPrice: product.price * quantity,
-          };
-        });
+          const items = selectedProducts.map((product: Product) => {
+            const quantity = Math.floor(Math.random() * 3) + 1;
+            return {
+              productId: product.id,
+              productName: product.name,
+              quantity,
+              unitPrice: product.price,
+              totalPrice: product.price * quantity,
+            };
+          });
 
-        const totalPrice = items.reduce((sum, item) => sum + item.totalPrice, 0);
+          const totalPrice = items.reduce((sum, item) => sum + item.totalPrice, 0);
 
-        // Random time offset for variety
-        const hoursAgo = Math.floor(Math.random() * 48); // Up to 48 hours ago
-        const orderTime = new Date(Date.now() - hoursAgo * 60 * 60 * 1000);
-        const pad = (n: number) => n.toString().padStart(2, '0');
-        const estimatedDelivery = `${orderTime.getFullYear()}-${pad(orderTime.getMonth() + 1)}-${pad(orderTime.getDate())}T${pad(orderTime.getHours() + 1)}:${pad(orderTime.getMinutes())}:${pad(orderTime.getSeconds())}`;
-
-        const orderData = {
-          customerName,
-          customerEmail: `${customerName.toLowerCase().replace(' ', '.')}@example.com`,
-          customerPhone: `+41 79 ${Math.floor(Math.random() * 900 + 100)} ${Math.floor(Math.random() * 9000 + 1000)}`,
-          orderType,
-          paymentMethod: Math.random() > 0.5 ? 'CARD' : 'CASH',
-          items,
-          totalPrice,
-          estimatedDelivery,
-          ...(orderType === 'DELIVERY' && {
-            deliveryStreet: street,
-            deliveryCity: cityInfo.city,
-            deliveryPostalCode: cityInfo.postal,
-          }),
-        };
-
-        try {
-          const orderResponse = await api.post('/api/orders', orderData);
-          createdOrders++;
-
-          // Update some orders to different statuses to show variety
-          if (i < 12) { // Leave a few as PENDING
-            const targetStatus = orderStatuses[Math.min(i % 6, 5)];
-            try {
-              // Progress through statuses
-              const statusProgression = ['CONFIRMED', 'IN_PROGRESS', 'READY'];
-              for (const status of statusProgression) {
-                await api.put(`/api/orders/${orderResponse.data.id}/status`, { status });
-                if (status === targetStatus || (targetStatus === 'DELIVERED' && status === 'READY') || (targetStatus === 'PICKED_UP' && status === 'READY')) {
-                  break;
-                }
-              }
-              // Final status for completed orders
-              if (targetStatus === 'DELIVERED' || targetStatus === 'PICKED_UP') {
-                await api.put(`/api/orders/${orderResponse.data.id}/status`, { status: targetStatus });
-              }
-            } catch (statusErr) {
-              console.log('Status update skipped');
-            }
+          // For active orders (first 8): random time in future (5-30 mins from now)
+          // For completed orders (last 7): random time in past (1-48 hours ago)
+          const pad = (n: number) => n.toString().padStart(2, '0');
+          let estimatedTime: Date;
+          
+          if (i < 8) {
+            // Active orders: 5-30 minutes in the future
+            const futureMinutes = Math.floor(Math.random() * 25) + 5;
+            estimatedTime = new Date(Date.now() + futureMinutes * 60 * 1000);
+          } else {
+            // Completed orders: 1-48 hours in the past (for historical data)
+            const hoursAgo = Math.floor(Math.random() * 47) + 1;
+            estimatedTime = new Date(Date.now() - hoursAgo * 60 * 60 * 1000);
           }
-        } catch (err) {
-          console.log('Order creation error:', err);
-        }
+          const estimatedDelivery = `${estimatedTime.getFullYear()}-${pad(estimatedTime.getMonth() + 1)}-${pad(estimatedTime.getDate())}T${pad(estimatedTime.getHours())}:${pad(estimatedTime.getMinutes())}:${pad(estimatedTime.getSeconds())}`;
 
-        setPopulateProgress(40 + Math.floor((i / 15) * 50));
-        await new Promise(resolve => setTimeout(resolve, 100));
+          const orderData = {
+            customerName,
+            customerEmail: `${customerName.toLowerCase().replace(' ', '.')}@example.com`,
+            customerPhone: `+41 79 ${Math.floor(Math.random() * 900 + 100)} ${Math.floor(Math.random() * 9000 + 1000)}`,
+            orderType,
+            paymentMethod: Math.random() > 0.5 ? 'CARD' : 'CASH',
+            items,
+            totalPrice,
+            estimatedDelivery,
+            ...(orderType === 'DELIVERY' && {
+              deliveryStreet: street,
+              deliveryCity: cityInfo.city,
+              deliveryPostalCode: cityInfo.postal,
+            }),
+          };
+
+          try {
+            const orderResponse = await api.post('/api/orders', orderData);
+
+            // Update some orders to different statuses to show variety
+            if (i < 12) { // Leave a few as PENDING
+              const targetStatus = orderStatuses[Math.min(i % 6, 5)];
+              try {
+                // Progress through statuses
+                const statusProgression = ['CONFIRMED', 'IN_PROGRESS', 'READY'];
+                for (const status of statusProgression) {
+                  await api.put(`/api/orders/${orderResponse.data.id}/status`, { status });
+                  if (status === targetStatus || (targetStatus === 'DELIVERED' && status === 'READY') || (targetStatus === 'PICKED_UP' && status === 'READY')) {
+                    break;
+                  }
+                }
+                // Final status for completed orders
+                if (targetStatus === 'DELIVERED' || targetStatus === 'PICKED_UP') {
+                  await api.put(`/api/orders/${orderResponse.data.id}/status`, { status: targetStatus });
+                }
+              } catch (statusErr) {
+                console.log('Status update skipped');
+              }
+            }
+          } catch (err) {
+            console.log('Order creation error:', err);
+          }
+
+          setPopulateProgress(40 + Math.floor((i / 15) * 50));
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
       }
 
       setPopulateProgress(100);
@@ -2173,31 +2210,132 @@ function DeveloperSettings() {
 
         <p className="text-sm text-gray-600 mb-4">
           Create a complete restaurant demo with categories, products, orders, and receipts.
-          This will add realistic menu items like pizzas, pasta, salads, burgers, desserts, and drinks.
+          Select what you want to create:
         </p>
 
+        {/* Checkboxes for selecting what to create */}
         <div className="grid grid-cols-3 gap-4 mb-4">
-          <div className="p-3 bg-gray-50 rounded-lg text-center">
-            <div className="text-2xl font-bold text-gray-900">{DEMO_CATEGORIES.length}</div>
-            <div className="text-xs text-gray-500">Categories</div>
-          </div>
-          <div className="p-3 bg-gray-50 rounded-lg text-center">
-            <div className="text-2xl font-bold text-gray-900">{DEMO_PRODUCTS.length}</div>
-            <div className="text-xs text-gray-500">Products</div>
-          </div>
-          <div className="p-3 bg-gray-50 rounded-lg text-center">
-            <div className="text-2xl font-bold text-gray-900">15</div>
-            <div className="text-xs text-gray-500">Sample Orders</div>
-          </div>
+          <label className={`p-3 rounded-lg text-center cursor-pointer border-2 transition-all ${
+            demoOptions.createCategories 
+              ? 'bg-green-50 border-green-500' 
+              : 'bg-gray-50 border-gray-200 hover:border-gray-300'
+          }`}>
+            <input
+              type="checkbox"
+              checked={demoOptions.createCategories}
+              onChange={(e) => {
+                const checked = e.target.checked;
+                setDemoOptions(prev => ({
+                  ...prev,
+                  createCategories: checked,
+                  // If unchecking categories, also uncheck products (products need categories)
+                  createProducts: checked ? prev.createProducts : false,
+                }));
+              }}
+              className="sr-only"
+            />
+            <div className={`text-2xl font-bold ${demoOptions.createCategories ? 'text-green-600' : 'text-gray-400'}`}>
+              {DEMO_CATEGORIES.length}
+            </div>
+            <div className={`text-xs ${demoOptions.createCategories ? 'text-green-600' : 'text-gray-500'}`}>
+              Categories
+            </div>
+            <div className={`mt-1 text-xs ${demoOptions.createCategories ? 'text-green-500' : 'text-gray-400'}`}>
+              {demoOptions.createCategories ? '✓ Selected' : 'Click to select'}
+            </div>
+          </label>
+          <label className={`p-3 rounded-lg text-center cursor-pointer border-2 transition-all ${
+            demoOptions.createProducts 
+              ? 'bg-green-50 border-green-500' 
+              : 'bg-gray-50 border-gray-200 hover:border-gray-300'
+          } ${!demoOptions.createCategories && categories.length === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}>
+            <input
+              type="checkbox"
+              checked={demoOptions.createProducts}
+              onChange={(e) => {
+                const checked = e.target.checked;
+                // Only allow selecting products if categories exist or will be created
+                if (checked && !demoOptions.createCategories && categories.length === 0) {
+                  return; // Can't create products without categories
+                }
+                setDemoOptions(prev => ({ ...prev, createProducts: checked }));
+              }}
+              className="sr-only"
+              disabled={!demoOptions.createCategories && categories.length === 0}
+            />
+            <div className={`text-2xl font-bold ${demoOptions.createProducts ? 'text-green-600' : 'text-gray-400'}`}>
+              {DEMO_PRODUCTS.length}
+            </div>
+            <div className={`text-xs ${demoOptions.createProducts ? 'text-green-600' : 'text-gray-500'}`}>
+              Products
+            </div>
+            <div className={`mt-1 text-xs ${demoOptions.createProducts ? 'text-green-500' : 'text-gray-400'}`}>
+              {!demoOptions.createCategories && categories.length === 0 
+                ? '⚠️ Needs categories' 
+                : demoOptions.createProducts ? '✓ Selected' : 'Click to select'}
+            </div>
+          </label>
+          <label className={`p-3 rounded-lg text-center cursor-pointer border-2 transition-all ${
+            demoOptions.createOrders 
+              ? 'bg-green-50 border-green-500' 
+              : 'bg-gray-50 border-gray-200 hover:border-gray-300'
+          }`}>
+            <input
+              type="checkbox"
+              checked={demoOptions.createOrders}
+              onChange={(e) => setDemoOptions(prev => ({ ...prev, createOrders: e.target.checked }))}
+              className="sr-only"
+            />
+            <div className={`text-2xl font-bold ${demoOptions.createOrders ? 'text-green-600' : 'text-gray-400'}`}>
+              15
+            </div>
+            <div className={`text-xs ${demoOptions.createOrders ? 'text-green-600' : 'text-gray-500'}`}>
+              Sample Orders
+            </div>
+            <div className={`mt-1 text-xs ${demoOptions.createOrders ? 'text-green-500' : 'text-gray-400'}`}>
+              {demoOptions.createOrders ? '✓ Selected' : 'Click to select'}
+            </div>
+          </label>
         </div>
+
+        {/* Clear existing orders option */}
+        <label className={`flex items-center p-3 rounded-lg cursor-pointer border-2 transition-all mb-4 ${
+          demoOptions.clearExistingOrders
+            ? 'bg-orange-50 border-orange-500'
+            : 'bg-gray-50 border-gray-200 hover:border-gray-300'
+        }`}>
+          <input
+            type="checkbox"
+            checked={demoOptions.clearExistingOrders}
+            onChange={(e) => setDemoOptions(prev => ({ ...prev, clearExistingOrders: e.target.checked }))}
+            className="sr-only"
+          />
+          <div className={`w-5 h-5 rounded flex items-center justify-center mr-3 ${
+            demoOptions.clearExistingOrders ? 'bg-orange-500' : 'bg-gray-300'
+          }`}>
+            {demoOptions.clearExistingOrders && <Check className="w-3 h-3 text-white" />}
+          </div>
+          <div>
+            <div className={`text-sm font-medium ${demoOptions.clearExistingOrders ? 'text-orange-700' : 'text-gray-600'}`}>
+              🗑️ Clear existing orders first
+            </div>
+            <div className="text-xs text-gray-500">
+              Removes all current orders before creating new demo orders (fixes timer issues)
+            </div>
+          </div>
+        </label>
 
         <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-blue-700 text-sm mb-4">
           <strong>What will be created:</strong>
           <ul className="mt-1 ml-4 list-disc">
-            <li>Pizzas, Pasta, Salads, Burgers, Desserts, Drinks categories</li>
-            <li>{DEMO_PRODUCTS.length} realistic menu items with prices</li>
-            <li>15 orders with various statuses (pending, preparing, completed)</li>
-            <li>Receipts for completed orders</li>
+            {demoOptions.clearExistingOrders && <li className="text-orange-600">⚠️ All existing orders will be deleted first</li>}
+            {demoOptions.createCategories && <li>Pizzas, Pasta, Salads, Burgers, Desserts, Drinks categories</li>}
+            {demoOptions.createProducts && <li>{DEMO_PRODUCTS.length} realistic menu items with prices</li>}
+            {demoOptions.createOrders && <li>15 orders with various statuses (pending, preparing, completed)</li>}
+            {demoOptions.createOrders && <li>Receipts for completed orders</li>}
+            {!demoOptions.createCategories && !demoOptions.createProducts && !demoOptions.createOrders && (
+              <li className="text-gray-500">Select at least one option above</li>
+            )}
           </ul>
         </div>
 
@@ -2224,9 +2362,9 @@ function DeveloperSettings() {
 
         <button
           onClick={populateDemoData}
-          disabled={isPopulating}
+          disabled={isPopulating || (!demoOptions.createCategories && !demoOptions.createProducts && !demoOptions.createOrders)}
           className={`w-full py-3 rounded-lg font-medium flex items-center justify-center transition ${
-            isPopulating
+            isPopulating || (!demoOptions.createCategories && !demoOptions.createProducts && !demoOptions.createOrders)
               ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
               : 'bg-green-500 text-white hover:bg-green-600'
           }`}

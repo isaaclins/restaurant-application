@@ -211,17 +211,19 @@ function ProductCard({
         <div className="flex items-center justify-between pt-3 border-t border-gray-100">
           <button
             onClick={onToggleAvailability}
-            className={`flex items-center text-sm ${
-              product.isAvailable ? 'text-green-600' : 'text-red-600'
+            className={`flex items-center px-2 py-1 rounded-full text-xs font-medium transition-all ${
+              product.isAvailable 
+                ? 'bg-green-100 text-green-700 hover:bg-green-200' 
+                : 'bg-red-100 text-red-700 hover:bg-red-200'
             }`}
           >
             {product.isAvailable ? (
               <>
-                <Eye className="w-4 h-4 mr-1" /> Available
+                <Eye className="w-3 h-3 mr-1" /> Available
               </>
             ) : (
               <>
-                <EyeOff className="w-4 h-4 mr-1" /> Unavailable
+                <EyeOff className="w-3 h-3 mr-1" /> Unavailable
               </>
             )}
           </button>

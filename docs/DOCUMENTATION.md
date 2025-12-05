@@ -1747,6 +1747,73 @@ docs/requests/
 | Demo Produkte         | 24   | Pizzas, Pasta, Salads, Burgers, etc.                             |
 | Unterstützte Sprachen | 4    | DE, EN, FR, IT (Email Templates)                                 |
 
+### 05.12.2025 | KDS Timer Fix, Enhanced Order Details & Statistics (Abend)
+
+#### ✅ Erfolge
+
+- [x] **KDS Timer Fix**: Demo-Orders werden jetzt mit korrekten zukünftigen `estimatedDelivery` Zeiten erstellt (5-30 min in Zukunft für aktive Orders)
+- [x] **Enhanced Order Detail Panel**: Erweiterte Detailansicht im KDS mit:
+  - Order-Type Badge (Delivery/Pickup/Dine-in) mit farbiger Anzeige
+  - Vollständige Kundeninformationen (Name, Telefon, Email)
+  - Hervorgehobene Lieferadresse für Delivery-Orders
+  - Pickup-Hinweis für Pickup-Orders
+  - Zahlungsmethode und Gesamtbetrag
+  - Notizen-Anzeige wenn vorhanden
+  - Receipt-Download Button für abgeschlossene Bestellungen
+- [x] **PDF Download verbessert**: Bessere Fehlerbehandlung und Validierung beim Receipt-PDF Download
+- [x] **Orders by Hour Chart Fix**: Korrigierte Höhenberechnung (von % zu px) und Empty-State wenn keine Daten
+- [x] **Selektive Demo-Daten**: Checkboxen zum Auswählen was erstellt werden soll (Kategorien, Produkte, Orders)
+
+#### 🐛 Probleme & Lösungen
+
+**Problem 1: KDS Timer zeigte -2280:12 (negative Stunden)**
+
+**Ursache:** `populateDemoData` erstellte Orders mit `estimatedDelivery` 1-48 Stunden in der Vergangenheit
+
+**Lösung:**
+
+```typescript
+// VORHER - Zeit in der Vergangenheit
+const hoursAgo = Math.floor(Math.random() * 48);
+const orderTime = new Date(Date.now() - hoursAgo * 60 * 60 * 1000);
+
+// NACHHER - Erste 8 Orders: 5-30 min in Zukunft (für KDS), Rest: historisch
+if (i < 8) {
+  const futureMinutes = Math.floor(Math.random() * 25) + 5;
+  estimatedTime = new Date(Date.now() + futureMinutes * 60 * 1000);
+} else {
+  // Für Statistiken: historische Daten
+}
+```
+
+---
+
+**Problem 2: Orders by Hour Chart war leer**
+
+**Ursache:** Prozent-basierte Höhen funktionieren nicht korrekt in einem Flex-Container
+
+**Lösung:**
+
+```typescript
+// VORHER
+style={{ height: `${Math.max(height, 2)}%` }}
+
+// NACHHER - Pixel-basiert mit Container-Höhe 180px
+const heightPx = Math.max((heightPercent / 100) * 180, data.count > 0 ? 8 : 2);
+style={{ height: `${heightPx}px` }}
+```
+
+#### 📝 Geänderte Dateien
+
+| Datei                                 | Änderung                                                    |
+| ------------------------------------- | ----------------------------------------------------------- |
+| `client/src/pages/KDSPage.tsx`        | Erweitertes Order Detail Panel mit mehr Infos               |
+| `client/src/pages/SettingsPage.tsx`   | Timer-Fix in Demo-Data, Checkboxen für selektive Erstellung |
+| `client/src/pages/StatisticsPage.tsx` | Orders by Hour Chart Fix                                    |
+| `client/src/api/receipts.ts`          | Verbesserte PDF-Download Fehlerbehandlung                   |
+
+---
+
 ### Service-Ports
 
 | Service              | Port | Status |

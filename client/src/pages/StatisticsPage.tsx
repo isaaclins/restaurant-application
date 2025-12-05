@@ -537,26 +537,37 @@ function StatisticsPage() {
               <Clock className="w-5 h-5 text-orange-500" />
               Orders by Hour
             </h3>
-            <div className="h-48 flex items-end justify-between gap-1">
-              {orderStats?.ordersByHour?.map((data, index) => {
-                const maxCount = Math.max(...(orderStats.ordersByHour?.map(d => d.count) || [1]));
-                const height = maxCount > 0 ? (data.count / maxCount) * 100 : 0;
-                return (
-                  <div key={index} className="flex-1 flex flex-col items-center">
-                    <div
-                      className={`w-full rounded-t transition-all ${
-                        data.count > 0 ? 'bg-orange-500' : 'bg-gray-200'
-                      }`}
-                      style={{ height: `${Math.max(height, 2)}%` }}
-                      title={`${data.hour}:00 - ${data.count} orders`}
-                    ></div>
-                    {index % 4 === 0 && (
-                      <span className="text-xs text-gray-500 mt-1">{data.hour}</span>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
+            {orderStats?.ordersByHour && orderStats.ordersByHour.some(d => d.count > 0) ? (
+              <div className="h-48 flex items-end justify-between gap-1">
+                {orderStats.ordersByHour.map((data, index) => {
+                  const maxCount = Math.max(...orderStats.ordersByHour.map(d => d.count), 1);
+                  const heightPercent = maxCount > 0 ? (data.count / maxCount) * 100 : 0;
+                  // Convert percentage to actual pixels (h-48 = 192px)
+                  const heightPx = Math.max((heightPercent / 100) * 180, data.count > 0 ? 8 : 2);
+                  return (
+                    <div key={index} className="flex-1 flex flex-col items-center justify-end h-full">
+                      <div
+                        className={`w-full rounded-t transition-all ${
+                          data.count > 0 ? 'bg-orange-500 hover:bg-orange-600' : 'bg-gray-200'
+                        }`}
+                        style={{ height: `${heightPx}px` }}
+                        title={`${data.hour}:00 - ${data.count} orders`}
+                      />
+                      {index % 4 === 0 && (
+                        <span className="text-xs text-gray-500 mt-1">{data.hour}</span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="h-48 flex items-center justify-center text-gray-400">
+                <div className="text-center">
+                  <Clock className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                  <p>No orders in selected period</p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
