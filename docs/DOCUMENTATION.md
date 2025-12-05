@@ -562,6 +562,7 @@ npm error enoent Could not read package.json
 #### 🔧 Neue Features
 
 **Frontend (SettingsPage.tsx):**
+
 - Email Template Preview Modal mit iframe-basierter HTML-Vorschau
 - Test Email Modal mit E-Mail-Adresse-Eingabe
 - SMTP Settings Tab mit Host, Port, User, Password, TLS/SSL
@@ -569,6 +570,7 @@ npm error enoent Could not read package.json
 - Verbessertes Error Handling für alle API-Calls
 
 **Backend (notification-service):**
+
 - `POST /api/notifications/test-email` - Test-E-Mail senden
 - `GET /api/notifications/smtp-config` - SMTP-Konfiguration abrufen
 - `PUT /api/notifications/smtp-config` - SMTP-Konfiguration aktualisieren
@@ -948,8 +950,12 @@ const CHECKBOX_EXPIRY_MS = 30 * 60 * 1000;
 const estimatedDelivery = estimatedTime.toISOString().slice(0, 19);
 
 // NACHHER (Lokale Zeit korrekt)
-const pad = (n: number) => n.toString().padStart(2, '0');
-const estimatedDelivery = `${estimatedTime.getFullYear()}-${pad(estimatedTime.getMonth() + 1)}-${pad(estimatedTime.getDate())}T${pad(estimatedTime.getHours())}:${pad(estimatedTime.getMinutes())}:${pad(estimatedTime.getSeconds())}`;
+const pad = (n: number) => n.toString().padStart(2, "0");
+const estimatedDelivery = `${estimatedTime.getFullYear()}-${pad(
+  estimatedTime.getMonth() + 1
+)}-${pad(estimatedTime.getDate())}T${pad(estimatedTime.getHours())}:${pad(
+  estimatedTime.getMinutes()
+)}:${pad(estimatedTime.getSeconds())}`;
 ```
 
 **Ursache:** JavaScript's `toISOString()` gibt immer UTC. Die Schweiz ist UTC+1, also waren alle Zeiten 1 Stunde in der Vergangenheit.
@@ -1020,6 +1026,7 @@ const estimatedDelivery = `${estimatedTime.getFullYear()}-${pad(estimatedTime.ge
 #### ✅ Erfolge
 
 **Neues Receipt Template System (Settings-Service):**
+
 - [x] `ReceiptTemplate` Entity mit vollständiger Lokalisierung
 - [x] 4 Sprachen unterstützt: **DE/EN/FR/IT**
 - [x] Alle Labels anpassbar (Quittung, Total, MwSt., etc.)
@@ -1030,6 +1037,7 @@ const estimatedDelivery = `${estimatedTime.getFullYear()}-${pad(estimatedTime.ge
 - [x] CRUD-Endpoints über REST API
 
 **Neuer Notification-Service (Port 8088):**
+
 - [x] Vollständiger neuer Microservice
 - [x] E-Mail-Versand mit Spring Mail + Thymeleaf Templates
 - [x] 4-sprachige E-Mail-Templates (DE/EN/FR/IT):
@@ -1039,19 +1047,21 @@ const estimatedDelivery = `${estimatedTime.getFullYear()}-${pad(estimatedTime.ge
   - Receipt Ready
 - [x] Kafka Consumer für automatische Notifications:
   - `order-events` Topic
-  - `payment-events` Topic  
+  - `payment-events` Topic
   - `receipt-events` Topic
 - [x] Notification-Logging mit Retry-Mechanismus
 - [x] REST API für manuellen Versand und Template-Management
 - [x] Statistik-Endpoints
 
 **Receipt-Service Erweiterungen:**
+
 - [x] **PNG Export** - Quittungen als Bild (150 DPI Standard, 300 DPI High-Quality)
 - [x] **ESC/POS Export** - Für Thermodrucker (80mm Papier)
 - [x] **Kitchen Ticket ESC/POS** - Grössere Schrift, nur relevante Infos
 - [x] PDFBox Integration für PDF-zu-PNG Konvertierung
 
 **API Gateway Updates:**
+
 - [x] Route für `/api/receipt-templates/**` → Settings-Service
 - [x] Route für `/api/notifications/**` → Notification-Service
 
@@ -1115,21 +1125,25 @@ const estimatedDelivery = `${estimatedTime.getFullYear()}-${pad(estimatedTime.ge
 #### 🧪 Tests (Abend-Session)
 
 **Settings-Service Tests:**
+
 - [x] `ReceiptTemplateServiceTest` - Service Layer Tests
 - [x] `ReceiptTemplateControllerTest` - REST API Tests
 
 **Notification-Service Tests:**
+
 - [x] `EmailServiceTest` - E-Mail Versand Tests
 - [x] `EmailTemplateServiceTest` - Template Rendering Tests
 - [x] `NotificationControllerTest` - REST API Tests
 
 **Receipt-Service Tests:**
+
 - [x] `EscPosServiceTest` - Thermodrucker Format Tests
 - [x] `ImageServiceTest` - PNG Generation Tests
 
 #### 🖥️ KDS Email & Receipt Settings (Abend-Session)
 
 **Neuer Tab "Email & Receipts" in Settings:**
+
 - [x] Tab-Navigation erweitert mit Mail-Icon
 - [x] 3 Sub-Tabs: Receipt Templates, Email Templates, Notification Stats
 - [x] **Receipt Template Editor:**
@@ -1154,23 +1168,24 @@ const estimatedDelivery = `${estimatedTime.getFullYear()}-${pad(estimatedTime.ge
   - Auto-Refresh alle 30 Sekunden
 
 **API Methods (client/src/api/settings.ts):**
+
 ```typescript
 // Receipt Templates
-getReceiptTemplates()
-getReceiptTemplateByLanguage(language)
-updateReceiptTemplate(id, template)
-resetReceiptTemplate(id)
-setDefaultReceiptTemplate(id)
-getLanguages()
+getReceiptTemplates();
+getReceiptTemplateByLanguage(language);
+updateReceiptTemplate(id, template);
+resetReceiptTemplate(id);
+setDefaultReceiptTemplate(id);
+getLanguages();
 
 // Email Templates
-getEmailTemplates()
-getEmailTemplatesByLanguage(language)
-updateEmailTemplate(id, template)
+getEmailTemplates();
+getEmailTemplatesByLanguage(language);
+updateEmailTemplate(id, template);
 
 // Notification Stats
-getNotificationStats()
-retryFailedNotifications()
+getNotificationStats();
+retryFailedNotifications();
 ```
 
 ---
@@ -1183,12 +1198,14 @@ retryFailedNotifications()
 
 **Symptom:** `curl` funktioniert, aber Frontend bekommt Network Error.
 
-**Ursache:** **Doppelte CORS-Header!** 
+**Ursache:** **Doppelte CORS-Header!**
+
 - API Gateway hatte globale CORS-Config
 - NotificationController und ReceiptTemplateController hatten zusätzlich `@CrossOrigin(origins = "*")`
 - Browser lehnt Response mit doppelten `Access-Control-Allow-Origin` Headers ab
 
 **Lösung:** `@CrossOrigin` Annotation von beiden Controllern entfernt:
+
 - `NotificationController.java` - Annotation entfernt
 - `ReceiptTemplateController.java` - Annotation entfernt
 - CORS wird jetzt zentral nur im API Gateway gehandhabt
@@ -1202,6 +1219,7 @@ retryFailedNotifications()
 **Ursache:** `PageImpl` wurde ohne `Pageable` und `totalElements` erstellt. Spring's Jackson Serializer braucht diese für korrekte Page-Struktur.
 
 **Lösung:**
+
 ```java
 // VORHER (fehlerhaft):
 new PageImpl<>(notifications)
@@ -1229,14 +1247,14 @@ new PageImpl<>(notifications, pageRequest, notifications.size())
 
 #### 📁 Geänderte/Neue Dateien
 
-| Datei | Änderung |
-|-------|----------|
-| `backend/notification-service/.../NotificationController.java` | `@CrossOrigin` entfernt |
-| `backend/settings-service/.../ReceiptTemplateController.java` | `@CrossOrigin` entfernt |
-| `backend/notification-service/.../NotificationControllerTest.java` | PageImpl Fix mit PageRequest |
-| `docker-compose.prod.yml` | **NEU** - Production Stack mit Traefik SSL |
-| `.env.prod.example` | **NEU** - Production Environment Template |
-| `backend/api-gateway/.../application-prod.yml` | **NEU** - HTTPS-only CORS Config |
+| Datei                                                              | Änderung                                   |
+| ------------------------------------------------------------------ | ------------------------------------------ |
+| `backend/notification-service/.../NotificationController.java`     | `@CrossOrigin` entfernt                    |
+| `backend/settings-service/.../ReceiptTemplateController.java`      | `@CrossOrigin` entfernt                    |
+| `backend/notification-service/.../NotificationControllerTest.java` | PageImpl Fix mit PageRequest               |
+| `docker-compose.prod.yml`                                          | **NEU** - Production Stack mit Traefik SSL |
+| `.env.prod.example`                                                | **NEU** - Production Environment Template  |
+| `backend/api-gateway/.../application-prod.yml`                     | **NEU** - HTTPS-only CORS Config           |
 
 #### 🔍 Erkenntnisse
 
