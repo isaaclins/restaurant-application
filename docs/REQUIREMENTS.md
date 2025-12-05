@@ -24,26 +24,26 @@
 
 | Nr  | Anforderung                                        | Status | Priorität |
 | --- | -------------------------------------------------- | ------ | --------- |
-| 1   | Jeder Service eigene DB + Argumentation            | ⬜     | MUSS      |
-| 2   | Docker für Datenbanken                             | ⬜     | MUSS      |
-| 3   | REST API Kommunikation (Spring REST Controllers)   | ⬜     | MUSS      |
-| 4   | Sicherheitsaspekte (sensible Daten)                | ⬜     | MUSS      |
-| 5   | Fehlerbehandlung & Circuit Breaker                 | ⬜     | MUSS      |
-| 6   | Service-Dokumentation (jeder Service dokumentiert) | ⬜     | MUSS      |
-| 7   | Grafische Architekturskizze mit Überlegungen       | ⬜     | MUSS      |
-| 8   | Clean Code Regeln                                  | ⬜     | MUSS      |
-| 9   | API-Dokumentation (Swagger)                        | ⬜     | MUSS      |
-| 10  | Formale Ausführung (Gruppe)                        | ⬜     | MUSS      |
+| 1   | Jeder Service eigene DB + Argumentation            | ✅     | MUSS      |
+| 2   | Docker für Datenbanken                             | ✅     | MUSS      |
+| 3   | REST API Kommunikation (Spring REST Controllers)   | ✅     | MUSS      |
+| 4   | Sicherheitsaspekte (sensible Daten)                | ✅     | MUSS      |
+| 5   | Fehlerbehandlung & Circuit Breaker                 | ✅     | MUSS      |
+| 6   | Service-Dokumentation (jeder Service dokumentiert) | 🔄     | MUSS      |
+| 7   | Grafische Architekturskizze mit Überlegungen       | ✅     | MUSS      |
+| 8   | Clean Code Regeln                                  | ✅     | MUSS      |
+| 9   | API-Dokumentation (Swagger)                        | ✅     | MUSS      |
+| 10  | Formale Ausführung (Gruppe)                        | 🔄     | MUSS      |
 
 ### Pipeline-Anforderungen (M324)
 
 | Nr  | Anforderung                                    | Status | Priorität |
 | --- | ---------------------------------------------- | ------ | --------- |
-| P1  | GitHub Actions Pipeline: Build → Test → Deploy | ⬜     | MUSS      |
-| P2  | Automatisches Testing bei jedem Push           | ⬜     | MUSS      |
-| P3  | Docker Image mit Versionierung                 | ⬜     | MUSS      |
+| P1  | GitHub Actions Pipeline: Build → Test → Deploy | ✅     | MUSS      |
+| P2  | Automatisches Testing bei jedem Push           | ✅     | MUSS      |
+| P3  | Docker Image mit Versionierung                 | ✅     | MUSS      |
 | P4  | Cloud Deployment (AWS/Azure/Fly.io)            | ⬜     | MUSS      |
-| P5  | Unit Tests + Postman Tests automatisch         | ⬜     | MUSS      |
+| P5  | Unit Tests + Postman Tests automatisch         | ✅     | MUSS      |
 
 ---
 
@@ -69,15 +69,15 @@ Die Anwendung **MUSS** folgende Komponenten beinhalten:
 
 ### 1.1 Docker Compose Infrastruktur
 
-**Status**: ⬜ Nicht gestartet
+**Status**: ✅ Abgeschlossen
 
 | Task  | Beschreibung                      | Status |
 | ----- | --------------------------------- | ------ |
-| 1.1.1 | `docker-compose.yml` erstellen    | ⬜     |
-| 1.1.2 | MySQL Container konfigurieren     | ⬜     |
-| 1.1.3 | Redis Container konfigurieren     | ⬜     |
-| 1.1.4 | Kafka + Zookeeper Container       | ⬜     |
-| 1.1.5 | Alle Container starten und testen | ⬜     |
+| 1.1.1 | `docker-compose.yml` erstellen    | ✅     |
+| 1.1.2 | MySQL Container konfigurieren     | ✅     |
+| 1.1.3 | Redis Container konfigurieren     | ✅     |
+| 1.1.4 | Kafka + Zookeeper Container       | ✅     |
+| 1.1.5 | Alle Container starten und testen | ✅     |
 
 **Erfolgskriterium**: `docker-compose up` startet alle Datenbanken fehlerfrei
 
@@ -85,14 +85,14 @@ Die Anwendung **MUSS** folgende Komponenten beinhalten:
 
 ### 1.2 GitHub Actions Pipeline
 
-**Status**: ⬜ Nicht gestartet
+**Status**: ✅ Abgeschlossen
 
 | Task  | Beschreibung                         | Status |
 | ----- | ------------------------------------ | ------ |
-| 1.2.1 | `.github/workflows/ci.yml` erstellen | ⬜     |
-| 1.2.2 | Build Stage implementieren           | ⬜     |
-| 1.2.3 | Test Stage implementieren            | ⬜     |
-| 1.2.4 | Docker Image Build + Push            | ⬜     |
+| 1.2.1 | `.github/workflows/ci.yml` erstellen | ✅     |
+| 1.2.2 | Build Stage implementieren           | ✅     |
+| 1.2.3 | Test Stage implementieren            | ✅     |
+| 1.2.4 | Docker Image Build + Push            | ✅     |
 | 1.2.5 | Deploy Stage (Fly.io/Railway)        | ⬜     |
 
 **Pipeline-Stages**:
@@ -114,15 +114,15 @@ stages:
 
 ### 2.1 Eureka Server
 
-**Status**: ⬜ Nicht gestartet
+**Status**: ✅ Abgeschlossen
 
 | Task  | Beschreibung                                    | Status |
 | ----- | ----------------------------------------------- | ------ |
-| 2.1.1 | Spring Boot Projekt erstellen (`eureka-server`) | ⬜     |
-| 2.1.2 | `@EnableEurekaServer` Annotation                | ⬜     |
-| 2.1.3 | `application.yml` konfigurieren (Port 8761)     | ⬜     |
-| 2.1.4 | Dockerfile erstellen                            | ⬜     |
-| 2.1.5 | Health Check implementieren                     | ⬜     |
+| 2.1.1 | Spring Boot Projekt erstellen (`eureka-server`) | ✅     |
+| 2.1.2 | `@EnableEurekaServer` Annotation                | ✅     |
+| 2.1.3 | `application.yml` konfigurieren (Port 8761)     | ✅     |
+| 2.1.4 | Dockerfile erstellen                            | ✅     |
+| 2.1.5 | Health Check implementieren                     | ✅     |
 
 **Konfiguration**:
 
@@ -152,15 +152,15 @@ eureka:
 
 ### 3.1 Gateway Service
 
-**Status**: ⬜ Nicht gestartet
+**Status**: ✅ Abgeschlossen
 
 | Task  | Beschreibung                                  | Status |
 | ----- | --------------------------------------------- | ------ |
-| 3.1.1 | Spring Boot Projekt erstellen (`api-gateway`) | ⬜     |
-| 3.1.2 | Spring Cloud Gateway Dependency               | ⬜     |
-| 3.1.3 | Route-Konfiguration für alle Services         | ⬜     |
-| 3.1.4 | Eureka Client Integration                     | ⬜     |
-| 3.1.5 | CORS Konfiguration                            | ⬜     |
+| 3.1.1 | Spring Boot Projekt erstellen (`api-gateway`) | ✅     |
+| 3.1.2 | Spring Cloud Gateway Dependency               | ✅     |
+| 3.1.3 | Route-Konfiguration für alle Services         | ✅     |
+| 3.1.4 | Eureka Client Integration                     | ✅     |
+| 3.1.5 | CORS Konfiguration                            | ✅     |
 | 3.1.6 | Rate Limiting (optional)                      | ⬜     |
 
 **Route-Konfiguration**:
@@ -207,22 +207,22 @@ spring:
 
 ### 4.1 Service Setup
 
-**Status**: ⬜ Nicht gestartet
+**Status**: ✅ Abgeschlossen
 
 | Task  | Beschreibung                    | Status |
 | ----- | ------------------------------- | ------ |
-| 4.1.1 | Spring Boot Projekt erstellen   | ⬜     |
-| 4.1.2 | MySQL Datenbank-Anbindung       | ⬜     |
-| 4.1.3 | JPA Entity `Product` erstellen  | ⬜     |
-| 4.1.4 | JPA Entity `Category` erstellen | ⬜     |
-| 4.1.5 | Repository Layer                | ⬜     |
-| 4.1.6 | Service Layer                   | ⬜     |
-| 4.1.7 | Eureka Client Integration       | ⬜     |
-| 4.1.8 | Swagger/OpenAPI Dokumentation   | ⬜     |
+| 4.1.1 | Spring Boot Projekt erstellen   | ✅     |
+| 4.1.2 | MySQL Datenbank-Anbindung       | ✅     |
+| 4.1.3 | JPA Entity `Product` erstellen  | ✅     |
+| 4.1.4 | JPA Entity `Category` erstellen | ✅     |
+| 4.1.5 | Repository Layer                | ✅     |
+| 4.1.6 | Service Layer                   | ✅     |
+| 4.1.7 | Eureka Client Integration       | ✅     |
+| 4.1.8 | Swagger/OpenAPI Dokumentation   | ✅     |
 
 ### 4.2 REST Endpoints
 
-**Status**: ⬜ Nicht gestartet
+**Status**: ✅ Abgeschlossen
 
 #### `GET /api/products` - Alle Produkte abrufen
 
@@ -373,18 +373,18 @@ spring:
 
 ### 5.1 Service Setup
 
-**Status**: ⬜ Nicht gestartet
+**Status**: ✅ Abgeschlossen
 
 | Task  | Beschreibung                        | Status |
 | ----- | ----------------------------------- | ------ |
-| 5.1.1 | Spring Boot Projekt erstellen       | ⬜     |
-| 5.1.2 | Redis Anbindung (Spring Data Redis) | ⬜     |
-| 5.1.3 | Cart Model erstellen                | ⬜     |
-| 5.1.4 | CartItem Model erstellen            | ⬜     |
-| 5.1.5 | Repository Layer                    | ⬜     |
-| 5.1.6 | Service Layer                       | ⬜     |
-| 5.1.7 | Eureka Client Integration           | ⬜     |
-| 5.1.8 | Swagger Dokumentation               | ⬜     |
+| 5.1.1 | Spring Boot Projekt erstellen       | ✅     |
+| 5.1.2 | Redis Anbindung (Spring Data Redis) | ✅     |
+| 5.1.3 | Cart Model erstellen                | ✅     |
+| 5.1.4 | CartItem Model erstellen            | ✅     |
+| 5.1.5 | Repository Layer                    | ✅     |
+| 5.1.6 | Service Layer                       | ✅     |
+| 5.1.7 | Eureka Client Integration           | ✅     |
+| 5.1.8 | Swagger Dokumentation               | ✅     |
 
 **Datenbank-Argumentation** (Anforderung 1):
 
@@ -397,7 +397,7 @@ spring:
 
 ### 5.2 REST Endpoints
 
-**Status**: ⬜ Nicht gestartet
+**Status**: ✅ Abgeschlossen
 
 #### `GET /api/cart` - Warenkorb abrufen
 
@@ -487,17 +487,17 @@ spring:
 
 ### 6.1 Service Setup
 
-**Status**: ⬜ Nicht gestartet
+**Status**: ✅ Abgeschlossen
 
 | Task  | Beschreibung                              | Status |
 | ----- | ----------------------------------------- | ------ |
-| 6.1.1 | Spring Boot Projekt erstellen             | ⬜     |
-| 6.1.2 | MySQL Datenbank-Anbindung                 | ⬜     |
-| 6.1.3 | JPA Entity `Order` erstellen              | ⬜     |
-| 6.1.4 | JPA Entity `OrderItem` erstellen          | ⬜     |
-| 6.1.5 | Kafka Producer Integration                | ⬜     |
-| 6.1.6 | Circuit Breaker für Product-Service Calls | ⬜     |
-| 6.1.7 | Swagger Dokumentation                     | ⬜     |
+| 6.1.1 | Spring Boot Projekt erstellen             | ✅     |
+| 6.1.2 | MySQL Datenbank-Anbindung                 | ✅     |
+| 6.1.3 | JPA Entity `Order` erstellen              | ✅     |
+| 6.1.4 | JPA Entity `OrderItem` erstellen          | ✅     |
+| 6.1.5 | Kafka Producer Integration                | ✅     |
+| 6.1.6 | Circuit Breaker für Product-Service Calls | ✅     |
+| 6.1.7 | Swagger Dokumentation                     | ✅     |
 
 **Kafka Events**:
 
@@ -509,7 +509,7 @@ order.completed → Bestellung abgeschlossen
 
 ### 6.2 REST Endpoints
 
-**Status**: ⬜ Nicht gestartet
+**Status**: ✅ Abgeschlossen
 
 #### `POST /api/orders` - Bestellung erstellen
 
@@ -629,15 +629,15 @@ PENDING → CONFIRMED → IN_PROGRESS → READY → DELIVERED/PICKED_UP
 
 ### 7.1 Service Setup
 
-**Status**: ⬜ Nicht gestartet
+**Status**: ✅ Abgeschlossen
 
 | Task  | Beschreibung                  | Status |
 | ----- | ----------------------------- | ------ |
-| 7.1.1 | Spring Boot Projekt erstellen | ⬜     |
-| 7.1.2 | H2 In-Memory Datenbank        | ⬜     |
-| 7.1.3 | Payment Entity                | ⬜     |
-| 7.1.4 | Mock Payment Processing       | ⬜     |
-| 7.1.5 | Swagger Dokumentation         | ⬜     |
+| 7.1.1 | Spring Boot Projekt erstellen | ✅     |
+| 7.1.2 | H2 In-Memory Datenbank        | ✅     |
+| 7.1.3 | Payment Entity                | ✅     |
+| 7.1.4 | Mock Payment Processing       | ✅     |
+| 7.1.5 | Swagger Dokumentation         | ✅     |
 
 **Datenbank-Argumentation** (Anforderung 1):
 
@@ -694,17 +694,17 @@ PENDING → CONFIRMED → IN_PROGRESS → READY → DELIVERED/PICKED_UP
 
 ### 8.1 Service Setup
 
-**Status**: ⬜ Nicht gestartet
+**Status**: ✅ Abgeschlossen
 
 | Task  | Beschreibung                  | Status |
 | ----- | ----------------------------- | ------ |
-| 8.1.1 | Spring Boot Projekt erstellen | ⬜     |
-| 8.1.2 | MySQL Datenbank-Anbindung     | ⬜     |
-| 8.1.3 | Spring Security Konfiguration | ⬜     |
-| 8.1.4 | JWT Token Generation          | ⬜     |
-| 8.1.5 | User Entity                   | ⬜     |
-| 8.1.6 | Password Hashing (BCrypt)     | ⬜     |
-| 8.1.7 | Swagger Dokumentation         | ⬜     |
+| 8.1.1 | Spring Boot Projekt erstellen | ✅     |
+| 8.1.2 | MySQL Datenbank-Anbindung     | ✅     |
+| 8.1.3 | Spring Security Konfiguration | ✅     |
+| 8.1.4 | JWT Token Generation          | ✅     |
+| 8.1.5 | User Entity                   | ✅     |
+| 8.1.6 | Password Hashing (BCrypt)     | ✅     |
+| 8.1.7 | Swagger Dokumentation         | ✅     |
 
 ### 8.2 REST Endpoints
 
@@ -751,14 +751,14 @@ PENDING → CONFIRMED → IN_PROGRESS → READY → DELIVERED/PICKED_UP
 
 ### 9.1 Resilience4j Integration
 
-**Status**: ⬜ Nicht gestartet
+**Status**: ✅ Abgeschlossen
 
 | Task  | Beschreibung                              | Status |
 | ----- | ----------------------------------------- | ------ |
-| 9.1.1 | Resilience4j Dependency hinzufügen        | ⬜     |
-| 9.1.2 | Circuit Breaker für Product-Service Calls | ⬜     |
-| 9.1.3 | Fallback-Methoden implementieren          | ⬜     |
-| 9.1.4 | Retry-Mechanismus                         | ⬜     |
+| 9.1.1 | Resilience4j Dependency hinzufügen        | ✅     |
+| 9.1.2 | Circuit Breaker für Product-Service Calls | ✅     |
+| 9.1.3 | Fallback-Methoden implementieren          | ✅     |
+| 9.1.4 | Retry-Mechanismus                         | ✅     |
 | 9.1.5 | Rate Limiter (optional)                   | ⬜     |
 
 **Konfiguration**:
@@ -788,14 +788,16 @@ resilience4j:
 
 ### 10.1 Unit Tests
 
-**Status**: ⬜ Nicht gestartet
+**Status**: ✅ Abgeschlossen (102 Tests bestanden)
 
 | Task   | Beschreibung               | Status |
 | ------ | -------------------------- | ------ |
-| 10.1.1 | Product Service Unit Tests | ⬜     |
-| 10.1.2 | Cart Service Unit Tests    | ⬜     |
-| 10.1.3 | Order Service Unit Tests   | ⬜     |
-| 10.1.4 | Auth Service Unit Tests    | ⬜     |
+| 10.1.1 | Product Service Unit Tests | ✅ (38 Tests) |
+| 10.1.2 | Cart Service Unit Tests    | ✅ (20 Tests) |
+| 10.1.3 | Order Service Unit Tests   | ✅ (16 Tests) |
+| 10.1.4 | Auth Service Unit Tests    | ✅ (16 Tests) |
+| 10.1.5 | Payment Service Unit Tests | ✅ (9 Tests)  |
+| 10.1.6 | API Gateway Unit Tests     | ✅ (3 Tests)  |
 
 ### 10.2 Integration Tests (Postman)
 
@@ -810,13 +812,13 @@ resilience4j:
 
 ### 10.3 Swagger/OpenAPI
 
-**Status**: ⬜ Nicht gestartet
+**Status**: ✅ Abgeschlossen
 
 | Task   | Beschreibung                 | Status |
 | ------ | ---------------------------- | ------ |
-| 10.3.1 | Springdoc OpenAPI Dependency | ⬜     |
-| 10.3.2 | API Annotations              | ⬜     |
-| 10.3.3 | Swagger UI verfügbar         | ⬜     |
+| 10.3.1 | Springdoc OpenAPI Dependency | ✅     |
+| 10.3.2 | API Annotations              | ✅     |
+| 10.3.3 | Swagger UI verfügbar         | ✅     |
 
 **Erfolgskriterium**: Swagger UI unter `http://localhost:8080/swagger-ui.html`
 

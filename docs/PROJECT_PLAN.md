@@ -66,9 +66,9 @@ Diese Komponenten **MÜSSEN** implementiert werden, um das Projekt als abgeschlo
 
 | #   | Aufgabe                  | Beschreibung                          | Abhängigkeit | Status |
 | --- | ------------------------ | ------------------------------------- | ------------ | ------ |
-| 1.1 | **Docker Compose Setup** | Basis docker-compose.yml mit Netzwerk | -            | ⬜     |
-| 1.2 | **MySQL Container**      | Datenbank für Produkte & Bestellungen | 1.1          | ⬜     |
-| 1.3 | **Redis Container**      | Cache für Sessions/Warenkorb          | 1.1          | ⬜     |
+| 1.1 | **Docker Compose Setup** | Basis docker-compose.yml mit Netzwerk | -            | ✅     |
+| 1.2 | **MySQL Container**      | Datenbank für Produkte & Bestellungen | 1.1          | ✅     |
+| 1.3 | **Redis Container**      | Cache für Sessions/Warenkorb          | 1.1          | ✅     |
 
 **Definition of Done Phase 1:**
 
@@ -81,38 +81,38 @@ Diese Komponenten **MÜSSEN** implementiert werden, um das Projekt als abgeschlo
 
 | #     | Aufgabe                   | Beschreibung                   | Abhängigkeit | Status |
 | ----- | ------------------------- | ------------------------------ | ------------ | ------ |
-| 2.1   | **Spring Boot Projekt**   | Basis-Setup mit Dependencies   | 1.2          | ⬜     |
-| 2.2   | **Products API**          | CRUD für Produkte              | 2.1          | ⬜     |
-| 2.2.1 | - Entity & Repository     | Product JPA Entity             | 2.2          | ⬜     |
-| 2.2.2 | - REST Controller         | GET/POST/PUT/DELETE Endpoints  | 2.2.1        | ⬜     |
-| 2.2.3 | - Kategorien              | Pizza, Drinks, Desserts, etc.  | 2.2.1        | ⬜     |
+| 2.1   | **Spring Boot Projekt**   | Basis-Setup mit Dependencies   | 1.2          | ✅     |
+| 2.2   | **Products API**          | CRUD für Produkte              | 2.1          | ✅     |
+| 2.2.1 | - Entity & Repository     | Product JPA Entity             | 2.2          | ✅     |
+| 2.2.2 | - REST Controller         | GET/POST/PUT/DELETE Endpoints  | 2.2.1        | ✅     |
+| 2.2.3 | - Kategorien              | Pizza, Drinks, Desserts, etc.  | 2.2.1        | ✅     |
 | 2.2.4 | - Bild-Upload             | Produkt-Bilder speichern       | 2.2.1        | ⬜     |
-| 2.3   | **Orders API**            | Bestellungen verarbeiten       | 2.1          | ⬜     |
-| 2.3.1 | - Entity & Repository     | Order JPA Entity               | 2.3          | ⬜     |
-| 2.3.2 | - REST Controller         | Create/Get/Update Endpoints    | 2.3.1        | ⬜     |
-| 2.3.3 | - Status-Workflow         | NEW→PREPARING→READY→DELIVERED  | 2.3.1        | ⬜     |
-| 2.3.4 | - Pickup vs Delivery      | Unterscheidung im Order        | 2.3.1        | ⬜     |
-| 2.4   | **Cart API**              | Warenkorb-Verwaltung           | 2.1, 1.3     | ⬜     |
-| 2.4.1 | - Session-basiert         | Redis für schnellen Zugriff    | 2.4          | ⬜     |
-| 2.4.2 | - Add/Remove/Update       | Warenkorb-Operationen          | 2.4.1        | ⬜     |
-| 2.5   | **Payments API (Mockup)** | Simulierte Zahlung             | 2.1          | ⬜     |
-| 2.5.1 | - Payment Endpoint        | POST /payments                 | 2.5          | ⬜     |
-| 2.5.2 | - Payment Types           | Twint, Bar, Card (simuliert)   | 2.5.1        | ⬜     |
+| 2.3   | **Orders API**            | Bestellungen verarbeiten       | 2.1          | ✅     |
+| 2.3.1 | - Entity & Repository     | Order JPA Entity               | 2.3          | ✅     |
+| 2.3.2 | - REST Controller         | Create/Get/Update Endpoints    | 2.3.1        | ✅     |
+| 2.3.3 | - Status-Workflow         | NEW→PREPARING→READY→DELIVERED  | 2.3.1        | ✅     |
+| 2.3.4 | - Pickup vs Delivery      | Unterscheidung im Order        | 2.3.1        | ✅     |
+| 2.4   | **Cart API**              | Warenkorb-Verwaltung           | 2.1, 1.3     | ✅     |
+| 2.4.1 | - Session-basiert         | Redis für schnellen Zugriff    | 2.4          | ✅     |
+| 2.4.2 | - Add/Remove/Update       | Warenkorb-Operationen          | 2.4.1        | ✅     |
+| 2.5   | **Payments API (Mockup)** | Simulierte Zahlung             | 2.1          | ✅     |
+| 2.5.1 | - Payment Endpoint        | POST /payments                 | 2.5          | ✅     |
+| 2.5.2 | - Payment Types           | Twint, Bar, Card (simuliert)   | 2.5.1        | ✅     |
 | 2.6   | **Receipts API**          | Rechnungen speichern & abrufen | 2.3          | ⬜     |
 | 2.7   | **Settings API**          | Restaurant-Einstellungen       | 2.1          | ⬜     |
 | 2.7.1 | - Öffnungszeiten          | CRUD für Zeiten                | 2.7          | ⬜     |
 | 2.7.2 | - Liefergebiet            | PLZ oder Radius                | 2.7          | ⬜     |
 | 2.7.3 | - Mindestbestellwert      | Konfigurierbar                 | 2.7          | ⬜     |
-| 2.8   | **Auth API**              | Authentifizierung              | 2.1          | ⬜     |
-| 2.8.1 | - Restaurant Login        | JWT für Client                 | 2.8          | ⬜     |
-| 2.8.2 | - Kunden-Registrierung    | Email, Passwort, Profil        | 2.8          | ⬜     |
-| 2.8.3 | - Kunden-Login            | JWT für Website                | 2.8          | ⬜     |
+| 2.8   | **Auth API**              | Authentifizierung              | 2.1          | ✅     |
+| 2.8.1 | - Restaurant Login        | JWT für Client                 | 2.8          | ✅     |
+| 2.8.2 | - Kunden-Registrierung    | Email, Passwort, Profil        | 2.8          | ✅     |
+| 2.8.3 | - Kunden-Login            | JWT für Website                | 2.8          | ✅     |
 | 2.8.4 | - Token Refresh           | Access Token erneuern          | 2.8          | ⬜     |
 | 2.9   | **Customers API**         | Kundenprofil-Verwaltung        | 2.8          | ⬜     |
 | 2.9.1 | - Profil CRUD             | GET/PUT eigenes Profil         | 2.9          | ⬜     |
 | 2.9.2 | - Adressen-Verwaltung     | CRUD für Lieferadressen        | 2.9          | ⬜     |
 | 2.9.3 | - Bestellhistorie         | Eigene Orders abrufen          | 2.9, 2.3     | ⬜     |
-| 2.10  | **Swagger/OpenAPI**       | API Dokumentation              | 2.2-2.9      | ⬜     |
+| 2.10  | **Swagger/OpenAPI**       | API Dokumentation              | 2.2-2.9      | ✅     |
 
 **Definition of Done Phase 2:**
 
@@ -281,14 +281,14 @@ Woche 5
 ### Gesamtfortschritt
 
 ```
-Phase 1: Infrastruktur       [░░░░░░░░░░] 0%
-Phase 2: Backend Server      [░░░░░░░░░░] 0%
+Phase 1: Infrastruktur       [██████████] 100%
+Phase 2: Backend Server      [███████░░░] 70%
 Phase 3: Website             [░░░░░░░░░░] 0%
 Phase 4: Restaurant Client   [░░░░░░░░░░] 0%
-Phase 5: Integration         [░░░░░░░░░░] 0%
-Phase 6: Dokumentation       [███░░░░░░░] 30%
+Phase 5: Integration         [████░░░░░░] 40%
+Phase 6: Dokumentation       [██████░░░░] 60%
 ─────────────────────────────────────────────
-GESAMT                       [█░░░░░░░░░] 5%
+GESAMT                       [████░░░░░░] 40%
 ```
 
 ### Erledigte Aufgaben
@@ -301,6 +301,18 @@ GESAMT                       [█░░░░░░░░░] 5%
 - [x] 3-Komponenten-Architektur entschieden
 - [x] KDS Wireframe erstellt
 - [x] Restaurant Client Features definiert
+- [x] Docker Compose mit MySQL, Redis, Kafka, Zookeeper
+- [x] Eureka Service Discovery
+- [x] API Gateway mit Circuit Breaker
+- [x] Product Service (CRUD, Categories)
+- [x] Cart Service (Redis-basiert)
+- [x] Order Service (Status-Workflow, Kafka)
+- [x] Payment Service (Mockup)
+- [x] Auth Service (JWT, BCrypt)
+- [x] GitHub Actions CI/CD Pipeline
+- [x] Unit Tests (102 Tests, alle bestanden)
+- [x] ARCHITECTURE.md erstellt
+- [x] REQUIREMENTS.md erstellt
 
 ---
 
@@ -331,4 +343,4 @@ Das Projekt gilt als **abgeschlossen**, wenn:
 ---
 
 _Erstellt: 04.12.2025_
-_Letzte Aktualisierung: 04.12.2025_
+_Letzte Aktualisierung: 05.12.2025_
