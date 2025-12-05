@@ -32,6 +32,13 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
 
+    @PostMapping("/refresh")
+    @Operation(summary = "Refresh access token using refresh token")
+    public ResponseEntity<AuthResponse> refreshToken(@Valid @RequestBody RefreshTokenRequest request) {
+        AuthResponse response = authService.refreshToken(request.getRefreshToken());
+        return ResponseEntity.ok(response);
+    }
+
     @PutMapping("/password")
     @Operation(summary = "Change password")
     public ResponseEntity<Void> changePassword(

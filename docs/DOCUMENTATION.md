@@ -352,29 +352,152 @@
 
 ---
 
-### Tag 3 – [DATUM]
+### Tag 2 – 05.12.2025 | Receipt, Settings, Customer APIs & KDS Client (Fortsetzung)
 
-#### ✅ Erfolge
+#### ✅ Erfolge – Backend APIs
 
-- [ ] _Beschreibung_
+- [x] **Receipt-Service** komplett implementiert (Port 8086)
+  - Receipt-Erstellung aus Bestellungen
+  - PDF-Generierung mit OpenPDF
+  - Tagesberichte mit Statistiken
+  - Suche nach Datum, Kunde, Bestellnummer
+- [x] **Settings-Service** komplett implementiert (Port 8087)
+  - Restaurant-Einstellungen (Name, Adresse, Liefergebühren)
+  - Öffnungszeiten pro Wochentag mit Pausenzeiten
+  - Liefergebiete nach PLZ
+  - Sonder-Öffnungszeiten (Feiertage)
+- [x] **Customer API** in Auth-Service erweitert
+  - Profil-Management (GET/PUT)
+  - Adressverwaltung (CRUD)
+  - Standard-Adresse setzen
+  - Passwort-Änderung
+- [x] **Token Refresh** implementiert
+  - POST `/api/auth/refresh` Endpoint
+  - Refresh Token Validierung
+  - Neue Access Token Generierung
+- [x] **Datenbank-Initialisierung** erweitert
+  - `receipt_db` hinzugefügt
+  - `settings_db` hinzugefügt
+- [x] **146 Backend Tests** alle grün ✅
 
-#### ❌ Misserfolge / Herausforderungen
+#### ✅ Erfolge – KDS Client (Tauri + React)
 
-- _Beschreibung_
+- [x] **Tauri App** initialisiert mit React + TypeScript + Vite
+- [x] **Tailwind CSS v4** konfiguriert mit `@tailwindcss/postcss`
+- [x] **React Query** für Server State Management
+- [x] **Zustand** für Auth State (Login, Token Storage)
+- [x] **React Router v6** für Navigation
+- [x] **5 Seiten** implementiert:
+  - **LoginPage** – JWT Auth mit Token Refresh
+  - **KDSPage** – 3-Spalten Kitchen Display (New → Preparing → Ready)
+  - **ProductsPage** – Produkt-Management mit CRUD
+  - **ReceiptsPage** – Rechnungsübersicht mit PDF Download
+  - **SettingsPage** – Restaurant-Konfiguration (General, Hours, Delivery Areas)
+- [x] **API Clients** für alle Backend-Services
+- [x] **Lucide React** Icons
+- [x] **date-fns** für Zeitformatierung
 
-#### 💡 Ideen
+#### 📁 Neue Backend-Dateien
 
-- _Neue Ideen_
+**Receipt-Service (18 Dateien):**
+
+- `pom.xml`, `application.yml`
+- `entity/`: Receipt, ReceiptItem, OrderType
+- `dto/`: ReceiptResponse, ReceiptItemResponse, CreateReceiptRequest, DailyReportResponse
+- `repository/`: ReceiptRepository
+- `service/`: ReceiptService, PdfService
+- `config/`: RestaurantConfig
+- `controller/`: ReceiptController
+- `exception/`: ReceiptNotFoundException, DuplicateReceiptException, GlobalExceptionHandler
+- `test/`: ReceiptControllerTest (12 Tests), PdfServiceTest (5 Tests)
+
+**Settings-Service (18 Dateien):**
+
+- `pom.xml`, `application.yml`
+- `entity/`: RestaurantSettings, OpeningHours, DeliveryArea, SpecialHours
+- `dto/`: RestaurantSettingsResponse, UpdateSettingsRequest, OpeningHoursResponse, etc.
+- `repository/`: RestaurantSettingsRepository, OpeningHoursRepository, DeliveryAreaRepository
+- `service/`: SettingsService
+- `controller/`: SettingsController
+- `exception/`: GlobalExceptionHandler, SettingsNotFoundException, DuplicateEntryException
+- `test/`: SettingsControllerTest (15 Tests)
+
+**Auth-Service Erweiterungen:**
+
+- `entity/`: CustomerAddress
+- `repository/`: CustomerAddressRepository
+- `dto/`: CustomerProfileResponse, AddressRequest/Response, UpdateProfileRequest, RefreshTokenRequest
+- `service/`: CustomerService
+- `controller/`: CustomerController
+- `test/`: CustomerControllerTest (12 Tests), +3 Refresh Token Tests
+
+#### 📁 Neue Client-Dateien (Tauri KDS App)
+
+**Konfiguration:**
+
+- `client/package.json` – Dependencies (React, Tauri, TailwindCSS, etc.)
+- `client/tailwind.config.js` – Custom KDS status colors
+- `client/postcss.config.js` – @tailwindcss/postcss
+- `client/src-tauri/tauri.conf.json` – App-Konfiguration (1400x900, Restaurant KDS)
+
+**API Layer:**
+
+- `client/src/api/client.ts` – Axios mit Token Interceptors
+- `client/src/api/auth.ts` – Login, Logout, Refresh
+- `client/src/api/orders.ts` – Orders CRUD, Status Update
+- `client/src/api/products.ts` – Products & Categories CRUD
+- `client/src/api/receipts.ts` – Receipts, PDF Download, Daily Report
+- `client/src/api/settings.ts` – Settings, Opening Hours, Delivery Areas
+
+**State & Types:**
+
+- `client/src/stores/authStore.ts` – Zustand Auth Store mit Persist
+- `client/src/types/index.ts` – TypeScript Interfaces für alle Entities
+
+**Components & Pages:**
+
+- `client/src/components/Layout.tsx` – App Shell mit Sidebar Navigation
+- `client/src/pages/LoginPage.tsx` – Login Form mit Error Handling
+- `client/src/pages/KDSPage.tsx` – Kitchen Display mit Order Cards, Timer, Status Workflow
+- `client/src/pages/ProductsPage.tsx` – Product Grid, Search, Filter, Modal
+- `client/src/pages/ReceiptsPage.tsx` – Receipt Table, Stats Cards, Detail Modal
+- `client/src/pages/SettingsPage.tsx` – Tabbed Settings (General, Hours, Delivery)
+
+#### ✅ Test-Ergebnisse (Backend)
+
+| Service          | Tests   | Status          |
+| ---------------- | ------- | --------------- |
+| Product Service  | 38      | ✅ PASS         |
+| Cart Service     | 20      | ✅ PASS         |
+| Order Service    | 16      | ✅ PASS         |
+| Payment Service  | 9       | ✅ PASS         |
+| Auth Service     | 31      | ✅ PASS         |
+| Receipt Service  | 17      | ✅ PASS         |
+| Settings Service | 15      | ✅ PASS         |
+| **Total**        | **146** | ✅ **ALL PASS** |
 
 #### 🔍 Erkenntnisse
 
-- _Was wurde gelernt_
+- OpenPDF für PDF-Generierung in Spring Boot
+- H2 Test-Konfiguration: `defer-datasource-initialization: true` nötig
+- JUnit 5 Test-Reihenfolge mit `@TestMethodOrder` und `@Order`
+- Separate Repositories für komplexe Entity-Beziehungen (Settings → OpeningHours)
+- Tailwind CSS v4 benötigt `@tailwindcss/postcss` statt `tailwindcss` Plugin
+- Tauri 2.0 mit React funktioniert reibungslos
+- Zustand + React Query = perfekte Kombination für State Management
 
-#### 📝 Notizen
+#### 🚀 KDS Client starten
 
-- _Sonstige Notizen_
+```bash
+cd client
+npm install
+npm run dev      # Vite Dev Server auf http://localhost:1420
+npm run tauri dev  # Native Tauri App
+```
 
 ---
+
+### Tag 3 – [DATUM]
 
 ## 🏁 Meilensteine
 
@@ -384,9 +507,9 @@
 | 2   | KDS Wireframe & Feature-Definition   | 04.12.2025 | ✅     | 3-Spalten Layout definiert  |
 | 3   | API-Dokumentation & Auth-Flow        | 04.12.2025 | ✅     | 30+ Endpoints dokumentiert  |
 | 4   | Infrastruktur (Docker, MySQL, Kafka) | 05.12.2025 | ✅     | docker-compose.yml erstellt |
-| 5   | Backend Microservices                | 05.12.2025 | ✅     | 7 Services implementiert    |
-| 6   | Website (Kunden-Portal)              | TBD        | ⬜     |                             |
-| 7   | Restaurant Client (Tauri KDS App)    | TBD        | ⬜     |                             |
+| 5   | Backend Microservices                | 05.12.2025 | ✅     | 9 Services, 146 Tests       |
+| 6   | Restaurant Client (Tauri KDS App)    | 05.12.2025 | ✅     | 5 Pages, API Integration    |
+| 7   | Website (Kunden-Portal)              | TBD        | ⬜     |                             |
 | 8   | Integration & Testing                | TBD        | ⬜     |                             |
 | 9   | Endabgabe                            | Juli 2025  | ⬜     |                             |
 
@@ -647,12 +770,12 @@ docs/requests/
 
 ### Code-Metriken (wird aktualisiert)
 
-| Metrik          | Wert      | Datum      |
-| --------------- | --------- | ---------- |
-| Lines of Code   | TBD       |            |
-| Anzahl Services | 4 geplant | 04.12.2025 |
-| Test Coverage   | TBD       |            |
-| API Endpoints   | TBD       |            |
+| Metrik          | Wert          | Datum      |
+| --------------- | ------------- | ---------- |
+| Backend Tests   | 146           | 12.06.2025 |
+| Anzahl Services | 9 (+ 2 Infra) | 12.06.2025 |
+| Test Coverage   | TBD           |            |
+| API Endpoints   | ~50+          | 12.06.2025 |
 
 ### Zeitaufwand
 
@@ -686,4 +809,4 @@ docs/requests/
 
 ---
 
-_Letzte Aktualisierung: 04.12.2025_
+_Letzte Aktualisierung: 12.06.2025_

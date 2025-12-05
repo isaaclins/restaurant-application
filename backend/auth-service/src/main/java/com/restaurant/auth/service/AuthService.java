@@ -84,6 +84,27 @@ public class AuthService {
         return UserResponse.fromEntity(user);
     }
 
+    /**
+     * Refresh access token using refresh token
+     */
+    public AuthResponse refreshToken(String refreshToken) {
+        if (!jwtTokenProvider.isValidToken(refreshToken)) {
+            throw new IllegalArgumentException("Invalid or expired refresh token");
+        }
+
+        String email = jwtTokenProvider.getEmailFromToken(refreshToken);
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        if (!user.getActive()) {
+            throw new IllegalArgumentException("Account is deactivated");
+        }
+
+        log.info("Token refreshed for user: {}", email);
+
+        return createAuthResponse(user);
+    }
+
     private AuthResponse createAuthResponse(User user) {
         String accessToken = jwtTokenProvider.generateAccessToken(
                 user.getId(), user.getEmail(), user.getRole().name());

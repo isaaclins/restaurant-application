@@ -1,0 +1,65 @@
+server:
+  port: 8086
+
+spring:
+  application:
+    name: receipt-service
+
+  datasource:
+    url: jdbc:mysql://${MYSQL_HOST:localhost}:${MYSQL_PORT:3306}/receipt_db?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+    username: ${MYSQL_USER:restaurant}
+    password: ${MYSQL_PASSWORD:restaurant123}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+        format_sql: true
+
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    consumer:
+      group-id: receipt-service-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "*"
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${server.port}
+
+# Restaurant configuration for receipts
+restaurant:
+  name: ${RESTAURANT_NAME:Restaurant App}
+  address: ${RESTAURANT_ADDRESS:Musterstrasse 1, 8000 Zürich}
+  phone: ${RESTAURANT_PHONE:+41 44 123 45 67}
+  vat-number: ${RESTAURANT_VAT:CHE-123.456.789}
+  vat-rate: ${RESTAURANT_VAT_RATE:7.7}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+logging:
+  level:
+    com.restaurant.receipt: DEBUG

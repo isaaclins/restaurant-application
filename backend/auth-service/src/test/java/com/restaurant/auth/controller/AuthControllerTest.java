@@ -3,6 +3,7 @@ package com.restaurant.auth.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.restaurant.auth.dto.ChangePasswordRequest;
 import com.restaurant.auth.dto.LoginRequest;
+import com.restaurant.auth.dto.RefreshTokenRequest;
 import com.restaurant.auth.dto.RegisterRequest;
 import com.restaurant.auth.entity.Role;
 import com.restaurant.auth.entity.User;
@@ -309,6 +310,67 @@ class AuthControllerTest {
         void shouldReturn403WhenUserIdMissing() throws Exception {
             mockMvc.perform(get("/api/auth/me"))
                     .andExpect(status().isForbidden());
+        }
+    }
+
+    @Nested
+    @DisplayName("POST /api/auth/refresh")
+    class RefreshToken {
+
+        @Test
+        @DisplayName("should refresh token successfully with valid refresh token")
+        void shouldRefreshTokenSuccessfully() throws Exception {
+            createTestUser("refresh@example.com", "password123");
+
+            // First login to get refresh token
+            LoginRequest loginRequest = new LoginRequest();
+            loginRequest.setEmail("refresh@example.com");
+            loginRequest.setPassword("password123");
+
+            String loginResponse = mockMvc.perform(post("/api/auth/login")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(loginRequest)))
+                    .andExpect(status().isOk())
+                    .andReturn().getResponse().getContentAsString();
+
+            String refreshToken = objectMapper.readTree(loginResponse).get("refreshToken").asText();
+
+            // Use refresh token to get new access token
+            RefreshTokenRequest refreshRequest = RefreshTokenRequest.builder()
+                    .refreshToken(refreshToken)
+                    .build();
+
+            mockMvc.perform(post("/api/auth/refresh")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(refreshRequest)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.accessToken", notNullValue()))
+                    .andExpect(jsonPath("$.refreshToken", notNullValue()))
+                    .andExpect(jsonPath("$.user.email", is("refresh@example.com")));
+        }
+
+        @Test
+        @DisplayName("should return 400 when refresh token is invalid")
+        void shouldReturn400WhenRefreshTokenInvalid() throws Exception {
+            RefreshTokenRequest request = RefreshTokenRequest.builder()
+                    .refreshToken("invalid-token")
+                    .build();
+
+            mockMvc.perform(post("/api/auth/refresh")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        @DisplayName("should return 400 when refresh token is empty")
+        void shouldReturn400WhenRefreshTokenEmpty() throws Exception {
+            RefreshTokenRequest request = new RefreshTokenRequest();
+
+            mockMvc.perform(post("/api/auth/refresh")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isBadRequest());
         }
     }
 }
