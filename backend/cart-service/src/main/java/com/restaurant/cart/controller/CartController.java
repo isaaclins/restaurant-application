@@ -70,4 +70,15 @@ public class CartController {
         cartService.clearCart(sessionId);
         return ResponseEntity.noContent().build();
     }
+
+    /**
+     * GET /api/cart/health - Health check
+     */
+    @GetMapping("/health")
+    @Operation(summary = "Health check endpoint")
+    public ResponseEntity<java.util.Map<String, String>> health() {
+        return ResponseEntity.ok(java.util.Map.of(
+                "status", "UP",
+                "service", "cart-service"));
+    }
 }

@@ -1708,6 +1708,77 @@ function DeveloperSettings() {
   const [populateError, setPopulateError] = useState<string | null>(null);
   const [populateSuccess, setPopulateSuccess] = useState(false);
 
+  // Service health state
+  interface ServiceHealth {
+    name: string;
+    port: number;
+    endpoint: string;
+    status: 'checking' | 'online' | 'offline';
+    responseTime: number | null;
+    lastChecked: Date | null;
+  }
+
+  const [services, setServices] = useState<ServiceHealth[]>([
+    { name: 'API Gateway', port: 8080, endpoint: '/api/products', status: 'checking', responseTime: null, lastChecked: null },
+    { name: 'Product Service', port: 8081, endpoint: '/api/products', status: 'checking', responseTime: null, lastChecked: null },
+    { name: 'Cart Service', port: 8082, endpoint: '/api/cart/health', status: 'checking', responseTime: null, lastChecked: null },
+    { name: 'Order Service', port: 8083, endpoint: '/api/orders', status: 'checking', responseTime: null, lastChecked: null },
+    { name: 'Payment Service', port: 8084, endpoint: '/api/payments/health', status: 'checking', responseTime: null, lastChecked: null },
+    { name: 'Auth Service', port: 8085, endpoint: '/api/auth/health', status: 'checking', responseTime: null, lastChecked: null },
+    { name: 'Receipt Service', port: 8086, endpoint: '/api/receipts', status: 'checking', responseTime: null, lastChecked: null },
+    { name: 'Settings Service', port: 8087, endpoint: '/api/settings', status: 'checking', responseTime: null, lastChecked: null },
+  ]);
+  const [isCheckingHealth, setIsCheckingHealth] = useState(false);
+
+  // Check service health via API Gateway (avoids CORS issues)
+  const checkServiceHealth = async (service: ServiceHealth): Promise<ServiceHealth> => {
+    const startTime = performance.now();
+    try {
+      // Route through API Gateway to avoid CORS
+      await api.get(service.endpoint, {
+        timeout: 5000,
+        validateStatus: () => true, // Accept any status code
+      });
+      const endTime = performance.now();
+      // ANY response (even 4xx/5xx) means service is responding
+      return {
+        ...service,
+        status: 'online',
+        responseTime: Math.round(endTime - startTime),
+        lastChecked: new Date(),
+      };
+    } catch {
+      const endTime = performance.now();
+      // Only network errors mean service is offline
+      return {
+        ...service,
+        status: 'offline',
+        responseTime: Math.round(endTime - startTime),
+        lastChecked: new Date(),
+      };
+    }
+  };
+
+  const checkAllServices = async () => {
+    setIsCheckingHealth(true);
+    // Set all to checking
+    setServices(prev => prev.map(s => ({ ...s, status: 'checking' as const })));
+    
+    // Check all services in parallel
+    const results = await Promise.all(services.map(checkServiceHealth));
+    setServices(results);
+    setIsCheckingHealth(false);
+  };
+
+  // Check health on mount
+  useEffect(() => {
+    checkAllServices();
+    // Auto-refresh every 30 seconds
+    const interval = setInterval(checkAllServices, 30000);
+    return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Fetch products to use in fake orders
   const { data: products = [], refetch: refetchProducts } = useQuery({
     queryKey: ['products'],
@@ -1988,6 +2059,109 @@ function DeveloperSettings() {
             </p>
           </div>
         </div>
+      </div>
+
+      {/* Service Health Monitor */}
+      <div className="bg-white rounded-lg shadow p-6 mb-6">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center">
+            <Server className="w-5 h-5 text-blue-500 mr-2" />
+            <h3 className="text-lg font-semibold text-gray-800">Service Health Monitor</h3>
+          </div>
+          <button
+            onClick={checkAllServices}
+            disabled={isCheckingHealth}
+            className="flex items-center px-3 py-1.5 text-sm bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition disabled:opacity-50"
+          >
+            <RefreshCw className={`w-4 h-4 mr-1.5 ${isCheckingHealth ? 'animate-spin' : ''}`} />
+            Refresh
+          </button>
+        </div>
+
+        <div className="grid gap-2">
+          {services.map((service) => (
+            <div
+              key={service.name}
+              className={`flex items-center justify-between p-3 rounded-lg border ${
+                service.status === 'online'
+                  ? 'bg-green-50 border-green-200'
+                  : service.status === 'offline'
+                  ? 'bg-red-50 border-red-200'
+                  : 'bg-gray-50 border-gray-200'
+              }`}
+            >
+              <div className="flex items-center">
+                <div
+                  className={`w-2.5 h-2.5 rounded-full mr-3 ${
+                    service.status === 'online'
+                      ? 'bg-green-500'
+                      : service.status === 'offline'
+                      ? 'bg-red-500'
+                      : 'bg-gray-400 animate-pulse'
+                  }`}
+                />
+                <div>
+                  <div className="font-medium text-gray-800">{service.name}</div>
+                  <div className="text-xs text-gray-500">Port {service.port}</div>
+                </div>
+              </div>
+              <div className="text-right">
+                {service.status === 'checking' ? (
+                  <span className="text-sm text-gray-500">Checking...</span>
+                ) : service.status === 'online' ? (
+                  <div>
+                    <span className="text-sm font-medium text-green-600">
+                      {service.responseTime}ms
+                    </span>
+                    <span className="text-xs text-green-500 ml-1">●</span>
+                  </div>
+                ) : (
+                  <span className="text-sm font-medium text-red-600">Offline</span>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Summary */}
+        <div className="mt-4 pt-4 border-t border-gray-200 flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center">
+              <div className="w-2 h-2 rounded-full bg-green-500 mr-1.5" />
+              <span className="text-sm text-gray-600">
+                {services.filter(s => s.status === 'online').length} Online
+              </span>
+            </div>
+            <div className="flex items-center">
+              <div className="w-2 h-2 rounded-full bg-red-500 mr-1.5" />
+              <span className="text-sm text-gray-600">
+                {services.filter(s => s.status === 'offline').length} Offline
+              </span>
+            </div>
+          </div>
+          {services.some(s => s.lastChecked) && (
+            <span className="text-xs text-gray-400">
+              Last checked: {services[0].lastChecked?.toLocaleTimeString()}
+            </span>
+          )}
+        </div>
+
+        {/* Average Response Time */}
+        {services.filter(s => s.status === 'online' && s.responseTime).length > 0 && (
+          <div className="mt-3 p-3 bg-blue-50 rounded-lg">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-blue-700">Average Response Time</span>
+              <span className="font-medium text-blue-800">
+                {Math.round(
+                  services
+                    .filter(s => s.status === 'online' && s.responseTime)
+                    .reduce((sum, s) => sum + (s.responseTime || 0), 0) /
+                    services.filter(s => s.status === 'online' && s.responseTime).length
+                )}ms
+              </span>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Populate Demo Data */}

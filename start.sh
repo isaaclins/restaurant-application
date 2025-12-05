@@ -231,70 +231,159 @@ stop_infrastructure() {
 # Backend Services
 # ============================================================================
 
+# Helper function to wait for a service to be ready
+wait_for_service() {
+    local service_name=$1
+    local port=$2
+    local max_attempts=${3:-90}
+    local attempt=0
+    
+    print_info "Waiting for $service_name (port $port) to be ready..."
+    while ! curl -s "http://localhost:$port/actuator/health" > /dev/null 2>&1; do
+        attempt=$((attempt + 1))
+        if [ $attempt -ge $max_attempts ]; then
+            print_error "$service_name failed to start within $max_attempts seconds"
+            return 1
+        fi
+        sleep 1
+        # Show progress every 10 seconds
+        if [ $((attempt % 10)) -eq 0 ]; then
+            print_info "  Still waiting for $service_name... ($attempt/$max_attempts)"
+        fi
+    done
+    print_success "$service_name is ready!"
+    return 0
+}
+
+# Helper function to start a service and optionally wait for it
+start_service() {
+    local service_name=$1
+    local wait_for_ready=${2:-false}
+    local port=$3
+    
+    if [ -d "$PROJECT_ROOT/backend/$service_name" ]; then
+        print_info "Starting $service_name..."
+        cd "$PROJECT_ROOT/backend/$service_name"
+        
+        if [ -f "mvnw" ]; then
+            ./mvnw spring-boot:run &
+        elif [ -f "gradlew" ]; then
+            ./gradlew bootRun &
+        elif [ -f "pom.xml" ]; then
+            mvn spring-boot:run &
+        else
+            print_warning "$service_name: No build file found, skipping..."
+            return 1
+        fi
+        
+        if [ "$wait_for_ready" = true ] && [ -n "$port" ]; then
+            wait_for_service "$service_name" "$port"
+        fi
+    else
+        print_warning "$service_name directory not found, skipping..."
+        return 1
+    fi
+}
+
 start_backend() {
     print_header "Starting Backend Services"
     
     # First start infrastructure
     start_infrastructure
     
-    cd "$PROJECT_ROOT/backend"
-    
     if [ ! -d "$PROJECT_ROOT/backend" ]; then
         print_warning "Backend directory not found. Skipping..."
         return
     fi
     
-    # Start Eureka first and wait for it to be ready
-    print_info "Starting eureka-server (Service Discovery)..."
-    cd "$PROJECT_ROOT/backend/eureka-server"
-    ./mvnw spring-boot:run &
+    print_header "Phase 1: Core Infrastructure Services"
     
-    print_info "Waiting for Eureka to be ready..."
-    local max_attempts=60
-    local attempt=0
-    while ! curl -s http://localhost:8761/actuator/health > /dev/null 2>&1; do
-        attempt=$((attempt + 1))
-        if [ $attempt -ge $max_attempts ]; then
-            print_error "Eureka failed to start within 60 seconds"
-            return 1
+    # 1. Eureka Server - Service Discovery (all services depend on this)
+    start_service "eureka-server" true 8761 || return 1
+    
+    # 2. Settings Service - Configuration (other services may need settings)
+    start_service "settings-service" true 8087 || return 1
+    
+    # 3. Auth Service - Authentication (gateway needs this for security)
+    start_service "auth-service" true 8085 || return 1
+    
+    print_header "Phase 2: Data Services"
+    
+    # 4. Product Service - Master data (orders reference products)
+    start_service "product-service" true 8081 || return 1
+    
+    print_header "Phase 3: API Gateway"
+    
+    # 5. API Gateway - Routing (needs services registered in Eureka)
+    start_service "api-gateway" true 8080 || return 1
+    
+    print_header "Phase 4: Business Services"
+    
+    # 6. Cart, Order, Payment - Can start in parallel now
+    start_service "cart-service" false
+    start_service "order-service" false
+    start_service "payment-service" false
+    
+    # Wait for order-service specifically (receipt depends on it)
+    wait_for_service "order-service" 8083
+    
+    print_header "Phase 5: Dependent Services"
+    
+    # 7. Receipt & Notification - Depend on order events
+    start_service "receipt-service" false
+    start_service "notification-service" false
+    
+    # Final readiness check
+    print_header "Verifying All Services"
+    sleep 5
+    
+    local all_ready=true
+    local service_ports=(
+        "eureka-server:8761"
+        "api-gateway:8080"
+        "product-service:8081"
+        "cart-service:8082"
+        "order-service:8083"
+        "payment-service:8084"
+        "auth-service:8085"
+        "receipt-service:8086"
+        "settings-service:8087"
+    )
+    
+    for service_port in "${service_ports[@]}"; do
+        local svc="${service_port%%:*}"
+        local port="${service_port##*:}"
+        if curl -s "http://localhost:$port/actuator/health" > /dev/null 2>&1; then
+            print_success "$svc (port $port) ✓"
+        else
+            print_warning "$svc (port $port) not responding yet"
+            all_ready=false
         fi
-        sleep 1
-    done
-    print_success "Eureka is ready!"
-    
-    # Start remaining services
-    local services=("api-gateway" "product-service" "cart-service" "order-service" "payment-service" "auth-service" "settings-service" "receipt-service" "notification-service")
-    
-    for service in "${services[@]}"; do
-        if [ -d "$PROJECT_ROOT/backend/$service" ]; then
-            print_info "Starting $service..."
-            cd "$PROJECT_ROOT/backend/$service"
-            
-            if [ -f "mvnw" ]; then
-                ./mvnw spring-boot:run &
-            elif [ -f "gradlew" ]; then
-                ./gradlew bootRun &
-            elif [ -f "pom.xml" ]; then
-                mvn spring-boot:run &
-            else
-                print_warning "$service: No build file found, skipping..."
-            fi
-        fi
     done
     
-    print_success "Backend services starting..."
     echo ""
-    echo "  Services:"
-    echo "  • Eureka:        http://localhost:8761"
-    echo "  • Gateway:       http://localhost:8080"
-    echo "  • Products:      http://localhost:8081"
-    echo "  • Cart:          http://localhost:8082"
-    echo "  • Orders:        http://localhost:8083"
-    echo "  • Payments:      http://localhost:8084"
-    echo "  • Auth:          http://localhost:8085"
-    echo "  • Receipt:       http://localhost:8086"
-    echo "  • Settings:      http://localhost:8087"
-    echo "  • Notifications: http://localhost:8088"
+    if [ "$all_ready" = true ]; then
+        print_success "All backend services are ready!"
+    else
+        print_warning "Some services are still starting. They should be ready shortly."
+    fi
+    
+    echo ""
+    echo "  ┌─────────────────────────────────────────────────────────┐"
+    echo "  │                    SERVICE ENDPOINTS                    │"
+    echo "  ├─────────────────────────────────────────────────────────┤"
+    echo "  │  Eureka Dashboard:    http://localhost:8761             │"
+    echo "  │  API Gateway:         http://localhost:8080             │"
+    echo "  ├─────────────────────────────────────────────────────────┤"
+    echo "  │  Products API:        http://localhost:8080/api/products│"
+    echo "  │  Cart API:            http://localhost:8080/api/cart    │"
+    echo "  │  Orders API:          http://localhost:8080/api/orders  │"
+    echo "  │  Payments API:        http://localhost:8080/api/payments│"
+    echo "  │  Auth API:            http://localhost:8080/api/auth    │"
+    echo "  │  Receipts API:        http://localhost:8080/api/receipts│"
+    echo "  │  Settings API:        http://localhost:8080/api/settings│"
+    echo "  └─────────────────────────────────────────────────────────┘"
+    echo ""
 }
 
 stop_backend() {

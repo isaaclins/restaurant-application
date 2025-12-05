@@ -55,4 +55,12 @@ public class AuthController {
         UserResponse user = authService.getUserProfile(userId);
         return ResponseEntity.ok(user);
     }
+
+    @GetMapping("/health")
+    @Operation(summary = "Health check endpoint")
+    public ResponseEntity<java.util.Map<String, String>> health() {
+        return ResponseEntity.ok(java.util.Map.of(
+                "status", "UP",
+                "service", "auth-service"));
+    }
 }
