@@ -222,7 +222,6 @@ public class OrderService {
                 .customerPhone(order.getCustomerPhone())
                 .customerId(order.getCustomerId())
                 .subtotal(order.getTotalPrice()) // Using totalPrice as subtotal
-                .deliveryFee(order.getDeliveryFee())
                 .totalPrice(order.getTotalPrice())
                 .paymentMethod(order.getPaymentMethod())
                 .itemCount(order.getItems().size())

@@ -70,7 +70,12 @@ function ReceiptsPage() {
   );
 
   const handleDownload = async (receipt: Receipt) => {
-    await receiptsApi.downloadReceiptPdf(receipt.id, receipt.receiptNumber);
+    try {
+      await receiptsApi.downloadReceiptPdf(receipt.id, receipt.receiptNumber);
+    } catch (error) {
+      console.error('Failed to download PDF:', error);
+      alert('Failed to download PDF. Please try again.');
+    }
   };
 
   if (receiptsLoading) {

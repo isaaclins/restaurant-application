@@ -1652,18 +1652,243 @@ const FAKE_CITIES = [
   { city: 'Luzern', postal: '6003' },
 ];
 
+// Demo data for restaurant menu
+const DEMO_CATEGORIES = [
+  { name: 'Pizzas', displayOrder: 1 },
+  { name: 'Pasta', displayOrder: 2 },
+  { name: 'Salads', displayOrder: 3 },
+  { name: 'Burgers', displayOrder: 4 },
+  { name: 'Desserts', displayOrder: 5 },
+  { name: 'Drinks', displayOrder: 6 },
+];
+
+const DEMO_PRODUCTS = [
+  // Pizzas
+  { name: 'Margherita', description: 'Tomato sauce, mozzarella, fresh basil', price: 18.50, category: 'Pizzas', preparationTime: 15 },
+  { name: 'Quattro Formaggi', description: 'Mozzarella, gorgonzola, parmesan, goat cheese', price: 22.00, category: 'Pizzas', preparationTime: 15 },
+  { name: 'Diavola', description: 'Tomato sauce, mozzarella, spicy salami, chili', price: 21.50, category: 'Pizzas', preparationTime: 15 },
+  { name: 'Prosciutto e Funghi', description: 'Tomato sauce, mozzarella, ham, mushrooms', price: 23.00, category: 'Pizzas', preparationTime: 18 },
+  { name: 'Vegetariana', description: 'Tomato sauce, mozzarella, grilled vegetables', price: 20.00, category: 'Pizzas', preparationTime: 15 },
+  // Pasta
+  { name: 'Spaghetti Carbonara', description: 'Guanciale, egg, pecorino, black pepper', price: 19.50, category: 'Pasta', preparationTime: 12 },
+  { name: 'Penne Arrabiata', description: 'Spicy tomato sauce, garlic, chili flakes', price: 16.50, category: 'Pasta', preparationTime: 10 },
+  { name: 'Tagliatelle Bolognese', description: 'Slow-cooked beef ragù, parmesan', price: 21.00, category: 'Pasta', preparationTime: 12 },
+  { name: 'Risotto ai Funghi', description: 'Arborio rice, mixed mushrooms, truffle oil', price: 24.00, category: 'Pasta', preparationTime: 20 },
+  // Salads
+  { name: 'Caesar Salad', description: 'Romaine, parmesan, croutons, caesar dressing', price: 14.50, category: 'Salads', preparationTime: 8 },
+  { name: 'Caprese', description: 'Buffalo mozzarella, tomatoes, basil, balsamic', price: 15.00, category: 'Salads', preparationTime: 5 },
+  { name: 'Greek Salad', description: 'Cucumber, tomatoes, olives, feta, red onion', price: 13.50, category: 'Salads', preparationTime: 8 },
+  // Burgers
+  { name: 'Classic Cheeseburger', description: 'Beef patty, cheddar, lettuce, tomato, pickles', price: 17.50, category: 'Burgers', preparationTime: 12 },
+  { name: 'Bacon BBQ Burger', description: 'Beef patty, bacon, cheddar, BBQ sauce, onion rings', price: 19.50, category: 'Burgers', preparationTime: 14 },
+  { name: 'Veggie Burger', description: 'Plant-based patty, avocado, sprouts, vegan mayo', price: 18.00, category: 'Burgers', preparationTime: 12 },
+  // Desserts
+  { name: 'Tiramisu', description: 'Classic Italian dessert with mascarpone and espresso', price: 9.50, category: 'Desserts', preparationTime: 2 },
+  { name: 'Panna Cotta', description: 'Vanilla cream with berry coulis', price: 8.50, category: 'Desserts', preparationTime: 2 },
+  { name: 'Chocolate Fondant', description: 'Warm chocolate cake with molten center', price: 11.00, category: 'Desserts', preparationTime: 10 },
+  // Drinks
+  { name: 'Coca-Cola', description: '330ml bottle', price: 4.00, category: 'Drinks', preparationTime: 1 },
+  { name: 'Mineral Water', description: 'Still or sparkling, 500ml', price: 3.50, category: 'Drinks', preparationTime: 1 },
+  { name: 'Fresh Orange Juice', description: 'Freshly squeezed, 300ml', price: 5.50, category: 'Drinks', preparationTime: 3 },
+  { name: 'Espresso', description: 'Italian espresso', price: 3.50, category: 'Drinks', preparationTime: 2 },
+  { name: 'Cappuccino', description: 'Espresso with steamed milk foam', price: 4.50, category: 'Drinks', preparationTime: 3 },
+];
+
 function DeveloperSettings() {
   const queryClient = useQueryClient();
   const [orderCount, setOrderCount] = useState(5);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedCount, setGeneratedCount] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  
+  // Demo data population state
+  const [isPopulating, setIsPopulating] = useState(false);
+  const [populateStatus, setPopulateStatus] = useState<string>('');
+  const [populateProgress, setPopulateProgress] = useState(0);
+  const [populateError, setPopulateError] = useState<string | null>(null);
+  const [populateSuccess, setPopulateSuccess] = useState(false);
 
   // Fetch products to use in fake orders
-  const { data: products = [] } = useQuery({
+  const { data: products = [], refetch: refetchProducts } = useQuery({
     queryKey: ['products'],
     queryFn: productsApi.getProducts,
   });
+
+  // Fetch categories
+  const { data: categories = [], refetch: refetchCategories } = useQuery({
+    queryKey: ['categories'],
+    queryFn: productsApi.getCategories,
+  });
+
+  // Populate demo data function
+  const populateDemoData = async () => {
+    setIsPopulating(true);
+    setPopulateError(null);
+    setPopulateSuccess(false);
+    setPopulateProgress(0);
+
+    try {
+      // Step 1: Create categories (if they don't exist)
+      setPopulateStatus('Creating categories...');
+      const existingCategoryNames = categories.map((c: { name: string }) => c.name.toLowerCase());
+      const categoryMap: Record<string, number> = {};
+      
+      // Map existing categories
+      categories.forEach((c: { id: number; name: string }) => {
+        categoryMap[c.name] = c.id;
+      });
+
+      let createdCategories = 0;
+      for (const cat of DEMO_CATEGORIES) {
+        if (!existingCategoryNames.includes(cat.name.toLowerCase())) {
+          try {
+            const response = await api.post('/api/categories', cat);
+            categoryMap[cat.name] = response.data.id;
+            createdCategories++;
+          } catch (err) {
+            console.log(`Category ${cat.name} might already exist`);
+          }
+        }
+      }
+      setPopulateProgress(15);
+
+      // Refetch categories to get updated IDs
+      await refetchCategories();
+      const updatedCategories = await productsApi.getCategories();
+      updatedCategories.forEach((c: { id: number; name: string }) => {
+        categoryMap[c.name] = c.id;
+      });
+
+      // Step 2: Create products
+      setPopulateStatus('Creating products...');
+      const existingProductNames = products.map((p: Product) => p.name.toLowerCase());
+      let createdProducts = 0;
+
+      for (const product of DEMO_PRODUCTS) {
+        if (!existingProductNames.includes(product.name.toLowerCase())) {
+          const categoryId = categoryMap[product.category];
+          if (categoryId) {
+            try {
+              await api.post('/api/products', {
+                name: product.name,
+                description: product.description,
+                price: product.price,
+                categoryId,
+                preparationTime: product.preparationTime,
+                isAvailable: true,
+              });
+              createdProducts++;
+            } catch (err) {
+              console.log(`Product ${product.name} might already exist`);
+            }
+          }
+        }
+      }
+      setPopulateProgress(40);
+
+      // Refetch products
+      await refetchProducts();
+      const allProducts = await productsApi.getProducts();
+
+      // Step 3: Create sample orders
+      setPopulateStatus('Creating orders...');
+      const orderStatuses = ['PENDING', 'CONFIRMED', 'IN_PROGRESS', 'READY', 'DELIVERED', 'PICKED_UP'];
+      let createdOrders = 0;
+
+      for (let i = 0; i < 15; i++) {
+        const orderType = Math.random() > 0.5 ? 'DELIVERY' : 'PICKUP';
+        const customerName = FAKE_NAMES[Math.floor(Math.random() * FAKE_NAMES.length)];
+        const cityInfo = FAKE_CITIES[Math.floor(Math.random() * FAKE_CITIES.length)];
+        const street = FAKE_STREETS[Math.floor(Math.random() * FAKE_STREETS.length)];
+
+        // Random 1-4 items
+        const itemCount = Math.floor(Math.random() * 4) + 1;
+        const shuffledProducts = [...allProducts].sort(() => Math.random() - 0.5);
+        const selectedProducts = shuffledProducts.slice(0, Math.min(itemCount, allProducts.length));
+
+        const items = selectedProducts.map((product: Product) => {
+          const quantity = Math.floor(Math.random() * 3) + 1;
+          return {
+            productId: product.id,
+            productName: product.name,
+            quantity,
+            unitPrice: product.price,
+            totalPrice: product.price * quantity,
+          };
+        });
+
+        const totalPrice = items.reduce((sum, item) => sum + item.totalPrice, 0);
+
+        // Random time offset for variety
+        const hoursAgo = Math.floor(Math.random() * 48); // Up to 48 hours ago
+        const orderTime = new Date(Date.now() - hoursAgo * 60 * 60 * 1000);
+        const pad = (n: number) => n.toString().padStart(2, '0');
+        const estimatedDelivery = `${orderTime.getFullYear()}-${pad(orderTime.getMonth() + 1)}-${pad(orderTime.getDate())}T${pad(orderTime.getHours() + 1)}:${pad(orderTime.getMinutes())}:${pad(orderTime.getSeconds())}`;
+
+        const orderData = {
+          customerName,
+          customerEmail: `${customerName.toLowerCase().replace(' ', '.')}@example.com`,
+          customerPhone: `+41 79 ${Math.floor(Math.random() * 900 + 100)} ${Math.floor(Math.random() * 9000 + 1000)}`,
+          orderType,
+          paymentMethod: Math.random() > 0.5 ? 'CARD' : 'CASH',
+          items,
+          totalPrice,
+          estimatedDelivery,
+          ...(orderType === 'DELIVERY' && {
+            deliveryStreet: street,
+            deliveryCity: cityInfo.city,
+            deliveryPostalCode: cityInfo.postal,
+          }),
+        };
+
+        try {
+          const orderResponse = await api.post('/api/orders', orderData);
+          createdOrders++;
+
+          // Update some orders to different statuses to show variety
+          if (i < 12) { // Leave a few as PENDING
+            const targetStatus = orderStatuses[Math.min(i % 6, 5)];
+            try {
+              // Progress through statuses
+              const statusProgression = ['CONFIRMED', 'IN_PROGRESS', 'READY'];
+              for (const status of statusProgression) {
+                await api.put(`/api/orders/${orderResponse.data.id}/status`, { status });
+                if (status === targetStatus || (targetStatus === 'DELIVERED' && status === 'READY') || (targetStatus === 'PICKED_UP' && status === 'READY')) {
+                  break;
+                }
+              }
+              // Final status for completed orders
+              if (targetStatus === 'DELIVERED' || targetStatus === 'PICKED_UP') {
+                await api.put(`/api/orders/${orderResponse.data.id}/status`, { status: targetStatus });
+              }
+            } catch (statusErr) {
+              console.log('Status update skipped');
+            }
+          }
+        } catch (err) {
+          console.log('Order creation error:', err);
+        }
+
+        setPopulateProgress(40 + Math.floor((i / 15) * 50));
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+
+      setPopulateProgress(100);
+      setPopulateStatus('Done!');
+      setPopulateSuccess(true);
+
+      // Invalidate all queries
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+      queryClient.invalidateQueries({ queryKey: ['categories'] });
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+      queryClient.invalidateQueries({ queryKey: ['receipts'] });
+
+    } catch (err) {
+      setPopulateError(err instanceof Error ? err.message : 'Failed to populate demo data');
+    } finally {
+      setIsPopulating(false);
+    }
+  };
 
   const generateFakeOrders = async () => {
     if (products.length === 0) {
@@ -1763,6 +1988,94 @@ function DeveloperSettings() {
             </p>
           </div>
         </div>
+      </div>
+
+      {/* Populate Demo Data */}
+      <div className="bg-white rounded-lg shadow p-6 mb-6">
+        <div className="flex items-center mb-4">
+          <Store className="w-5 h-5 text-green-500 mr-2" />
+          <h3 className="text-lg font-semibold text-gray-800">Populate Demo Data</h3>
+        </div>
+
+        <p className="text-sm text-gray-600 mb-4">
+          Create a complete restaurant demo with categories, products, orders, and receipts.
+          This will add realistic menu items like pizzas, pasta, salads, burgers, desserts, and drinks.
+        </p>
+
+        <div className="grid grid-cols-3 gap-4 mb-4">
+          <div className="p-3 bg-gray-50 rounded-lg text-center">
+            <div className="text-2xl font-bold text-gray-900">{DEMO_CATEGORIES.length}</div>
+            <div className="text-xs text-gray-500">Categories</div>
+          </div>
+          <div className="p-3 bg-gray-50 rounded-lg text-center">
+            <div className="text-2xl font-bold text-gray-900">{DEMO_PRODUCTS.length}</div>
+            <div className="text-xs text-gray-500">Products</div>
+          </div>
+          <div className="p-3 bg-gray-50 rounded-lg text-center">
+            <div className="text-2xl font-bold text-gray-900">15</div>
+            <div className="text-xs text-gray-500">Sample Orders</div>
+          </div>
+        </div>
+
+        <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-blue-700 text-sm mb-4">
+          <strong>What will be created:</strong>
+          <ul className="mt-1 ml-4 list-disc">
+            <li>Pizzas, Pasta, Salads, Burgers, Desserts, Drinks categories</li>
+            <li>{DEMO_PRODUCTS.length} realistic menu items with prices</li>
+            <li>15 orders with various statuses (pending, preparing, completed)</li>
+            <li>Receipts for completed orders</li>
+          </ul>
+        </div>
+
+        {populateError && (
+          <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm mb-4">
+            {populateError}
+          </div>
+        )}
+
+        {isPopulating && (
+          <div className="space-y-2 mb-4">
+            <div className="flex justify-between text-sm text-gray-600">
+              <span>{populateStatus}</span>
+              <span>{populateProgress}%</span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div 
+                className="bg-green-500 h-2 rounded-full transition-all duration-300"
+                style={{ width: `${populateProgress}%` }}
+              />
+            </div>
+          </div>
+        )}
+
+        <button
+          onClick={populateDemoData}
+          disabled={isPopulating}
+          className={`w-full py-3 rounded-lg font-medium flex items-center justify-center transition ${
+            isPopulating
+              ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+              : 'bg-green-500 text-white hover:bg-green-600'
+          }`}
+        >
+          {isPopulating ? (
+            <>
+              <RefreshCw className="w-5 h-5 mr-2 animate-spin" />
+              Populating...
+            </>
+          ) : (
+            <>
+              <Store className="w-5 h-5 mr-2" />
+              Populate Demo Data
+            </>
+          )}
+        </button>
+
+        {populateSuccess && (
+          <div className="p-3 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm flex items-center mt-4">
+            <Check className="w-4 h-4 mr-2" />
+            Demo data created successfully! Check Products, KDS, and Receipts pages.
+          </div>
+        )}
       </div>
 
       {/* Fake Order Generator */}
