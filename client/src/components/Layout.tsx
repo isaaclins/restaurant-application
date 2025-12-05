@@ -7,6 +7,7 @@ import {
   Settings,
   LogOut,
   ChefHat,
+  FolderOpen,
 } from 'lucide-react';
 
 function Layout() {
@@ -21,6 +22,7 @@ function Layout() {
   const navItems = [
     { to: '/kds', icon: LayoutGrid, label: 'KDS' },
     { to: '/products', icon: Package, label: 'Products' },
+    { to: '/categories', icon: FolderOpen, label: 'Categories' },
     { to: '/receipts', icon: Receipt, label: 'Receipts' },
     { to: '/settings', icon: Settings, label: 'Settings' },
   ];

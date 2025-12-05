@@ -1,6 +1,18 @@
 import api from './client';
 import { Product, Category, CreateProductRequest, UpdateProductRequest } from '../types';
 
+export interface CreateCategoryRequest {
+  name: string;
+  displayOrder?: number;
+  isActive?: boolean;
+}
+
+export interface UpdateCategoryRequest {
+  name?: string;
+  displayOrder?: number;
+  isActive?: boolean;
+}
+
 export const productsApi = {
   // Get all products
   getProducts: async (): Promise<Product[]> => {
@@ -49,17 +61,27 @@ export const productsApi = {
     return response.data;
   },
 
-  createCategory: async (name: string): Promise<Category> => {
-    const response = await api.post('/api/categories', { name });
+  createCategory: async (data: CreateCategoryRequest): Promise<Category> => {
+    const response = await api.post('/api/categories', data);
     return response.data;
   },
 
-  updateCategory: async (id: number, name: string): Promise<Category> => {
-    const response = await api.put(`/api/categories/${id}`, { name });
+  updateCategory: async (id: number, data: UpdateCategoryRequest): Promise<Category> => {
+    const response = await api.put(`/api/categories/${id}`, data);
     return response.data;
   },
 
   deleteCategory: async (id: number): Promise<void> => {
     await api.delete(`/api/categories/${id}`);
+  },
+
+  toggleCategoryActive: async (id: number): Promise<Category> => {
+    const response = await api.patch(`/api/categories/${id}/toggle-active`);
+    return response.data;
+  },
+
+  reorderCategories: async (categoryIds: number[]): Promise<Category[]> => {
+    const response = await api.put('/api/categories/reorder', categoryIds);
+    return response.data;
   },
 };

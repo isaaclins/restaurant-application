@@ -4,6 +4,7 @@ import Layout from './components/Layout';
 import LoginPage from './pages/LoginPage';
 import KDSPage from './pages/KDSPage';
 import ProductsPage from './pages/ProductsPage';
+import CategoriesPage from './pages/CategoriesPage';
 import ReceiptsPage from './pages/ReceiptsPage';
 import SettingsPage from './pages/SettingsPage';
 
@@ -27,6 +28,7 @@ function App() {
         <Route index element={<Navigate to="/kds" replace />} />
         <Route path="kds" element={<KDSPage />} />
         <Route path="products" element={<ProductsPage />} />
+        <Route path="categories" element={<CategoriesPage />} />
         <Route path="receipts" element={<ReceiptsPage />} />
         <Route path="settings" element={<SettingsPage />} />
       </Route>
