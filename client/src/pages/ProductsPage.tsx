@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { productsApi } from '../api/products';
 import { Product, Category } from '../types';
@@ -12,6 +12,8 @@ import {
   RefreshCw,
   Eye,
   EyeOff,
+  Upload,
+  Link,
 } from 'lucide-react';
 
 function ProductsPage() {
@@ -255,6 +257,7 @@ function ProductModal({
 }) {
   const queryClient = useQueryClient();
   const isEditing = product !== null;
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState({
     name: product?.name || '',
@@ -265,11 +268,22 @@ function ProductModal({
     preparationTime: product?.preparationTime?.toString() || '',
   });
 
+  const [imageInputType, setImageInputType] = useState<'url' | 'file'>(
+    product?.imageUrl?.startsWith('data:') ? 'file' : 'url'
+  );
+  const [imagePreview, setImagePreview] = useState<string | null>(product?.imageUrl || null);
+
+  const [error, setError] = useState<string | null>(null);
+
   const createMutation = useMutation({
     mutationFn: productsApi.createProduct,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['products'] });
       onClose();
+    },
+    onError: (err: Error) => {
+      console.error('Create product error:', err);
+      setError(err.message || 'Failed to create product');
     },
   });
 
@@ -280,7 +294,50 @@ function ProductModal({
       queryClient.invalidateQueries({ queryKey: ['products'] });
       onClose();
     },
+    onError: (err: Error) => {
+      console.error('Update product error:', err);
+      setError(err.message || 'Failed to update product');
+    },
   });
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      alert('Please select an image file (PNG, JPEG, etc.)');
+      return;
+    }
+
+    // Validate file size (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      alert('Image size should be less than 2MB');
+      return;
+    }
+
+    // Convert to base64
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64 = reader.result as string;
+      setFormData({ ...formData, imageUrl: base64 });
+      setImagePreview(base64);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleUrlChange = (url: string) => {
+    setFormData({ ...formData, imageUrl: url });
+    setImagePreview(url || null);
+  };
+
+  const clearImage = () => {
+    setFormData({ ...formData, imageUrl: '' });
+    setImagePreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -302,8 +359,8 @@ function ProductModal({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-lg m-4">
-        <div className="flex items-center justify-between p-4 border-b">
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-lg m-4 max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between p-4 border-b sticky top-0 bg-white">
           <h2 className="text-lg font-bold">{isEditing ? 'Edit Product' : 'Add Product'}</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
             <X className="w-5 h-5" />
@@ -311,6 +368,13 @@ function ProductModal({
         </div>
 
         <form onSubmit={handleSubmit} className="p-4 space-y-4">
+          {/* Error Display */}
+          {error && (
+            <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+              {error}
+            </div>
+          )}
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
             <input
@@ -363,15 +427,86 @@ function ProductModal({
             </div>
           </div>
 
+          {/* Image Input Section */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Image URL</label>
-            <input
-              type="url"
-              value={formData.imageUrl}
-              onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 outline-none"
-              placeholder="https://..."
-            />
+            <label className="block text-sm font-medium text-gray-700 mb-2">Product Image</label>
+            
+            {/* Toggle between URL and File Upload */}
+            <div className="flex space-x-2 mb-3">
+              <button
+                type="button"
+                onClick={() => setImageInputType('url')}
+                className={`flex items-center px-3 py-1.5 text-sm rounded-lg transition ${
+                  imageInputType === 'url'
+                    ? 'bg-orange-500 text-white'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                <Link className="w-4 h-4 mr-1.5" />
+                URL
+              </button>
+              <button
+                type="button"
+                onClick={() => setImageInputType('file')}
+                className={`flex items-center px-3 py-1.5 text-sm rounded-lg transition ${
+                  imageInputType === 'file'
+                    ? 'bg-orange-500 text-white'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                <Upload className="w-4 h-4 mr-1.5" />
+                Upload
+              </button>
+            </div>
+
+            {/* URL Input */}
+            {imageInputType === 'url' && (
+              <input
+                type="url"
+                value={formData.imageUrl.startsWith('data:') ? '' : formData.imageUrl}
+                onChange={(e) => handleUrlChange(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 outline-none"
+                placeholder="https://example.com/image.jpg"
+              />
+            )}
+
+            {/* File Upload */}
+            {imageInputType === 'file' && (
+              <div
+                onClick={() => fileInputRef.current?.click()}
+                className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center cursor-pointer hover:border-orange-400 hover:bg-orange-50 transition"
+              >
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/png,image/jpeg,image/jpg,image/gif,image/webp"
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
+                <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                <p className="text-sm text-gray-600">Click to upload image</p>
+                <p className="text-xs text-gray-400 mt-1">PNG, JPEG, GIF, WebP (max 2MB)</p>
+              </div>
+            )}
+
+            {/* Image Preview */}
+            {imagePreview && (
+              <div className="mt-3 relative">
+                <img
+                  src={imagePreview}
+                  alt="Preview"
+                  className="w-full h-40 object-cover rounded-lg border"
+                  onError={() => setImagePreview(null)}
+                />
+                <button
+                  type="button"
+                  onClick={clearImage}
+                  className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-full hover:bg-red-600 transition"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            )}
           </div>
 
           <div>
