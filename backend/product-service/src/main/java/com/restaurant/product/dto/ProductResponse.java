@@ -24,8 +24,8 @@ public class ProductResponse {
     private BigDecimal price;
     private Long categoryId;
     private String categoryName;
-    private Boolean isAvailable;
-    private Boolean isActive;
+    private Boolean available;
+    private Boolean active;
     private String imageUrl;
     private Integer preparationTime;
     private LocalDateTime createdAt;
@@ -39,8 +39,8 @@ public class ProductResponse {
                 .price(product.getPrice())
                 .categoryId(product.getCategory().getId())
                 .categoryName(product.getCategory().getName())
-                .isAvailable(product.getAvailable())
-                .isActive(true)
+                .available(product.getAvailable())
+                .active(true)
                 .imageUrl(product.getImageUrl())
                 .preparationTime(product.getPreparationTime())
                 .createdAt(product.getCreatedAt())
