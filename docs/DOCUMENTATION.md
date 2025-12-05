@@ -727,7 +727,7 @@ curl -X POST http://localhost:8085/api/auth/login \
 
 ---
 
-###05.12.2025 | KDS UI Verbesserungen & System-Analyse (Morgen-Session)
+### 05.12.2025 | KDS UI Verbesserungen & System-Analyse (Morgen-Session)
 
 #### ✅ Erfolge – KDS UI/UX Überarbeitung
 
