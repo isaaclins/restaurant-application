@@ -911,12 +911,8 @@ const CHECKBOX_EXPIRY_MS = 30 * 60 * 1000;
 const estimatedDelivery = estimatedTime.toISOString().slice(0, 19);
 
 // NACHHER (Lokale Zeit korrekt)
-const pad = (n: number) => n.toString().padStart(2, "0");
-const estimatedDelivery = `${estimatedTime.getFullYear()}-${pad(
-  estimatedTime.getMonth() + 1
-)}-${pad(estimatedTime.getDate())}T${pad(estimatedTime.getHours())}:${pad(
-  estimatedTime.getMinutes()
-)}:${pad(estimatedTime.getSeconds())}`;
+const pad = (n: number) => n.toString().padStart(2, '0');
+const estimatedDelivery = `${estimatedTime.getFullYear()}-${pad(estimatedTime.getMonth() + 1)}-${pad(estimatedTime.getDate())}T${pad(estimatedTime.getHours())}:${pad(estimatedTime.getMinutes())}:${pad(estimatedTime.getSeconds())}`;
 ```
 
 **Ursache:** JavaScript's `toISOString()` gibt immer UTC. Die Schweiz ist UTC+1, also waren alle Zeiten 1 Stunde in der Vergangenheit.
