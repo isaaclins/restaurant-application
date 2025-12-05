@@ -1317,6 +1317,64 @@ new PageImpl<>(notifications, pageRequest, notifications.size())
 
 ---
 
+### 05.12.2025 | KDS Bugfixes & Statistics Improvements (Nacht-Session)
+
+#### 🐛 Probleme & Lösungen
+
+**Problem 1: Timer zeigte negative Werte (z.B. -2760:02)**
+
+**Ursache:** Die Demo-Daten verwendeten `createdAt` statt `estimatedDelivery` für die Sortierung und Timer-Berechnung.
+
+**Lösung:** Timer-Logik verwendet jetzt korrekt das `estimatedDelivery`-Feld. Nach `./start.sh --full` werden neue Orders mit Zukunfts-Zeiten erstellt (5-30 Min in der Zukunft).
+
+**Problem 2: Produkte wurden als "unavailable" erstellt**
+
+**Ursache:** Frontend sendete `isAvailable: true`, aber Backend-DTO erwartet `available`.
+
+**Lösung:**
+
+```typescript
+// SettingsPage.tsx - VORHER
+isAvailable: true,
+
+// SettingsPage.tsx - NACHHER
+available: true,
+```
+
+**Problem 3: Receipt PDF Download tat nichts**
+
+**Ursache:** Komplexe Error-Handling-Logik in `getReceiptPdf` verursachte Probleme mit Blob-Response.
+
+**Lösung:** Vereinfachte API-Funktion ohne unnötige Content-Type-Prüfung:
+
+```typescript
+getReceiptPdf: async (id: number): Promise<Blob> => {
+  const response = await api.get(`/api/receipts/${id}/pdf`, {
+    responseType: 'blob',
+  });
+  return response.data;
+},
+```
+
+#### ✅ Erfolge - Neue Features
+
+- [x] **Avg Completion Time** Statistik ersetzt "Emails Sent"
+- [x] **Empty Orders Filter** - KDS zeigt keine Orders ohne Items mehr
+- [x] **Delete Confirmation** - Bestätigungs-Dialog vor Order-Löschung
+- [x] **Sort Direction Toggle** - Aufsteigend/Absteigend für Zeit und Items
+
+#### 📁 Geänderte Dateien
+
+| Datei | Änderung |
+|-------|----------|
+| `pages/SettingsPage.tsx` | `available` statt `isAvailable` für Product-Erstellung |
+| `pages/StatisticsPage.tsx` | Neue "Avg Completion Time" Statistik-Karte |
+| `pages/KDSPage.tsx` | Empty-Orders-Filter, Delete-Confirmation |
+| `api/receipts.ts` | Vereinfachte PDF-Download-Funktion |
+| `api/orders.ts` | Neue `deleteOrder` API-Methode |
+
+---
+
 ### 05.12.2025 | Receipt Items Bug Fix & Demo Data Feature (Nachmittag)
 
 #### 🐛 Probleme & Lösungen
@@ -1840,6 +1898,33 @@ style={{ height: `${heightPx}px` }}
 
 ---
 
+### 06.12.2025 | PDF Download UX + Cypress E2E Suite
+
+#### ✅ Erfolge
+
+- [x] **PDF Download UX**: "Save As" Dialog via File System Access API (Fallback: Blob-Download) für Receipt-PDFs
+- [x] **Toast Notifications**: Globale Toast-Komponente (Success/Error) mit Stack-Handling; in Receipts-Download eingebaut
+- [x] **Cypress E2E Setup**: Vollständiges Cypress-Setup mit TypeScript, Fixtures, Custom Commands und 8 Specs (Auth, KDS, Orders, Products, Receipts, Statistics, Settings, Navigation)
+- [x] **E2E Test Plan**: 74 Tests im Plan dokumentiert (`client/cypress/E2E_TEST_PLAN.md`)
+
+#### 📝 Geänderte Dateien
+
+| Datei                                     | Änderung                                                      |
+| ----------------------------------------- | ------------------------------------------------------------- |
+| `client/src/api/receipts.ts`              | PDF-Download mit Save-As Dialog und Fallback-Download         |
+| `client/src/pages/ReceiptsPage.tsx`       | Success/Error Toasts für PDF-Download; User-Cancel bleibt stumm |
+| `client/src/components/Toast.tsx`         | Neue Toast-Komponente + Hook                                  |
+| `client/cypress.config.ts`                | Cypress Grundkonfiguration                                    |
+| `client/cypress/**`                       | Fixtures, Support, e2e Specs für alle Hauptbereiche           |
+| `client/cypress/E2E_TEST_PLAN.md`         | Detaillierter Test-Plan mit 74 Fällen                         |
+
+#### 📌 Nächste Schritte
+
+- Cypress Runs gegen laufende Services ausführen und Ergebnisse dokumentieren
+- Weitere Happy-Path-Screenshots/Recordings für Abgabe sammeln
+
+---
+
 ## 🔗 Referenzen & Ressourcen
 
 ### Dokumentation
@@ -1862,4 +1947,4 @@ style={{ height: `${heightPx}px` }}
 
 ---
 
-_Letzte Aktualisierung: 05.12.2025_
+_Letzte Aktualisierung: 06.12.2025_

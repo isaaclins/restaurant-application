@@ -177,7 +177,7 @@ Diese Komponenten **MÜSSEN** implementiert werden, um das Projekt als abgeschlo
 | --- | --------------------- | ------------------------- | ------------ | ------ |
 | 5.1 | **Fehlerbehandlung**  | Global Exception Handler  | Phase 2      | ⬜     |
 | 5.2 | **Logging**           | Strukturiertes Logging    | Phase 2      | ⬜     |
-| 5.3 | **Integration Tests** | Mindestens Happy Path     | Phase 2,3,4  | ⬜     |
+| 5.3 | **Integration Tests** | Mindestens Happy Path     | Phase 2,3,4  | 🔄     |
 | 5.4 | **Real-time Updates** | WebSocket für Live-Orders | 2.3, 4.2     | ⬜     |
 
 **Definition of Done Phase 5:**
