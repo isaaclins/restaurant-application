@@ -16,6 +16,11 @@ import {
   Link,
 } from 'lucide-react';
 
+// Helper to check product availability (handles both backend and frontend naming)
+const isProductAvailable = (product: Product): boolean => {
+  return product.available ?? product.isAvailable ?? true;
+};
+
 function ProductsPage() {
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState('');
@@ -178,8 +183,10 @@ function ProductCard({
   onDelete: () => void;
   onToggleAvailability: () => void;
 }) {
+  const available = isProductAvailable(product);
+  
   return (
-    <div className={`bg-white rounded-lg shadow overflow-hidden ${!product.isAvailable ? 'opacity-60' : ''}`}>
+    <div className={`bg-white rounded-lg shadow overflow-hidden ${!available ? 'opacity-60' : ''}`}>
       {/* Image */}
       {product.imageUrl ? (
         <img
@@ -212,10 +219,10 @@ function ProductCard({
           <button
             onClick={onToggleAvailability}
             className={`flex items-center text-sm ${
-              product.isAvailable ? 'text-green-600' : 'text-red-600'
+              available ? 'text-green-600' : 'text-red-600'
             }`}
           >
-            {product.isAvailable ? (
+            {available ? (
               <>
                 <Eye className="w-4 h-4 mr-1" /> Available
               </>

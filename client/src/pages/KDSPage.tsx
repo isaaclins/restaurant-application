@@ -101,15 +101,43 @@ function cleanupExpiredChecks(): void {
 // Calculate time remaining until ETA (or time elapsed since order)
 function getTimeInfo(order: Order) {
   const now = new Date();
-  const createdAt = new Date(order.createdAt);
+  
+  // Safely parse createdAt - default to now if invalid
+  let createdAt: Date;
+  try {
+    createdAt = order.createdAt ? new Date(order.createdAt) : now;
+    // Check if the date is valid
+    if (isNaN(createdAt.getTime())) {
+      createdAt = now;
+    }
+  } catch {
+    createdAt = now;
+  }
   
   // If ETA is set, use it; otherwise use 15 min from creation as default
   // Backend uses 'estimatedDelivery', frontend might use 'estimatedReadyTime'
-  const eta = order.estimatedDelivery 
-    ? new Date(order.estimatedDelivery)
-    : order.estimatedReadyTime
-      ? new Date(order.estimatedReadyTime)
-      : addMinutes(createdAt, 15);
+  let eta: Date;
+  if (order.estimatedDelivery) {
+    try {
+      eta = new Date(order.estimatedDelivery);
+      if (isNaN(eta.getTime())) {
+        eta = addMinutes(createdAt, 15);
+      }
+    } catch {
+      eta = addMinutes(createdAt, 15);
+    }
+  } else if (order.estimatedReadyTime) {
+    try {
+      eta = new Date(order.estimatedReadyTime);
+      if (isNaN(eta.getTime())) {
+        eta = addMinutes(createdAt, 15);
+      }
+    } catch {
+      eta = addMinutes(createdAt, 15);
+    }
+  } else {
+    eta = addMinutes(createdAt, 15);
+  }
   
   const secondsRemaining = differenceInSeconds(eta, now);
   const minutesElapsed = differenceInMinutes(now, createdAt);
@@ -778,6 +806,7 @@ function KDSPage() {
   const [selectedOrder, setSelectedOrder] = useState<SelectedOrder | null>(null);
   const [sortMode, setSortMode] = useState<SortMode>('time');
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   // Cleanup expired checks on mount
   useEffect(() => {
@@ -827,10 +856,11 @@ function KDSPage() {
     },
   });
 
-  // Filter active orders (not delivered/picked up/cancelled)
+  // Filter active orders (not delivered/picked up/cancelled and has items)
   const activeOrders = useMemo(() => {
     return orders.filter(
-      (order) => !['DELIVERED', 'PICKED_UP', 'CANCELLED'].includes(order.status)
+      (order) => !['DELIVERED', 'PICKED_UP', 'CANCELLED'].includes(order.status) && 
+                 order.items && order.items.length > 0
     );
   }, [orders]);
 
@@ -915,14 +945,19 @@ function KDSPage() {
     updateStatusMutation.mutate({ id: selectedOrder.id, status: completedStatus });
   };
 
-  // Handle delete/cancel order - remove checks from localStorage
-  const handleDelete = () => {
+  // Handle delete/cancel order - show confirmation modal
+  const handleDeleteClick = () => {
     if (!selectedOrder) return;
-    if (confirm('Are you sure you want to cancel this order?')) {
-      // Remove checks from localStorage
-      removeOrderChecks(selectedOrder.id);
-      updateStatusMutation.mutate({ id: selectedOrder.id, status: 'CANCELLED' });
-    }
+    setShowDeleteConfirm(true);
+  };
+
+  // Confirm delete/cancel order
+  const confirmDelete = () => {
+    if (!selectedOrder) return;
+    // Remove checks from localStorage
+    removeOrderChecks(selectedOrder.id);
+    updateStatusMutation.mutate({ id: selectedOrder.id, status: 'CANCELLED' });
+    setShowDeleteConfirm(false);
   };
 
   // Handle create order
@@ -971,7 +1006,7 @@ function KDSPage() {
             order={selectedOrder}
             onToggleItem={handleToggleItem}
             onComplete={handleComplete}
-            onDelete={handleDelete}
+            onDelete={handleDeleteClick}
             products={products}
           />
         </div>
@@ -991,6 +1026,34 @@ function KDSPage() {
         onClose={() => setShowCreateModal(false)}
         onSubmit={handleCreateOrder}
       />
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && selectedOrder && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-md m-4">
+            <div className="p-6">
+              <h2 className="text-xl font-bold text-gray-800 mb-2">Cancel Order?</h2>
+              <p className="text-gray-600 mb-6">
+                Are you sure you want to cancel order <span className="font-semibold">#{selectedOrder.orderNumber}</span> for <span className="font-semibold">{selectedOrder.customerName}</span>? This action cannot be undone.
+              </p>
+              <div className="flex space-x-3">
+                <button
+                  onClick={() => setShowDeleteConfirm(false)}
+                  className="flex-1 py-3 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 transition"
+                >
+                  Keep Order
+                </button>
+                <button
+                  onClick={confirmDelete}
+                  className="flex-1 py-3 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600 transition"
+                >
+                  Cancel Order
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

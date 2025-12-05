@@ -31,14 +31,33 @@ export const receiptsApi = {
 
   // Download receipt PDF
   downloadReceiptPdf: async (id: number, receiptNumber: string): Promise<void> => {
-    const blob = await receiptsApi.getReceiptPdf(id);
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `receipt-${receiptNumber}.pdf`;
-    document.body.appendChild(a);
-    a.click();
-    window.URL.revokeObjectURL(url);
-    document.body.removeChild(a);
+    try {
+      const blob = await receiptsApi.getReceiptPdf(id);
+      
+      // Create a blob URL
+      const url = window.URL.createObjectURL(new Blob([blob], { type: 'application/pdf' }));
+      
+      // Create a temporary link element
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `receipt-${receiptNumber}.pdf`);
+      
+      // Append to body (required for Firefox)
+      document.body.appendChild(link);
+      
+      // Trigger the download
+      link.click();
+      
+      // Cleanup: remove the link and revoke the URL after a short delay
+      setTimeout(() => {
+        if (link.parentNode) {
+          link.parentNode.removeChild(link);
+        }
+        window.URL.revokeObjectURL(url);
+      }, 100);
+    } catch (error) {
+      console.error('Failed to download receipt PDF:', error);
+      throw error;
+    }
   },
 };

@@ -48,7 +48,8 @@ export interface Category {
   id: number;
   name: string;
   displayOrder: number;
-  isActive: boolean;
+  isActive?: boolean;
+  active?: boolean;
 }
 
 export interface Product {
@@ -59,8 +60,11 @@ export interface Product {
   categoryId: number;
   categoryName: string;
   imageUrl?: string;
-  isAvailable: boolean;
-  isActive: boolean;
+  available?: boolean;
+  active?: boolean;
+  // Aliases for compatibility with frontend naming conventions
+  isAvailable?: boolean;
+  isActive?: boolean;
   allergens?: string[];
   preparationTime?: number;
   createdAt: string;

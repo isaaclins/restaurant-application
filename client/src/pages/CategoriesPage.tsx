@@ -16,6 +16,11 @@ import {
   AlertCircle,
 } from 'lucide-react';
 
+// Helper to check category active status (handles both backend and frontend naming)
+const isCategoryActive = (category: Category): boolean => {
+  return category.isActive ?? category.active ?? true;
+};
+
 function CategoriesPage() {
   const queryClient = useQueryClient();
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
@@ -200,10 +205,12 @@ interface CategoryCardProps {
 }
 
 function CategoryCard({ category, productCount, onEdit, onDelete, onToggleActive, isTogglingActive }: CategoryCardProps) {
+  const active = isCategoryActive(category);
+  
   return (
     <div
       className={`bg-white rounded-lg shadow-sm border-2 transition ${
-        category.isActive ? 'border-transparent' : 'border-gray-200 opacity-60'
+        active ? 'border-transparent' : 'border-gray-200 opacity-60'
       }`}
     >
       <div className="flex items-center p-4">
@@ -216,7 +223,7 @@ function CategoryCard({ category, productCount, onEdit, onDelete, onToggleActive
         <div className="flex-1">
           <div className="flex items-center space-x-2">
             <h3 className="font-semibold text-gray-800">{category.name}</h3>
-            {!category.isActive && (
+            {!active && (
               <span className="px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-500 rounded">
                 Hidden
               </span>
@@ -233,13 +240,13 @@ function CategoryCard({ category, productCount, onEdit, onDelete, onToggleActive
             onClick={onToggleActive}
             disabled={isTogglingActive}
             className={`p-2 rounded-lg transition ${
-              category.isActive
+              active
                 ? 'text-green-600 hover:bg-green-50'
                 : 'text-gray-400 hover:bg-gray-100'
             }`}
-            title={category.isActive ? 'Hide category' : 'Show category'}
+            title={active ? 'Hide category' : 'Show category'}
           >
-            {category.isActive ? <Eye className="w-5 h-5" /> : <EyeOff className="w-5 h-5" />}
+            {active ? <Eye className="w-5 h-5" /> : <EyeOff className="w-5 h-5" />}
           </button>
 
           <button

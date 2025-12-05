@@ -113,6 +113,21 @@ function StatisticsPage() {
     const pickupOrders = orders.filter((o: Order) => o.orderType === 'PICKUP').length;
     const deliveryOrders = orders.filter((o: Order) => o.orderType === 'DELIVERY').length;
 
+    // Calculate average completion time (from createdAt to updatedAt for completed orders)
+    const completedOrdersWithTimes = orders.filter((o: Order) => 
+      (o.status === 'DELIVERED' || o.status === 'PICKED_UP') && o.createdAt && o.updatedAt
+    );
+    let averageCompletionTimeMinutes = 0;
+    if (completedOrdersWithTimes.length > 0) {
+      const totalCompletionTime = completedOrdersWithTimes.reduce((sum: number, o: Order) => {
+        const created = new Date(o.createdAt).getTime();
+        const updated = new Date(o.updatedAt!).getTime();
+        const diffMinutes = (updated - created) / (1000 * 60);
+        return sum + diffMinutes;
+      }, 0);
+      averageCompletionTimeMinutes = totalCompletionTime / completedOrdersWithTimes.length;
+    }
+
     // Orders by hour
     const ordersByHour = Array.from({ length: 24 }, (_, hour) => {
       const count = orders.filter((o: Order) => {
@@ -152,6 +167,7 @@ function StatisticsPage() {
       inProgressOrders,
       totalRevenue,
       averageOrderValue,
+      averageCompletionTimeMinutes,
       ordersByType: { pickup: pickupOrders, delivery: deliveryOrders },
       ordersByHour,
       topProducts,
@@ -162,7 +178,8 @@ function StatisticsPage() {
   const productStats = useMemo(() => {
     if (!productsData) return null;
     const totalProducts = productsData.length;
-    const activeProducts = productsData.filter((p) => p.isAvailable).length;
+    // Handle both backend naming (available) and frontend naming (isAvailable)
+    const activeProducts = productsData.filter((p) => p.available ?? p.isAvailable ?? true).length;
     const unavailableProducts = totalProducts - activeProducts;
     
     const byCategory: Record<string, number> = {};
@@ -320,30 +337,23 @@ function StatisticsPage() {
             </div>
           </div>
 
-          {/* Emails Sent */}
+          {/* Avg. Order Completion Time */}
           <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl p-6 text-white shadow-lg">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-orange-100 text-sm font-medium">Emails Sent</p>
+                <p className="text-orange-100 text-sm font-medium">Avg. Completion Time</p>
                 <p className="text-3xl font-bold mt-1">
-                  {notificationStats?.sent || 0}
+                  {orderStats?.averageCompletionTimeMinutes 
+                    ? `${Math.round(orderStats.averageCompletionTimeMinutes)} min`
+                    : 'N/A'}
                 </p>
                 <p className="text-orange-200 text-sm mt-2 flex items-center gap-1">
-                  {(notificationStats?.failed || 0) > 0 ? (
-                    <>
-                      <XCircle className="w-4 h-4" />
-                      {notificationStats?.failed} failed
-                    </>
-                  ) : (
-                    <>
-                      <CheckCircle className="w-4 h-4" />
-                      All delivered
-                    </>
-                  )}
+                  <Clock className="w-4 h-4" />
+                  From order to completion
                 </p>
               </div>
               <div className="bg-white/20 p-3 rounded-lg">
-                <Mail className="w-8 h-8" />
+                <Clock className="w-8 h-8" />
               </div>
             </div>
           </div>
