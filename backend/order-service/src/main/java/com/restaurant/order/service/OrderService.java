@@ -202,14 +202,31 @@ public class OrderService {
      * Build Kafka event from order
      */
     private OrderEvent buildEvent(Order order) {
+        List<OrderEvent.OrderItemEvent> itemEvents = order.getItems().stream()
+                .map(item -> OrderEvent.OrderItemEvent.builder()
+                        .productId(item.getProductId())
+                        .productName(item.getProductName())
+                        .quantity(item.getQuantity())
+                        .unitPrice(item.getUnitPrice())
+                        .totalPrice(item.getTotalPrice())
+                        .build())
+                .collect(Collectors.toList());
+
         return OrderEvent.builder()
                 .orderId(order.getId())
                 .orderNumber(order.getOrderNumber())
                 .status(order.getStatus().name())
                 .orderType(order.getOrderType().name())
                 .customerName(order.getCustomerName())
+                .customerEmail(order.getCustomerEmail())
+                .customerPhone(order.getCustomerPhone())
+                .customerId(order.getCustomerId())
+                .subtotal(order.getTotalPrice()) // Using totalPrice as subtotal
+                .deliveryFee(order.getDeliveryFee())
                 .totalPrice(order.getTotalPrice())
+                .paymentMethod(order.getPaymentMethod())
                 .itemCount(order.getItems().size())
+                .items(itemEvents)
                 .createdAt(order.getCreatedAt())
                 .updatedAt(order.getUpdatedAt())
                 .build();
