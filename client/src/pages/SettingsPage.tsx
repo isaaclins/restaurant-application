@@ -25,7 +25,6 @@ import {
   X,
   Eye,
   Send,
-  Settings,
   Server,
   Shield,
   TestTube,
@@ -1278,7 +1277,7 @@ function SmtpSettings() {
   });
   const [showPassword, setShowPassword] = useState(false);
 
-  const { data: config, isLoading, error } = useQuery({
+  const { data: config, isLoading } = useQuery({
     queryKey: ['smtpConfig'],
     queryFn: settingsApi.getSmtpConfig,
     retry: 1,

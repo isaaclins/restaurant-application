@@ -62,7 +62,7 @@ public class OrderEventConsumer {
             Receipt receipt = createReceipt(event);
 
             // Generate PDF
-            byte[] pdfData = pdfService.generatePdf(receipt);
+            byte[] pdfData = pdfService.generateReceiptPdf(receipt);
             receipt.setPdfData(pdfData);
             receipt.setPdfFilename(generateFilename(receipt));
 

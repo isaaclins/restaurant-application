@@ -1265,6 +1265,85 @@ new PageImpl<>(notifications, pageRequest, notifications.size())
 
 ---
 
+### 05.12.2025 | Statistics Dashboard, Receipt-Service Fix & Date Range Filters
+
+#### ✅ Erfolge
+
+**Statistics Dashboard (Neue Seite):**
+
+- [x] **Umfassende Statistik-Seite** erstellt (`/statistics`)
+- [x] Navigations-Eintrag mit BarChart3 Icon hinzugefügt
+- [x] **Key Metrics Cards:**
+  - Total Revenue (CHF)
+  - Total Orders
+  - Average Order Value
+  - Cancellation Rate
+- [x] **Order Statistics:**
+  - Orders by Type (Pickup vs Delivery)
+  - Orders by Status (Completed, Pending, Cancelled)
+  - Orders by Hour (Heatmap-Visualisierung)
+- [x] **Product Statistics:**
+  - Top 10 Best-Selling Products
+  - Products by Category
+  - Active vs Unavailable Products
+- [x] **Receipt Statistics:**
+  - Total Receipts
+  - Total Amount
+  - Average Receipt Value
+- [x] **Notification/Email Statistics:**
+  - Emails Sent/Pending/Failed
+  - By Type Breakdown
+
+**Date Range Filters:**
+
+- [x] **Statistics Page:** Today, Yesterday, Week, Month, Year, Custom
+- [x] **Receipts Page:** Gleiche Filter-Buttons (Today, Yesterday, Week, Month, Year, Custom)
+- [x] `startOfYear`/`endOfYear` von date-fns für Jahresberechnung
+- [x] Konsistentes UI zwischen beiden Seiten
+
+**Receipt-Service Fixes:**
+
+- [x] Service startet jetzt korrekt (war Compilation-Fehler)
+- [x] `generatePdf` → `generateReceiptPdf` Methodenname korrigiert
+- [x] Kafka Type-Mapping für `OrderCompletedEvent` konfiguriert
+- [x] `getAllReceipts()` Endpoint hinzugefügt (ohne Datums-Filter)
+- [x] `getReceiptsByDateRange()` Endpoint hinzugefügt
+
+**TypeScript Fixes:**
+
+- [x] `Receipt` Interface korrigiert: `total` → `totalAmount`
+- [x] Optionale Felder hinzugefügt für Backend-Kompatibilität
+- [x] Null-Safety in ReceiptsPage und StatisticsPage
+
+#### 📁 Neue/Geänderte Dateien
+
+**Frontend:**
+| Datei | Änderung |
+|-------|----------|
+| `client/src/pages/StatisticsPage.tsx` | **NEU** - Vollständiges Dashboard |
+| `client/src/api/statistics.ts` | **NEU** - Statistics API Types |
+| `client/src/App.tsx` | StatisticsPage Route hinzugefügt |
+| `client/src/components/Layout.tsx` | Statistics Navigation Item |
+| `client/src/pages/ReceiptsPage.tsx` | Date Range Filter Buttons |
+| `client/src/types/index.ts` | Receipt Interface Update |
+
+**Backend:**
+| Datei | Änderung |
+|-------|----------|
+| `receipt-service/ReceiptController.java` | Neue Endpoints |
+| `receipt-service/ReceiptService.java` | getAllReceipts, getByDateRange |
+| `receipt-service/OrderEventConsumer.java` | generateReceiptPdf Fix |
+| `receipt-service/application.yml` | Kafka Type-Mapping |
+
+#### 🔍 Erkenntnisse
+
+- **Receipt vs Total:** Backend sendet `totalAmount`, Frontend erwartete `total`
+- **Kafka Type-Mapping:** Bei Class-Renaming muss `spring.json.type.mapping` konfiguriert werden
+- **Date Range UX:** Konsistente Filter-Buttons verbessern Benutzererfahrung erheblich
+- **useMemo für Berechnungen:** Wichtig für Performance bei komplexen Statistik-Aggregationen
+
+---
+
 ## 🏁 Meilensteine
 
 | #   | Meilenstein                          | Zieldatum  | Status | Notizen                     |

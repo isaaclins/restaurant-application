@@ -8,6 +8,7 @@ import {
   LogOut,
   ChefHat,
   FolderOpen,
+  BarChart3,
 } from 'lucide-react';
 
 function Layout() {
@@ -24,6 +25,7 @@ function Layout() {
     { to: '/products', icon: Package, label: 'Products' },
     { to: '/categories', icon: FolderOpen, label: 'Categories' },
     { to: '/receipts', icon: Receipt, label: 'Receipts' },
+    { to: '/statistics', icon: BarChart3, label: 'Statistics' },
     { to: '/settings', icon: Settings, label: 'Settings' },
   ];
 

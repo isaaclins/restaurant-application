@@ -195,6 +195,26 @@ public class ReceiptService {
         }
 
         /**
+         * Get all receipts
+         */
+        public List<ReceiptResponse> getAllReceipts() {
+                return receiptRepository.findAll().stream()
+                                .map(this::mapToResponse)
+                                .collect(Collectors.toList());
+        }
+
+        /**
+         * Get all receipts for a date range
+         */
+        public List<ReceiptResponse> getReceiptsByDateRange(LocalDate startDate, LocalDate endDate) {
+                LocalDateTime startDateTime = startDate.atStartOfDay();
+                LocalDateTime endDateTime = endDate.atTime(LocalTime.MAX);
+                return receiptRepository.findByCreatedAtBetween(startDateTime, endDateTime).stream()
+                                .map(this::mapToResponse)
+                                .collect(Collectors.toList());
+        }
+
+        /**
          * Get all receipts for a date
          */
         public List<ReceiptResponse> getReceiptsByDate(LocalDate date) {

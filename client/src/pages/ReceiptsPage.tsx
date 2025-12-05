@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { receiptsApi } from '../api/receipts';
 import { Receipt } from '../types';
-import { format } from 'date-fns';
+import { format, subDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear } from 'date-fns';
 import {
   Download,
   Search,
@@ -15,19 +15,53 @@ import {
   ChevronRight,
 } from 'lucide-react';
 
+type DateRange = 'today' | 'yesterday' | 'week' | 'month' | 'year' | 'custom';
+
 function ReceiptsPage() {
   const [searchQuery, setSearchQuery] = useState('');
-  const [dateFilter, setDateFilter] = useState('');
+  const [dateRange, setDateRange] = useState<DateRange>('today');
+  const [customDate, setCustomDate] = useState('');
   const [selectedReceipt, setSelectedReceipt] = useState<Receipt | null>(null);
 
+  const { startDate, endDate } = useMemo(() => {
+    const now = new Date();
+    switch (dateRange) {
+      case 'today':
+        const today = format(now, 'yyyy-MM-dd');
+        return { startDate: today, endDate: today };
+      case 'yesterday':
+        const yesterday = format(subDays(now, 1), 'yyyy-MM-dd');
+        return { startDate: yesterday, endDate: yesterday };
+      case 'week':
+        return {
+          startDate: format(startOfWeek(now, { weekStartsOn: 1 }), 'yyyy-MM-dd'),
+          endDate: format(endOfWeek(now, { weekStartsOn: 1 }), 'yyyy-MM-dd'),
+        };
+      case 'month':
+        return {
+          startDate: format(startOfMonth(now), 'yyyy-MM-dd'),
+          endDate: format(endOfMonth(now), 'yyyy-MM-dd'),
+        };
+      case 'year':
+        return {
+          startDate: format(startOfYear(now), 'yyyy-MM-dd'),
+          endDate: format(endOfYear(now), 'yyyy-MM-dd'),
+        };
+      case 'custom':
+        return { startDate: customDate, endDate: customDate };
+      default:
+        return { startDate: format(now, 'yyyy-MM-dd'), endDate: format(now, 'yyyy-MM-dd') };
+    }
+  }, [dateRange, customDate]);
+
   const { data: receipts = [], isLoading: receiptsLoading } = useQuery({
-    queryKey: ['receipts', dateFilter],
-    queryFn: () => receiptsApi.getReceipts(dateFilter ? { startDate: dateFilter, endDate: dateFilter } : undefined),
+    queryKey: ['receipts', startDate, endDate],
+    queryFn: () => receiptsApi.getReceipts(startDate && endDate ? { startDate, endDate } : undefined),
   });
 
   const { data: dailyReport } = useQuery({
-    queryKey: ['dailyReport', dateFilter || format(new Date(), 'yyyy-MM-dd')],
-    queryFn: () => receiptsApi.getDailyReport(dateFilter || undefined),
+    queryKey: ['dailyReport', startDate],
+    queryFn: () => receiptsApi.getDailyReport(startDate || undefined),
   });
 
   const filteredReceipts = receipts.filter((receipt) =>
@@ -72,17 +106,47 @@ function ReceiptsPage() {
             />
           </div>
 
-          {/* Date Filter */}
-          <div className="relative">
-            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <input
-              type="date"
-              value={dateFilter}
-              onChange={(e) => setDateFilter(e.target.value)}
-              className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
-            />
+          {/* Date Range Buttons */}
+          <div className="flex items-center gap-2">
+            {(['today', 'yesterday', 'week', 'month', 'year'] as DateRange[]).map((range) => (
+              <button
+                key={range}
+                onClick={() => setDateRange(range)}
+                className={`px-3 py-2 rounded-lg font-medium text-sm transition-colors ${
+                  dateRange === range
+                    ? 'bg-orange-500 text-white'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                {range.charAt(0).toUpperCase() + range.slice(1)}
+              </button>
+            ))}
+            <button
+              onClick={() => setDateRange('custom')}
+              className={`px-3 py-2 rounded-lg font-medium text-sm transition-colors flex items-center gap-1 ${
+                dateRange === 'custom'
+                  ? 'bg-orange-500 text-white'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              <Calendar className="w-4 h-4" />
+              Custom
+            </button>
           </div>
         </div>
+
+        {/* Custom Date Picker */}
+        {dateRange === 'custom' && (
+          <div className="flex items-center gap-2 mt-4">
+            <Calendar className="w-5 h-5 text-gray-400" />
+            <input
+              type="date"
+              value={customDate}
+              onChange={(e) => setCustomDate(e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
+            />
+          </div>
+        )}
       </div>
 
       {/* Stats Cards */}
@@ -156,7 +220,7 @@ function ReceiptsPage() {
                     <span className="text-gray-600">{receipt.items.length} items</span>
                   </td>
                   <td className="px-4 py-3">
-                    <span className="font-semibold text-gray-800">CHF {receipt.total.toFixed(2)}</span>
+                    <span className="font-semibold text-gray-800">CHF {(receipt.totalAmount || 0).toFixed(2)}</span>
                   </td>
                   <td className="px-4 py-3">
                     <span className="text-gray-500 text-sm">
@@ -287,24 +351,24 @@ function ReceiptDetailModal({
           <div className="pt-4 border-t space-y-2">
             <div className="flex justify-between text-sm">
               <span className="text-gray-500">Subtotal</span>
-              <span>CHF {receipt.subtotal.toFixed(2)}</span>
+              <span>CHF {(receipt.subtotal || 0).toFixed(2)}</span>
             </div>
-            {receipt.deliveryFee > 0 && (
+            {(receipt.deliveryFee || 0) > 0 && (
               <div className="flex justify-between text-sm">
                 <span className="text-gray-500">Delivery Fee</span>
-                <span>CHF {receipt.deliveryFee.toFixed(2)}</span>
+                <span>CHF {(receipt.deliveryFee || 0).toFixed(2)}</span>
               </div>
             )}
             <div className="flex justify-between font-bold text-lg">
               <span>Total</span>
-              <span>CHF {receipt.total.toFixed(2)}</span>
+              <span>CHF {(receipt.totalAmount || 0).toFixed(2)}</span>
             </div>
           </div>
 
           {/* Payment Method */}
           <div className="pt-4 border-t">
             <p className="text-sm text-gray-500">
-              Payment: <span className="text-gray-800">{receipt.paymentMethod}</span>
+              Payment: <span className="text-gray-800">{receipt.paymentMethod || 'N/A'}</span>
             </p>
             <p className="text-sm text-gray-500">
               Date: <span className="text-gray-800">{format(new Date(receipt.createdAt), 'dd.MM.yyyy HH:mm')}</span>

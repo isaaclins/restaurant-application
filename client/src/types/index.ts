@@ -94,16 +94,26 @@ export interface Receipt {
   id: number;
   receiptNumber: string;
   orderId: number;
+  orderNumber?: string;
   orderType: OrderType;
   customerName: string;
+  customerEmail?: string;
   customerPhone?: string;
   customerAddress?: string;
+  restaurantName?: string;
+  restaurantAddress?: string;
+  restaurantPhone?: string;
+  vatNumber?: string;
   items: ReceiptItem[];
   subtotal: number;
-  deliveryFee: number;
-  total: number;
-  paymentMethod: string;
+  vatAmount?: number;
+  vatRate?: number;
+  deliveryFee?: number;
+  discount?: number;
+  totalAmount: number;
+  paymentMethod?: string;
   createdAt: string;
+  pdfAvailable?: boolean;
 }
 
 export interface DailyReport {

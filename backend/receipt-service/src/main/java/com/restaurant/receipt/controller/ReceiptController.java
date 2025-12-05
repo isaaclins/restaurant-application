@@ -40,6 +40,19 @@ public class ReceiptController {
         return ResponseEntity.status(HttpStatus.CREATED).body(receipt);
     }
 
+    @GetMapping
+    @Operation(summary = "Get all receipts, optionally filtered by date range")
+    public ResponseEntity<List<ReceiptResponse>> getAllReceipts(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+        if (startDate != null && endDate != null) {
+            return ResponseEntity.ok(receiptService.getReceiptsByDateRange(startDate, endDate));
+        } else if (startDate != null) {
+            return ResponseEntity.ok(receiptService.getReceiptsByDate(startDate));
+        }
+        return ResponseEntity.ok(receiptService.getAllReceipts());
+    }
+
     @GetMapping("/{id}")
     @Operation(summary = "Get receipt by ID")
     public ResponseEntity<ReceiptResponse> getReceiptById(@PathVariable Long id) {
