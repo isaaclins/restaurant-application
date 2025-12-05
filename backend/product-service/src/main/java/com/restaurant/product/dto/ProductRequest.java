@@ -34,4 +34,6 @@ public class ProductRequest {
     private Boolean available = true;
 
     private String imageUrl;
+
+    private Integer preparationTime;
 }

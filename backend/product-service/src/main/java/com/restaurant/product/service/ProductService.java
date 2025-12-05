@@ -83,6 +83,7 @@ public class ProductService {
                 .category(category)
                 .available(request.getAvailable() != null ? request.getAvailable() : true)
                 .imageUrl(request.getImageUrl())
+                .preparationTime(request.getPreparationTime())
                 .build();
 
         Product saved = productRepository.save(product);
@@ -119,6 +120,9 @@ public class ProductService {
         }
         if (request.getImageUrl() != null) {
             product.setImageUrl(request.getImageUrl());
+        }
+        if (request.getPreparationTime() != null) {
+            product.setPreparationTime(request.getPreparationTime());
         }
 
         Product saved = productRepository.save(product);

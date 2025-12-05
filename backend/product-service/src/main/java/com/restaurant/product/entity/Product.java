@@ -48,7 +48,11 @@ public class Product {
     @Column(nullable = false)
     private Boolean available = true;
 
+    @Column(columnDefinition = "LONGTEXT")
     private String imageUrl;
+
+    @Column
+    private Integer preparationTime;
 
     @Builder.Default
     @Column(nullable = false, updatable = false)
