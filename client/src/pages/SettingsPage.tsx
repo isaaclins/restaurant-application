@@ -1873,7 +1873,7 @@ function DeveloperSettings() {
                   price: product.price,
                   categoryId,
                   preparationTime: product.preparationTime,
-                  isAvailable: true,
+                  available: true,
                 });
               } catch (err) {
                 console.log(`Product ${product.name} might already exist`);
