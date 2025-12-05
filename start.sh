@@ -575,6 +575,43 @@ run_tests() {
             fi
         fi
     fi
+
+    # Client E2E tests
+    if [ -d "$PROJECT_ROOT/client" ]; then
+        print_info "Running client E2E tests..."
+        cd "$PROJECT_ROOT/client"
+        
+        if [ -f "package.json" ]; then
+            if npm run 2>/dev/null | grep -q "test:e2e"; then
+                # Check if services are running
+                local backend_ready=false
+                local frontend_ready=false
+                
+                if nc -z localhost 8080 2>/dev/null; then
+                    backend_ready=true
+                fi
+                
+                if nc -z localhost 5173 2>/dev/null; then
+                    frontend_ready=true
+                fi
+                
+                if [ "$backend_ready" = true ] && [ "$frontend_ready" = true ]; then
+                    print_info "Backend and Frontend are running. Starting Cypress..."
+                    if npm run test:e2e; then
+                        print_success "Client E2E tests passed"
+                    else
+                        print_error "Client E2E tests failed"
+                        test_failed=true
+                    fi
+                else
+                    print_warning "Skipping E2E tests because application is not running."
+                    print_warning "  Backend (8080): $([ "$backend_ready" = true ] && echo "UP" || echo "DOWN")"
+                    print_warning "  Frontend (5173): $([ "$frontend_ready" = true ] && echo "UP" || echo "DOWN")"
+                    print_info "  Run './start.sh --all' in another terminal before running tests."
+                fi
+            fi
+        fi
+    fi
     
     echo ""
     if [ "$test_failed" = true ]; then
