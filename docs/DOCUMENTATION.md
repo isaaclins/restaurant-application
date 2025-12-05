@@ -23,7 +23,7 @@
 
 ## 🎯 Projekt-Tagebuch
 
-### Tag 1 – 04.12.2025 | Projektstart & Architektur-Pivot
+### 04.12.2025 | Projektstart & Architektur-Pivot
 
 #### ✅ Erfolge
 
@@ -134,7 +134,7 @@
 
 ---
 
-### Tag 1 – 05.12.2025 | Backend Implementation (Nacht-Session)
+### 05.12.2025 | Backend Implementation (Nacht-Session)
 
 #### ✅ Erfolge
 
@@ -233,7 +233,7 @@
 
 ---
 
-### Tag 2 – 05.12.2025 | Test-Suite Implementation
+### 05.12.2025 | Test-Suite Implementation
 
 #### ✅ Erfolge
 
@@ -352,7 +352,7 @@
 
 ---
 
-### Tag 2 – 05.12.2025 | Receipt, Settings, Customer APIs & KDS Client (Fortsetzung)
+### 05.12.2025 | Receipt, Settings, Customer APIs & KDS Client (Fortsetzung)
 
 #### ✅ Erfolge – Backend APIs
 
@@ -497,7 +497,7 @@ npm run tauri dev  # Native Tauri App
 
 ---
 
-### Tag 2 – 05.12.2025 | Start-Script Verbesserungen (Nacht-Session)
+### 05.12.2025 | Start-Script Verbesserungen (Nacht-Session)
 
 #### ✅ Erfolge
 
@@ -548,7 +548,7 @@ npm error enoent Could not read package.json
 
 ---
 
-### Tag 2 – 05.12.2025 | Email Templates, SMTP Config & Settings UI (Nachmittag)
+### 05.12.2025 | Email Templates, SMTP Config & Settings UI (Nachmittag)
 
 #### ✅ Erfolge
 
@@ -585,7 +585,7 @@ npm error enoent Could not read package.json
 
 ---
 
-### Tag 2 – 05.12.2025 | Infrastructure & Configuration Fixes (Nacht-Session 2)
+### 05.12.2025 | Infrastructure & Configuration Fixes (Nacht-Session 2)
 
 #### 🐛 Probleme & Lösungen
 
@@ -725,7 +725,7 @@ curl -X POST http://localhost:8085/api/auth/login \
 
 ---
 
-### Tag 3 – 05.12.2025 | KDS UI Verbesserungen & System-Analyse (Morgen-Session)
+###05.12.2025 | KDS UI Verbesserungen & System-Analyse (Morgen-Session)
 
 #### ✅ Erfolge – KDS UI/UX Überarbeitung
 
@@ -871,7 +871,7 @@ const CHECKBOX_EXPIRY_MS = 30 * 60 * 1000;
 
 ---
 
-### Tag 3 – 05.12.2025 | Bugfixes, KDS Features & Infrastructure (Nachmittag-Session)
+### 05.12.2025 | Bugfixes, KDS Features & Infrastructure (Nachmittag-Session)
 
 #### ✅ Infrastruktur-Fixes
 
@@ -1015,7 +1015,7 @@ const estimatedDelivery = `${estimatedTime.getFullYear()}-${pad(estimatedTime.ge
 
 ---
 
-### Tag 4 – 06.12.2025 | Receipt System & Notification Service
+### 05.12.2025 | Receipt System & Notification Service
 
 #### ✅ Erfolge
 
@@ -1175,7 +1175,7 @@ retryFailedNotifications()
 
 ---
 
-### Tag 2 – 05.12.2025 | CORS Fix, HTTPS Production Setup & Tests (Nachmittag)
+### 05.12.2025 | CORS Fix, HTTPS Production Setup & Tests (Nachmittag)
 
 #### 🐛 Probleme & Lösungen
 
