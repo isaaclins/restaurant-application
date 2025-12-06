@@ -18,6 +18,7 @@ export default function Layout() {
         <nav>
           <Link to="/">Menu</Link>
           <Link to="/cart">Cart ({totalItems})</Link>
+            <Link to="/about">About</Link>
           {isAuthenticated ? (
             <Link to="/profile">
               {user?.firstName || 'Profile'}

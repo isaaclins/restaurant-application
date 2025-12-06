@@ -9,6 +9,7 @@ import OrderConfirmPage from './pages/OrderConfirmPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import ProfilePage from './pages/ProfilePage';
+import AboutPage from './pages/AboutPage';
 import { useCartStore } from './stores/cartStore';
 import { useAuthStore } from './stores/authStore';
 
@@ -46,6 +47,7 @@ export default function App() {
         <Route path="login" element={<LoginPage />} />
         <Route path="register" element={<RegisterPage />} />
         <Route path="profile" element={<ProfilePage />} />
+        <Route path="about" element={<AboutPage />} />
       </Route>
     </Routes>
   );
