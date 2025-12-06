@@ -2,21 +2,21 @@ import api from './client';
 import type { Customer, LoginRequest, RegisterRequest, AuthResponse } from '../types';
 
 export const authApi = {
-  // Register new customer
-  register: async (data: RegisterRequest): Promise<Customer> => {
+  // Register new customer - returns tokens and user
+  register: async (data: RegisterRequest): Promise<AuthResponse> => {
     const response = await api.post('/api/auth/register', data);
     return response.data.data || response.data;
   },
 
-  // Customer login
+  // Customer login (standard login endpoint)
   login: async (data: LoginRequest): Promise<AuthResponse> => {
-    const response = await api.post('/api/auth/login/customer', data);
+    const response = await api.post('/api/auth/login', data);
     return response.data.data || response.data;
   },
 
-  // Logout
+  // Logout is client-side only (no backend endpoint today)
   logout: async (): Promise<void> => {
-    await api.post('/api/auth/logout');
+    return;
   },
 
   // Get current customer profile
