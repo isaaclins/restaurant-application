@@ -261,8 +261,6 @@ jobs:
 
     env:
       MYSQL_ROOT_PASSWORD: rootpassword
-      MYSQL_USER: root
-      MYSQL_PASSWORD: rootpassword
       REDIS_PASSWORD: ""
       JWT_SECRET: "xK8pN2mQ5vR9tY3wZ6aD0gH4jL7oS1uF8bE2cI5nM8pQ3rT6wY9zA2dG5hJ8kN1qV4xB7yC0" # test-only secret for CI
 
