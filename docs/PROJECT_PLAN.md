@@ -283,12 +283,12 @@ Woche 5
 ```
 Phase 1: Infrastruktur       [██████████] 100%
 Phase 2: Backend Server      [███████░░░] 70%
-Phase 3: Website             [░░░░░░░░░░] 0%
+Phase 3: Website             [███████░░░] 70%
 Phase 4: Restaurant Client   [░░░░░░░░░░] 0%
 Phase 5: Integration         [████░░░░░░] 40%
 Phase 6: Dokumentation       [██████░░░░] 60%
 ─────────────────────────────────────────────
-GESAMT                       [████░░░░░░] 40%
+GESAMT                       [█████░░░░░] 55%
 ```
 
 ### Erledigte Aufgaben
@@ -318,6 +318,12 @@ GESAMT                       [████░░░░░░] 40%
 
 ## 🔴 Risiken & Mitigation
 
+### Update 06.12.2025
+- Kunden-Website: Checkout, Profil, Adressen (inkl. gespeicherte Adresse) lauffähig.
+- Auth-Flow harmonisiert (`/api/customers/profile`, `X-User-ID`).
+- E2E-Tests für Kunden (Gast & registriert mit Lieferadresse) ergänzt.
+- Offene Lücke: dedizierter Customer-Order-History-Endpoint (derzeit Fallback).
+
 | Risiko            | Wahrscheinlichkeit | Impact  | Mitigation                          |
 | ----------------- | ------------------ | ------- | ----------------------------------- |
 | Zeitknappheit     | Hoch               | Hoch    | Scope auf Must-Haves reduzieren     |
@@ -343,4 +349,4 @@ Das Projekt gilt als **abgeschlossen**, wenn:
 ---
 
 _Erstellt: 04.12.2025_
-_Letzte Aktualisierung: 05.12.2025_
+_Letzte Aktualisierung: 06.12.2025_

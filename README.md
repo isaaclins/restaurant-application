@@ -124,6 +124,12 @@ cd client && npm install && npm run tauri dev
 | [docs/requests/](./docs/requests/)          | API Endpoint-Dokumentation mit Beispielen        |
 | [ARCHITECTURE.md](./docs/ARCHITECTURE.md)   | Technische Architektur-Details                   |
 
+### Neueste Highlights (06.12.2025)
+- Kunden-Website lauffähig (React/Vite) mit Warenkorb, Checkout, Profil & Adressen.
+- Auth-Flow gefixt: richtige `/api/customers/profile`-Endpoints, `X-User-ID` Header.
+- Gespeicherte Adressen im Checkout wählbar (Button füllt Felder).
+- E2E-Tests für Kunden (Gast-Checkout & Registrierung+Lieferung) hinzugefügt.
+
 ---
 
 ## ✅ Projekt-Anforderungen (Schule)
