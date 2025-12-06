@@ -46,25 +46,20 @@ load_env() {
     if [ -f "$env_file" ]; then
         print_info "Loading environment variables from .env..."
         
-        # Export all variables from .env file (ignore comments and empty lines)
+        # Source the .env file directly (simpler and more reliable)
         set -a
-        while IFS='=' read -r key value; do
-            # Skip comments and empty lines
-            if [[ ! "$key" =~ ^# && -n "$key" ]]; then
-                # Remove leading/trailing whitespace and quotes
-                key=$(echo "$key" | xargs)
-                value=$(echo "$value" | xargs)
-                # Remove surrounding quotes if present
-                value="${value%\"}"
-                value="${value#\"}"
-                value="${value%\'}"
-                value="${value#\'}"
-                export "$key=$value"
-            fi
-        done < <(grep -v '^#' "$env_file" | grep -v '^$' | grep '=')
+        source "$env_file"
         set +a
         
         print_success "Environment variables loaded"
+        
+        # Verify critical variables are set
+        if [ -z "$JWT_SECRET" ]; then
+            print_warning "JWT_SECRET is not set!"
+        fi
+        if [ -z "$MYSQL_PASSWORD" ]; then
+            print_warning "MYSQL_PASSWORD is not set!"
+        fi
     else
         print_warning ".env file not found at $env_file"
         print_info "Copy .env.example to .env and configure your settings"
@@ -78,6 +73,7 @@ START_WEBSITE=false
 START_INFRA=false
 STOP_ALL=false
 RUN_TESTS=false
+RUN_QUICK_TESTS=false
 FULL_RESET=false
 SILENT=false
 
@@ -131,7 +127,8 @@ show_help() {
     echo "  --infra       Start only infrastructure (Docker: MySQL, Redis, Kafka)"
     echo "  --all         Start everything"
     echo "  --full        Full reset: stop all, delete DB volumes, restart everything"
-    echo "  --test        Run tests as if in CI/CD pipeline"
+    echo "  --test        Run FULL tests (backend unit + E2E) - slow (~5 min)"
+    echo "  --quick-test  Run QUICK E2E tests only (no backend unit tests) - fast (~1 min)"
     echo "  --stop        Stop all running services"
     echo "  -s, --silent  Silent mode: minimal output, only errors and final results"
     echo "  --help        Show this help message"
@@ -140,8 +137,8 @@ show_help() {
     echo "  ./start.sh --backend --website"
     echo "  ./start.sh --client"
     echo "  ./start.sh --all"
-    echo "  ./start.sh --test -s       # Silent testing"
-    echo "  ./start.sh --full -s       # Silent full reset"
+    echo "  ./start.sh --quick-test    # Fast E2E tests"
+    echo "  ./start.sh --test -s       # Full silent testing"
     echo "  ./start.sh --stop"
 }
 
@@ -288,6 +285,11 @@ start_service() {
     if [ -d "$PROJECT_ROOT/backend/$service_name" ]; then
         print_info "Starting $service_name..."
         cd "$PROJECT_ROOT/backend/$service_name"
+        
+        # Export all environment variables to ensure they're available to child processes
+        export JWT_SECRET MYSQL_USER MYSQL_PASSWORD MYSQL_HOST MYSQL_PORT
+        export REDIS_HOST REDIS_PORT EUREKA_HOST EUREKA_PORT
+        export KAFKA_BOOTSTRAP_SERVERS
         
         if [ "$SILENT" = true ]; then
             # Silent mode: redirect all output to /dev/null
@@ -550,6 +552,9 @@ stop_client() {
 
 run_tests() {
     print_header "🧪 Running FULL Test Suite (CI/CD Pipeline Mode)"
+    
+    # Load environment variables first
+    load_env
     
     local test_failed=false
     local started_backend=false
@@ -835,6 +840,102 @@ run_tests() {
 }
 
 # ============================================================================
+# Quick Tests (E2E Only - No Backend Unit Tests)
+# ============================================================================
+
+run_quick_tests() {
+    print_header "⚡ Running QUICK E2E Tests (Frontend Only)"
+    
+    load_env
+    
+    local test_failed=false
+    local started_frontend=false
+    
+    # Check if frontend is running
+    if ! nc -z localhost 1420 2>/dev/null; then
+        print_info "Starting frontend dev server..."
+        cd "$PROJECT_ROOT/client"
+        
+        if [ ! -d "node_modules" ]; then
+            print_info "Installing dependencies..."
+            npm install --silent 2>/dev/null
+        fi
+        
+        npm run dev > /dev/null 2>&1 &
+        started_frontend=true
+        
+        # Wait for frontend
+        local attempts=0
+        while ! nc -z localhost 1420 2>/dev/null; do
+            attempts=$((attempts + 1))
+            if [ $attempts -gt 30 ]; then
+                print_error "Frontend failed to start"
+                exit 1
+            fi
+            sleep 1
+        done
+        print_success "Frontend ready!"
+    else
+        print_success "Frontend already running"
+    fi
+    
+    # Run only auth and security tests (no backend required)
+    cd "$PROJECT_ROOT/client"
+    
+    local auth_passed=false
+    local security_passed=false
+    
+    print_info "Running Authentication Tests..."
+    if npx cypress run --spec "cypress/e2e/auth.cy.ts" --headless --quiet 2>/dev/null; then
+        auth_passed=true
+    fi
+    
+    print_info "Running Security Tests..."
+    if npx cypress run --spec "cypress/e2e/security.cy.ts" --headless --quiet 2>/dev/null; then
+        security_passed=true
+    fi
+    
+    # Cleanup
+    if [ "$started_frontend" = true ]; then
+        pkill -f "vite" 2>/dev/null || true
+    fi
+    
+    # Results
+    echo ""
+    echo -e "${BLUE}═══════════════════════════════════════════════════════════${NC}"
+    echo -e "${BLUE}  📊 Quick Test Results${NC}"
+    echo -e "${BLUE}═══════════════════════════════════════════════════════════${NC}"
+    echo ""
+    
+    if [ "$auth_passed" = true ]; then
+        echo -e "  ${GREEN}✓${NC} Authentication Tests"
+    else
+        echo -e "  ${RED}✗${NC} Authentication Tests"
+        test_failed=true
+    fi
+    
+    if [ "$security_passed" = true ]; then
+        echo -e "  ${GREEN}✓${NC} Security Tests"
+    else
+        echo -e "  ${RED}✗${NC} Security Tests"
+        test_failed=true
+    fi
+    
+    echo ""
+    
+    if [ "$test_failed" = true ]; then
+        echo -e "${RED}╔════════════════════════════════════════════════════════════╗${NC}"
+        echo -e "${RED}║              ❌ SOME TESTS FAILED                          ║${NC}"
+        echo -e "${RED}╚════════════════════════════════════════════════════════════╝${NC}"
+        exit 1
+    else
+        echo -e "${GREEN}╔════════════════════════════════════════════════════════════╗${NC}"
+        echo -e "${GREEN}║              ✅ QUICK TESTS PASSED!                        ║${NC}"
+        echo -e "${GREEN}╚════════════════════════════════════════════════════════════╝${NC}"
+    fi
+}
+
+# ============================================================================
 # Stop All
 # ============================================================================
 
@@ -941,6 +1042,10 @@ while [[ $# -gt 0 ]]; do
             RUN_TESTS=true
             shift
             ;;
+        --quick-test|-q)
+            RUN_QUICK_TESTS=true
+            shift
+            ;;
         --full)
             FULL_RESET=true
             shift
@@ -984,6 +1089,11 @@ fi
 
 if [ "$RUN_TESTS" = true ]; then
     run_tests
+    exit 0
+fi
+
+if [ "$RUN_QUICK_TESTS" = true ]; then
+    run_quick_tests
     exit 0
 fi
 

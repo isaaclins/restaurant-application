@@ -14,7 +14,8 @@ export default defineConfig({
     screenshotOnRunFailure: true,
     chromeWebSecurity: false,
     setupNodeEvents(on, config) {
-      // implement node event listeners here
+      // Node event listeners can be added here
+      return config;
     },
   },
 

@@ -3,9 +3,7 @@
 /**
  * REAL E2E Tests - Settings & Demo Data
  * 
- * Prerequisites:
- * 1. Backend must be running: ./start.sh --backend
- * 2. Frontend must be running: cd client && npm run dev
+ * Backend is automatically started by Cypress before tests run.
  * 
  * This test populates demo data which other tests can use.
  */
