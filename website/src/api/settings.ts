@@ -1,9 +1,5 @@
 import api from './client';
-import type {
-  RestaurantSettings,
-  OpeningHoursEntry,
-  DeliveryArea,
-} from '../types/settings';
+import type { RestaurantSettings } from '../types/settings';
 
 export const settingsApi = {
   getSettings: async (): Promise<RestaurantSettings> => {
