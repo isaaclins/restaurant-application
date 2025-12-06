@@ -247,6 +247,72 @@ curl http://localhost:1420
 
 ---
 
+## Security Architecture & Test Design Decisions
+
+### API Authentication Architecture
+
+The restaurant application has a **mixed authentication model**:
+
+| Endpoint Type | Authentication | Example Endpoints                | Rationale                                                   |
+| ------------- | -------------- | -------------------------------- | ----------------------------------------------------------- |
+| **Public**    | None required  | `/api/orders`, `/api/products`   | Customers can browse menu and place orders without accounts |
+| **Protected** | Token required | `/api/settings`, `/api/receipts` | Admin/staff operations require authentication               |
+
+### XSS Prevention Strategy
+
+**Design Decision**: XSS prevention is handled at the **frontend rendering layer**, not backend storage.
+
+| Layer        | Responsibility                                    |
+| ------------ | ------------------------------------------------- |
+| **Backend**  | Stores raw data as-is, validates format/length    |
+| **Frontend** | Escapes HTML when rendering user-provided content |
+
+**Rationale**:
+
+- React automatically escapes content rendered via JSX (`{variable}`)
+- Storing raw data preserves original input for audit/logging
+- Allows flexibility in how data is displayed in different contexts
+
+### Security Test Changes (December 2024)
+
+The following tests were updated to reflect the actual security architecture:
+
+#### SEC-009: XSS in Order Creation
+
+- **Before**: Expected backend to strip `<script>` tags from customer names
+- **After**: Verifies API handles XSS payloads gracefully (doesn't crash)
+- **Reason**: XSS prevention is a frontend responsibility in this architecture
+
+#### SEC-015: Token Manipulation
+
+- **Before**: Tested against `/api/orders` expecting 401/403 for invalid tokens
+- **After**: Tests against `/api/settings` (a protected endpoint)
+- **Reason**: `/api/orders` is intentionally public for customer ordering
+
+#### SEC-016: Expired Token Handling
+
+- **Before**: Tested against public `/api/orders` endpoint
+- **After**: Tests against `/api/settings` (protected endpoint)
+- **Reason**: Only protected endpoints should validate tokens
+
+### Security Testing Best Practices
+
+When writing security tests for this application:
+
+1. **Identify endpoint protection level first** - Check if the endpoint requires authentication
+2. **Test public endpoints for**:
+   - SQL injection (should not expose DB errors)
+   - Input validation (should handle edge cases gracefully)
+   - No crash on malicious input
+3. **Test protected endpoints for**:
+   - Token validation (reject invalid/expired tokens)
+   - Authorization (role-based access)
+4. **Frontend XSS tests should**:
+   - Verify no JavaScript execution when rendering user content
+   - Use `cy.spy(win, 'alert')` to detect XSS execution
+
+---
+
 ## Adding New Tests
 
 1. **User journey tests**: Add to `cypress/e2e/real-e2e/`
