@@ -303,28 +303,31 @@ jobs:
         with:
           path: artifacts
 
-      - name: Start Backend Services
+      - name: Start Backend Services (all) with health checks
         run: |
-          # Start Eureka Server
-          cd backend/eureka-server
-          chmod +x mvnw
-          ./mvnw spring-boot:run &
-          sleep 30
+          set -euo pipefail
+          cd backend
 
-          # Start Auth Service
-          cd ../auth-service
-          chmod +x mvnw
-          ./mvnw spring-boot:run &
-          sleep 20
+          start_service() {
+            local dir="$1"
+            local health="$2"
+            echo "Starting $dir ..."
+            (cd "$dir" && chmod +x mvnw && ./mvnw spring-boot:run >/tmp/${dir}.log 2>&1 &) 
+            if [ -n "$health" ]; then
+              echo "Waiting for $dir health: $health"
+              timeout 180 bash -c "until curl -sf $health >/dev/null; do sleep 5; done"
+            else
+              sleep 15
+            fi
+          }
 
-          # Start API Gateway
-          cd ../api-gateway
-          chmod +x mvnw
-          ./mvnw spring-boot:run &
-          sleep 20
-
-          # Wait for gateway to be ready
-          timeout 120 bash -c 'until curl -s http://localhost:8080/actuator/health > /dev/null; do sleep 5; done' || echo "Gateway may not be fully ready"
+          start_service eureka-server ""
+          start_service api-gateway "http://localhost:8080/actuator/health"
+          start_service auth-service "http://localhost:8081/actuator/health"
+          start_service product-service "http://localhost:8082/actuator/health"
+          start_service cart-service "http://localhost:8083/actuator/health"
+          start_service order-service "http://localhost:8084/actuator/health"
+          start_service payment-service "http://localhost:8085/actuator/health"
 
       - name: Install Client Dependencies
         working-directory: client
@@ -413,7 +416,6 @@ jobs:
       - name: Cleanup
         if: always()
         run: docker compose down -v
-
 
   # ============================================================================
   # Deploy (Example for Cloud Run)
