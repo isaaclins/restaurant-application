@@ -308,26 +308,57 @@ jobs:
           set -euo pipefail
           cd backend
 
-          start_service() {
-            local dir="$1"
-            local health="$2"
-            echo "Starting $dir ..."
-            (cd "$dir" && chmod +x mvnw && ./mvnw spring-boot:run >/tmp/${dir}.log 2>&1 &) 
-            if [ -n "$health" ]; then
-              echo "Waiting for $dir health: $health"
-              timeout 180 bash -c "until curl -sf $health >/dev/null; do sleep 5; done"
-            else
-              sleep 15
-            fi
-          }
+          services=(
+            eureka-server
+            api-gateway
+            auth-service
+            product-service
+            cart-service
+            order-service
+            payment-service
+          )
 
-          start_service eureka-server ""
-          start_service api-gateway "http://localhost:8080/actuator/health"
-          start_service auth-service "http://localhost:8081/actuator/health"
-          start_service product-service "http://localhost:8082/actuator/health"
-          start_service cart-service "http://localhost:8083/actuator/health"
-          start_service order-service "http://localhost:8084/actuator/health"
-          start_service payment-service "http://localhost:8085/actuator/health"
+          health=(
+            ""                                        # eureka-server (no health check)
+            "http://localhost:8080/actuator/health"   # api-gateway
+            "http://localhost:8081/actuator/health"   # auth-service
+            "http://localhost:8082/actuator/health"   # product-service
+            "http://localhost:8083/actuator/health"   # cart-service
+            "http://localhost:8084/actuator/health"   # order-service
+            "http://localhost:8085/actuator/health"   # payment-service
+          )
+
+          echo "Starting all backend services in background..."
+          for svc in "${services[@]}"; do
+            echo "Starting $svc ..."
+            (cd "$svc" && chmod +x mvnw && ./mvnw spring-boot:run >/tmp/${svc}.log 2>&1 &)
+          done
+
+          echo "Waiting for health endpoints..."
+          for i in "${!services[@]}"; do
+            svc="${services[$i]}"
+            url="${health[$i]}"
+            if [ -z "$url" ]; then
+              echo "Skipping health check for $svc"
+              continue
+            fi
+            echo "Waiting for $svc at $url"
+            ok=0
+            for attempt in {1..36}; do
+              if curl -sf "$url" >/dev/null; then
+                echo "$svc is healthy (attempt $attempt)"
+                ok=1
+                break
+              fi
+              sleep 5
+            done
+            if [ "$ok" -ne 1 ]; then
+              echo "Health check failed for $svc after 180s"
+              echo "Recent log tail for $svc:"
+              tail -n 100 "/tmp/${svc}.log" || true
+              exit 1
+            fi
+          done
 
       - name: Install Client Dependencies
         working-directory: client
