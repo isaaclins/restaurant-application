@@ -261,6 +261,8 @@ jobs:
 
     env:
       MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_USER: restaurant
+      MYSQL_PASSWORD: restaurant123
       REDIS_PASSWORD: ""
       JWT_SECRET: "xK8pN2mQ5vR9tY3wZ6aD0gH4jL7oS1uF8bE2cI5nM8pQ3rT6wY9zA2dG5hJ8kN1qV4xB7yC0" # test-only secret for CI
 
@@ -270,6 +272,8 @@ jobs:
         env:
           MYSQL_ROOT_PASSWORD: rootpassword
           MYSQL_DATABASE: restaurant_db
+          MYSQL_USER: restaurant
+          MYSQL_PASSWORD: restaurant123
           MYSQL_ROOT_HOST: "%"
         ports:
           - 3306:3306
