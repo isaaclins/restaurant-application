@@ -41,7 +41,7 @@ const extractErrorMessage = (error: unknown, fallback: string) => {
 
 export const useAuthStore = create<AuthState>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       user: null,
       isAuthenticated: false,
       loading: false,
