@@ -101,6 +101,9 @@ export default function ProfilePage() {
     return <div>Loading...</div>;
   }
 
+  // Fallback to empty addresses array if backend omits it
+  const addresses = user.addresses || [];
+
   return (
     <div>
       <h1>My Profile</h1>
@@ -161,11 +164,11 @@ export default function ProfilePage() {
       {/* Addresses */}
       <section>
         <h2>My Addresses</h2>
-        {user.addresses.length === 0 ? (
+        {addresses.length === 0 ? (
           <p>No saved addresses.</p>
         ) : (
           <ul>
-            {user.addresses.map((addr) => (
+            {addresses.map((addr) => (
               <li key={addr.id}>
                 <p>{addr.street}</p>
                 <p>

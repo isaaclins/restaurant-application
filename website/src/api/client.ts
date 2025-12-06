@@ -13,8 +13,12 @@ export const api = axios.create({
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('customerAccessToken');
+    const userId = localStorage.getItem('customerUserId');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+    }
+    if (userId) {
+      config.headers['X-User-ID'] = userId;
     }
     return config;
   },

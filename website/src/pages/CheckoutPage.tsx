@@ -15,6 +15,7 @@ export default function CheckoutPage() {
   const navigate = useNavigate();
   const { items, totalPrice, clearCart } = useCartStore();
   const { user, isAuthenticated } = useAuthStore();
+  const addresses = user?.addresses || [];
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -184,6 +185,26 @@ export default function CheckoutPage() {
         {orderType === 'DELIVERY' && (
           <fieldset>
             <legend>Delivery Address</legend>
+            {addresses.length > 0 && (
+              <div>
+                <p>Use a saved address:</p>
+                {addresses.map((addr) => (
+                  <button
+                    type="button"
+                    key={addr.id}
+                    onClick={() => {
+                      setOrderType('DELIVERY');
+                      setStreet(addr.street);
+                      setCity(addr.city);
+                      setPostalCode(addr.postalCode);
+                    }}
+                  >
+                    {addr.street}, {addr.postalCode} {addr.city}
+                    {addr.isDefault ? ' (Default)' : ''}
+                  </button>
+                ))}
+              </div>
+            )}
             <label>
               Street *
               <input

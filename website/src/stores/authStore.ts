@@ -53,6 +53,9 @@ export const useAuthStore = create<AuthState>()(
           const response = await authApi.login(data);
           localStorage.setItem('customerAccessToken', response.accessToken);
           localStorage.setItem('customerRefreshToken', response.refreshToken);
+          if (response.user?.id) {
+            localStorage.setItem('customerUserId', String(response.user.id));
+          }
           set({
             user: response.user,
             isAuthenticated: true,
@@ -73,6 +76,9 @@ export const useAuthStore = create<AuthState>()(
           const response = await authApi.register(data);
           localStorage.setItem('customerAccessToken', response.accessToken);
           localStorage.setItem('customerRefreshToken', response.refreshToken);
+          if (response.user?.id) {
+            localStorage.setItem('customerUserId', String(response.user.id));
+          }
           set({
             user: response.user,
             isAuthenticated: true,
@@ -96,6 +102,7 @@ export const useAuthStore = create<AuthState>()(
         } finally {
           localStorage.removeItem('customerAccessToken');
           localStorage.removeItem('customerRefreshToken');
+          localStorage.removeItem('customerUserId');
           set({
             user: null,
             isAuthenticated: false,
@@ -112,11 +119,15 @@ export const useAuthStore = create<AuthState>()(
         set({ loading: true });
         try {
           const user = await authApi.getProfile();
+          if (user?.id) {
+            localStorage.setItem('customerUserId', String(user.id));
+          }
           set({ user, isAuthenticated: true, loading: false });
         } catch {
           // Token might be invalid
           localStorage.removeItem('customerAccessToken');
           localStorage.removeItem('customerRefreshToken');
+          localStorage.removeItem('customerUserId');
           set({ user: null, isAuthenticated: false, loading: false });
         }
       },

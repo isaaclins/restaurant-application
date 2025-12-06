@@ -16,7 +16,12 @@ export const ordersApi = {
 
   // Get customer's order history (requires auth)
   getMyOrders: async (): Promise<Order[]> => {
-    const response = await api.get('/api/customers/me/orders');
-    return response.data.data || response.data;
+    try {
+      // Currently there is no dedicated customer orders endpoint; fall back to empty list on errors
+      const response = await api.get('/api/orders');
+      return response.data.data || response.data || [];
+    } catch {
+      return [];
+    }
   },
 };

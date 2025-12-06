@@ -21,19 +21,19 @@ export const authApi = {
 
   // Get current customer profile
   getProfile: async (): Promise<Customer> => {
-    const response = await api.get('/api/customers/me');
+    const response = await api.get('/api/customers/profile');
     return response.data.data || response.data;
   },
 
   // Update customer profile
   updateProfile: async (data: Partial<Customer>): Promise<Customer> => {
-    const response = await api.put('/api/customers/me', data);
+    const response = await api.put('/api/customers/profile', data);
     return response.data.data || response.data;
   },
 
   // Change password
   changePassword: async (currentPassword: string, newPassword: string): Promise<void> => {
-    await api.put('/api/customers/me/password', { currentPassword, newPassword });
+    await api.post('/api/customers/profile/change-password', { currentPassword, newPassword });
   },
 
   // Add new address
@@ -43,7 +43,7 @@ export const authApi = {
     postalCode: string;
     isDefault?: boolean;
   }): Promise<Customer> => {
-    const response = await api.post('/api/customers/me/addresses', address);
+    const response = await api.post('/api/customers/addresses', address);
     return response.data.data || response.data;
   },
 };
