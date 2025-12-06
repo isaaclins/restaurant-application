@@ -1,13 +1,10 @@
 package com.restaurant.cart.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.restaurant.cart.client.ProductClient;
 import com.restaurant.cart.dto.AddToCartRequest;
-import com.restaurant.cart.dto.ProductDTO;
 import com.restaurant.cart.model.Cart;
 import com.restaurant.cart.model.CartItem;
 import com.restaurant.cart.service.CartService;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -111,7 +108,10 @@ class CartControllerTest {
         @Test
         @DisplayName("should add item to cart successfully")
         void shouldAddItemToCart() throws Exception {
-            AddToCartRequest request = new AddToCartRequest(1L, 2);
+            AddToCartRequest request = AddToCartRequest.builder()
+                    .productId(1L)
+                    .quantity(2)
+                    .build();
 
             Cart updatedCart = createTestCart();
             updatedCart.getItems().add(createTestCartItem(1L, "Pizza", new BigDecimal("12.50"), 2));
@@ -131,9 +131,44 @@ class CartControllerTest {
         }
 
         @Test
+        @DisplayName("should add item with size and notes")
+        void shouldAddItemWithSizeAndNotes() throws Exception {
+            AddToCartRequest request = AddToCartRequest.builder()
+                    .productId(1L)
+                    .quantity(1)
+                    .size("L")
+                    .notes("Extra crispy")
+                    .build();
+
+            Cart updatedCart = createTestCart();
+            CartItem item = CartItem.builder()
+                    .productId(1L)
+                    .productName("Pizza")
+                    .unitPrice(new BigDecimal("18.50"))
+                    .quantity(1)
+                    .size("L")
+                    .notes("Extra crispy")
+                    .build();
+            updatedCart.getItems().add(item);
+
+            when(cartService.addItem(eq(SESSION_ID), any(AddToCartRequest.class))).thenReturn(updatedCart);
+
+            mockMvc.perform(post("/api/cart/items")
+                    .header("X-Session-ID", SESSION_ID)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.items[0].size", is("L")))
+                    .andExpect(jsonPath("$.items[0].notes", is("Extra crispy")));
+        }
+
+        @Test
         @DisplayName("should return 400 when productId is null")
         void shouldReturn400WhenProductIdNull() throws Exception {
-            AddToCartRequest request = new AddToCartRequest(null, 2);
+            AddToCartRequest request = AddToCartRequest.builder()
+                    .productId(null)
+                    .quantity(2)
+                    .build();
 
             mockMvc.perform(post("/api/cart/items")
                     .header("X-Session-ID", SESSION_ID)
@@ -145,7 +180,10 @@ class CartControllerTest {
         @Test
         @DisplayName("should return 400 when quantity is less than 1")
         void shouldReturn400WhenQuantityInvalid() throws Exception {
-            AddToCartRequest request = new AddToCartRequest(1L, 0);
+            AddToCartRequest request = AddToCartRequest.builder()
+                    .productId(1L)
+                    .quantity(0)
+                    .build();
 
             mockMvc.perform(post("/api/cart/items")
                     .header("X-Session-ID", SESSION_ID)
@@ -157,7 +195,10 @@ class CartControllerTest {
         @Test
         @DisplayName("should return 400 when X-Session-ID header is missing")
         void shouldReturn400WhenSessionIdMissing() throws Exception {
-            AddToCartRequest request = new AddToCartRequest(1L, 2);
+            AddToCartRequest request = AddToCartRequest.builder()
+                    .productId(1L)
+                    .quantity(2)
+                    .build();
 
             mockMvc.perform(post("/api/cart/items")
                     .contentType(MediaType.APPLICATION_JSON)
@@ -167,28 +208,29 @@ class CartControllerTest {
     }
 
     @Nested
-    @DisplayName("DELETE /api/cart/items/{productId}")
-    class RemoveItem {
+    @DisplayName("DELETE /api/cart/items/{itemId}")
+    class RemoveItemById {
 
         @Test
-        @DisplayName("should remove item from cart successfully")
-        void shouldRemoveItemFromCart() throws Exception {
+        @DisplayName("should remove item from cart by itemId")
+        void shouldRemoveItemByItemId() throws Exception {
+            String itemId = "test-item-uuid";
             Cart updatedCart = createTestCart();
 
-            when(cartService.removeItem(SESSION_ID, 1L)).thenReturn(updatedCart);
+            when(cartService.removeItemById(SESSION_ID, itemId)).thenReturn(updatedCart);
 
-            mockMvc.perform(delete("/api/cart/items/{productId}", 1L)
+            mockMvc.perform(delete("/api/cart/items/{itemId}", itemId)
                     .header("X-Session-ID", SESSION_ID))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.items", hasSize(0)));
 
-            verify(cartService).removeItem(SESSION_ID, 1L);
+            verify(cartService).removeItemById(SESSION_ID, itemId);
         }
 
         @Test
         @DisplayName("should return 400 when X-Session-ID header is missing")
         void shouldReturn400WhenSessionIdMissing() throws Exception {
-            mockMvc.perform(delete("/api/cart/items/{productId}", 1L))
+            mockMvc.perform(delete("/api/cart/items/{itemId}", "test-item"))
                     .andExpect(status().isBadRequest());
         }
     }

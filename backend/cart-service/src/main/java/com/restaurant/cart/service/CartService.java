@@ -60,22 +60,39 @@ public class CartService {
         Cart cart = getCart(sessionId);
 
         CartItem item = CartItem.builder()
+                .itemId(java.util.UUID.randomUUID().toString())
                 .productId(product.getId())
                 .productName(product.getName())
                 .unitPrice(product.getPrice())
                 .quantity(request.getQuantity())
+                .size(request.getSize())
+                .notes(request.getNotes())
                 .build();
 
         cart.addItem(item);
         saveCart(cart);
 
-        log.info("Added {} x {} to cart {}", request.getQuantity(), product.getName(), sessionId);
+        String sizeInfo = request.getSize() != null ? " (" + request.getSize() + ")" : "";
+        log.info("Added {} x {}{} to cart {}", request.getQuantity(), product.getName(), sizeInfo, sessionId);
 
         return cart;
     }
 
     /**
-     * Remove item from cart
+     * Remove item from cart by itemId
+     */
+    public Cart removeItemById(String sessionId, String itemId) {
+        Cart cart = getCart(sessionId);
+        cart.removeItemById(itemId);
+        saveCart(cart);
+
+        log.info("Removed item {} from cart {}", itemId, sessionId);
+
+        return cart;
+    }
+
+    /**
+     * Remove item from cart by productId (legacy, removes all with that productId)
      */
     public Cart removeItem(String sessionId, Long productId) {
         Cart cart = getCart(sessionId);
@@ -88,7 +105,24 @@ public class CartService {
     }
 
     /**
-     * Update item quantity
+     * Update item quantity by itemId
+     */
+    public Cart updateItemQuantityById(String sessionId, String itemId, int quantity) {
+        if (quantity <= 0) {
+            return removeItemById(sessionId, itemId);
+        }
+
+        Cart cart = getCart(sessionId);
+        cart.updateItemQuantity(itemId, quantity);
+        saveCart(cart);
+
+        log.info("Updated quantity for item {} in cart {}: {}", itemId, sessionId, quantity);
+
+        return cart;
+    }
+
+    /**
+     * Update item quantity by productId (legacy)
      */
     public Cart updateItemQuantity(String sessionId, Long productId, int quantity) {
         if (quantity <= 0) {

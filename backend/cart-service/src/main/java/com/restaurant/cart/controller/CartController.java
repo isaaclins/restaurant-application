@@ -37,7 +37,7 @@ public class CartController {
      * POST /api/cart/items - Add item to cart
      */
     @PostMapping("/items")
-    @Operation(summary = "Add item", description = "Add item to shopping cart")
+    @Operation(summary = "Add item", description = "Add item to shopping cart with optional size and notes")
     public ResponseEntity<Cart> addItem(
             @RequestHeader("X-Session-ID") String sessionId,
             @Valid @RequestBody AddToCartRequest request) {
@@ -47,15 +47,42 @@ public class CartController {
     }
 
     /**
-     * DELETE /api/cart/items/{productId} - Remove item from cart
+     * DELETE /api/cart/items/{itemId} - Remove item by itemId
      */
-    @DeleteMapping("/items/{productId}")
-    @Operation(summary = "Remove item", description = "Remove item from shopping cart")
-    public ResponseEntity<Cart> removeItem(
+    @DeleteMapping("/items/{itemId}")
+    @Operation(summary = "Remove item by ID", description = "Remove specific cart item by its unique ID")
+    public ResponseEntity<Cart> removeItemById(
+            @RequestHeader("X-Session-ID") String sessionId,
+            @PathVariable String itemId) {
+
+        Cart cart = cartService.removeItemById(sessionId, itemId);
+        return ResponseEntity.ok(cart);
+    }
+
+    /**
+     * DELETE /api/cart/products/{productId} - Remove all items with productId
+     */
+    @DeleteMapping("/products/{productId}")
+    @Operation(summary = "Remove by product", description = "Remove all cart items with given product ID")
+    public ResponseEntity<Cart> removeByProductId(
             @RequestHeader("X-Session-ID") String sessionId,
             @PathVariable Long productId) {
 
         Cart cart = cartService.removeItem(sessionId, productId);
+        return ResponseEntity.ok(cart);
+    }
+
+    /**
+     * PUT /api/cart/items/{itemId}/quantity - Update item quantity
+     */
+    @PutMapping("/items/{itemId}/quantity")
+    @Operation(summary = "Update quantity", description = "Update quantity for a specific cart item")
+    public ResponseEntity<Cart> updateItemQuantity(
+            @RequestHeader("X-Session-ID") String sessionId,
+            @PathVariable String itemId,
+            @RequestParam int quantity) {
+
+        Cart cart = cartService.updateItemQuantityById(sessionId, itemId, quantity);
         return ResponseEntity.ok(cart);
     }
 

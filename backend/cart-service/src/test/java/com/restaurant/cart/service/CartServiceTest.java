@@ -112,7 +112,10 @@ class CartServiceTest {
         @DisplayName("should add new item to empty cart")
         void shouldAddNewItemToEmptyCart() {
             ProductDTO product = createTestProduct(1L, "Margherita", new BigDecimal("12.50"), true);
-            AddToCartRequest request = new AddToCartRequest(1L, 2);
+            AddToCartRequest request = AddToCartRequest.builder()
+                    .productId(1L)
+                    .quantity(2)
+                    .build();
 
             when(productClient.getProductById(1L)).thenReturn(product);
             when(valueOperations.get(CART_KEY)).thenReturn(null);
@@ -129,10 +132,35 @@ class CartServiceTest {
         }
 
         @Test
-        @DisplayName("should increase quantity when adding existing item")
+        @DisplayName("should add item with size and notes")
+        void shouldAddItemWithSizeAndNotes() {
+            ProductDTO product = createTestProduct(1L, "Margherita", new BigDecimal("12.50"), true);
+            AddToCartRequest request = AddToCartRequest.builder()
+                    .productId(1L)
+                    .quantity(1)
+                    .size("L")
+                    .notes("Extra cheese")
+                    .build();
+
+            when(productClient.getProductById(1L)).thenReturn(product);
+            when(valueOperations.get(CART_KEY)).thenReturn(null);
+
+            Cart result = cartService.addItem(SESSION_ID, request);
+
+            assertThat(result.getItems()).hasSize(1);
+            assertThat(result.getItems().get(0).getSize()).isEqualTo("L");
+            assertThat(result.getItems().get(0).getNotes()).isEqualTo("Extra cheese");
+        }
+
+        @Test
+        @DisplayName("should increase quantity when adding existing item with same options")
         void shouldIncreaseQuantityForExistingItem() {
             ProductDTO product = createTestProduct(1L, "Margherita", new BigDecimal("12.50"), true);
-            AddToCartRequest request = new AddToCartRequest(1L, 3);
+            AddToCartRequest request = AddToCartRequest.builder()
+                    .productId(1L)
+                    .quantity(3)
+                    .size("M")
+                    .build();
 
             Cart existingCart = createTestCart();
             existingCart.getItems().add(CartItem.builder()
@@ -140,6 +168,7 @@ class CartServiceTest {
                     .productName("Margherita")
                     .unitPrice(new BigDecimal("12.50"))
                     .quantity(2)
+                    .size("M")
                     .build());
 
             when(productClient.getProductById(1L)).thenReturn(product);
@@ -152,9 +181,39 @@ class CartServiceTest {
         }
 
         @Test
+        @DisplayName("should add as separate item when same product but different size")
+        void shouldAddSeparateItemForDifferentSize() {
+            ProductDTO product = createTestProduct(1L, "Margherita", new BigDecimal("12.50"), true);
+            AddToCartRequest request = AddToCartRequest.builder()
+                    .productId(1L)
+                    .quantity(1)
+                    .size("L")
+                    .build();
+
+            Cart existingCart = createTestCart();
+            existingCart.getItems().add(CartItem.builder()
+                    .productId(1L)
+                    .productName("Margherita")
+                    .unitPrice(new BigDecimal("12.50"))
+                    .quantity(2)
+                    .size("M")
+                    .build());
+
+            when(productClient.getProductById(1L)).thenReturn(product);
+            when(valueOperations.get(CART_KEY)).thenReturn(existingCart);
+
+            Cart result = cartService.addItem(SESSION_ID, request);
+
+            assertThat(result.getItems()).hasSize(2); // Two separate items
+        }
+
+        @Test
         @DisplayName("should throw exception when product not found")
         void shouldThrowWhenProductNotFound() {
-            AddToCartRequest request = new AddToCartRequest(999L, 1);
+            AddToCartRequest request = AddToCartRequest.builder()
+                    .productId(999L)
+                    .quantity(1)
+                    .build();
             when(productClient.getProductById(999L)).thenReturn(null);
 
             assertThatThrownBy(() -> cartService.addItem(SESSION_ID, request))
@@ -166,7 +225,10 @@ class CartServiceTest {
         @DisplayName("should throw exception when product not available")
         void shouldThrowWhenProductNotAvailable() {
             ProductDTO product = createTestProduct(1L, "Seasonal Special", new BigDecimal("20.00"), false);
-            AddToCartRequest request = new AddToCartRequest(1L, 1);
+            AddToCartRequest request = AddToCartRequest.builder()
+                    .productId(1L)
+                    .quantity(1)
+                    .build();
 
             when(productClient.getProductById(1L)).thenReturn(product);
 
@@ -181,7 +243,7 @@ class CartServiceTest {
     class RemoveItem {
 
         @Test
-        @DisplayName("should remove item from cart")
+        @DisplayName("should remove item from cart by productId")
         void shouldRemoveItemFromCart() {
             Cart existingCart = createTestCart();
             existingCart.getItems().add(CartItem.builder()
@@ -222,6 +284,33 @@ class CartServiceTest {
             Cart result = cartService.removeItem(SESSION_ID, 999L);
 
             assertThat(result.getItems()).hasSize(1); // Original item still there
+        }
+    }
+
+    @Nested
+    @DisplayName("removeItemById")
+    class RemoveItemById {
+
+        @Test
+        @DisplayName("should remove item from cart by itemId")
+        void shouldRemoveItemByItemId() {
+            String itemId = "test-item-id";
+            Cart existingCart = createTestCart();
+            CartItem item = CartItem.builder()
+                    .productId(1L)
+                    .productName("Pizza")
+                    .unitPrice(new BigDecimal("12.50"))
+                    .quantity(2)
+                    .build();
+            item.setItemId(itemId);
+            existingCart.getItems().add(item);
+
+            when(valueOperations.get(CART_KEY)).thenReturn(existingCart);
+
+            Cart result = cartService.removeItemById(SESSION_ID, itemId);
+
+            assertThat(result.getItems()).isEmpty();
+            verify(valueOperations).set(eq(CART_KEY), any(Cart.class), anyLong(), any());
         }
     }
 
