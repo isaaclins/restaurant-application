@@ -480,7 +480,7 @@ start_website() {
     print_success "Website started"
     if [ "$SILENT" = false ]; then
         echo ""
-        echo "  URL: http://localhost:5173"
+        echo "  URL: http://localhost:3000"
     fi
 }
 
@@ -988,6 +988,9 @@ full_reset() {
     
     # Start backend
     start_backend
+    
+    # Start website
+    start_website
     
     # Start client
     start_client
