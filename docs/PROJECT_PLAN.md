@@ -319,6 +319,7 @@ GESAMT                       [█████░░░░░] 55%
 ## 🔴 Risiken & Mitigation
 
 ### Update 06.12.2025
+
 - Kunden-Website: Checkout, Profil, Adressen (inkl. gespeicherte Adresse) lauffähig.
 - Auth-Flow harmonisiert (`/api/customers/profile`, `X-User-ID`).
 - E2E-Tests für Kunden (Gast & registriert mit Lieferadresse) ergänzt.

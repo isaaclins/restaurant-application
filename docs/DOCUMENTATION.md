@@ -26,6 +26,7 @@
 ### 06.12.2025 | Kunden-Website stabilisiert, E2E ergänzt
 
 #### ✅ Erfolge
+
 - Kunden-Website: Profile/Adressen auf `/api/customers/profile` umgestellt; `X-User-ID` Header hinzugefügt.
 - Adresse speichern repariert (`/api/customers/addresses`), Checkout kann gespeicherte Adresse per Button übernehmen.
 - Warenkorb/Checkout stabil: fehlende Endpoints abgefedert, Polling/Fehler reduziert.
@@ -35,10 +36,12 @@
 - Frontend Build Fix: ungenutzten `get`-Parameter im Zustand entfernt (TS6133).
 
 #### ❌ Herausforderungen
+
 - API-Gaps (z. B. `/customers/me/orders`) → Fallbacks eingebaut, bis dedizierter Endpoint existiert.
 - Mehrere Backend-/Frontend-Endpunkt-Mismatches (Profile, Addresses, Auth) mussten harmonisiert werden.
 
 #### 🔍 Erkenntnisse
+
 - `X-User-ID` muss clientseitig gesendet werden, sonst 400 bei Kundenendpunkten.
 - E2E hilft früh API/Frontend-Verträge aufzudecken; Fallbacks verhindern UX-Abbruch.
 
