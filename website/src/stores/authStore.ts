@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import axios from 'axios';
 import { authApi } from '../api/auth';
 import type { Customer, LoginRequest, RegisterRequest } from '../types';
 
@@ -17,6 +18,26 @@ interface AuthState {
   updateProfile: (data: Partial<Customer>) => Promise<void>;
   clearError: () => void;
 }
+
+const extractErrorMessage = (error: unknown, fallback: string) => {
+  if (axios.isAxiosError(error)) {
+    const data = error.response?.data as any;
+    if (data) {
+      if (typeof data.message === 'string') return data.message;
+      if (typeof data.error === 'string') return data.error;
+      if (typeof data.detail === 'string') return data.detail;
+      // last resort: serialize
+      try {
+        return JSON.stringify(data);
+      } catch {
+        /* ignore */
+      }
+    }
+    return error.message || fallback;
+  }
+  if (error instanceof Error) return error.message;
+  return fallback;
+};
 
 export const useAuthStore = create<AuthState>()(
   persist(
@@ -40,7 +61,7 @@ export const useAuthStore = create<AuthState>()(
         } catch (error) {
           set({
             loading: false,
-            error: error instanceof Error ? error.message : 'Login failed',
+            error: extractErrorMessage(error, 'Login failed'),
           });
           throw error;
         }
@@ -60,7 +81,7 @@ export const useAuthStore = create<AuthState>()(
         } catch (error) {
           set({
             loading: false,
-            error: error instanceof Error ? error.message : 'Registration failed',
+            error: extractErrorMessage(error, 'Registration failed'),
           });
           throw error;
         }
