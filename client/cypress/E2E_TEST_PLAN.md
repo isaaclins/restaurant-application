@@ -1,315 +1,261 @@
-# 🧪 E2E Test Plan - Restaurant Application
+# E2E Test Plan - Restaurant Application
 
-> Vollständige Definition aller End-to-End Tests mit Cypress
+## Overview
 
----
+This test suite provides **comprehensive end-to-end testing** for the restaurant application. Tests are designed to run against **real services** (not mocks) to validate actual user workflows.
 
-## 📋 Übersicht
-
-| Bereich               | Anzahl Tests | Priorität  |
-| --------------------- | ------------ | ---------- |
-| Authentication        | 8            | 🔴 Hoch    |
-| KDS (Kitchen Display) | 15           | 🔴 Hoch    |
-| Orders Management     | 12           | 🔴 Hoch    |
-| Products & Categories | 10           | 🟡 Mittel  |
-| Receipts              | 8            | 🟡 Mittel  |
-| Statistics            | 6            | 🟡 Mittel  |
-| Settings              | 10           | 🟢 Niedrig |
-| Navigation & Layout   | 5            | 🟢 Niedrig |
-| **Total**             | **74**       | -          |
-
----
-
-## 1️⃣ Authentication Tests (`auth.cy.ts`)
-
-### Login Flow
-
-| Test ID  | Beschreibung                                       | Precondition   |
-| -------- | -------------------------------------------------- | -------------- |
-| AUTH-001 | Login-Seite wird korrekt angezeigt                 | -              |
-| AUTH-002 | Login mit gültigen Credentials                     | User existiert |
-| AUTH-003 | Login mit ungültigen Credentials zeigt Fehler      | -              |
-| AUTH-004 | Login mit leerem Passwort zeigt Validierungsfehler | -              |
-| AUTH-005 | Login mit leerem Username zeigt Validierungsfehler | -              |
-
-### Session Management
-
-| Test ID  | Beschreibung                                     | Precondition    |
-| -------- | ------------------------------------------------ | --------------- |
-| AUTH-006 | Nach Login wird Token gespeichert                | -               |
-| AUTH-007 | Logout entfernt Token und redirected zu Login    | User eingeloggt |
-| AUTH-008 | Geschützte Routen redirecten zu Login ohne Token | -               |
-
----
-
-## 2️⃣ KDS (Kitchen Display System) Tests (`kds.cy.ts`)
-
-### Order Display
-
-| Test ID | Beschreibung                                          | Precondition               |
-| ------- | ----------------------------------------------------- | -------------------------- |
-| KDS-001 | KDS-Seite lädt und zeigt Grid                         | User eingeloggt            |
-| KDS-002 | Pickup-Orders werden in Pickup-Grid angezeigt         | Orders existieren          |
-| KDS-003 | Delivery-Orders werden in Delivery-Grid angezeigt     | Orders existieren          |
-| KDS-004 | Leere Orders werden NICHT angezeigt                   | Order ohne Items existiert |
-| KDS-005 | Order-Karte zeigt alle Details (Nummer, Kunde, Items) | Order existiert            |
-
-### Timer & Sorting
-
-| Test ID | Beschreibung                                  | Precondition                  |
-| ------- | --------------------------------------------- | ----------------------------- |
-| KDS-006 | Timer zeigt korrekte Zeit bis ETA             | Order mit estimatedDelivery   |
-| KDS-007 | Überfällige Orders zeigen negative Zeit (rot) | Order mit vergangener ETA     |
-| KDS-008 | Sort-Toggle wechselt zwischen Asc/Desc        | Orders existieren             |
-| KDS-009 | "Sort by Time" sortiert nach ETA              | Orders mit verschiedenen ETAs |
-| KDS-010 | "Sort by Items" sortiert nach Item-Anzahl     | Orders mit Items              |
-
-### Order Actions
-
-| Test ID | Beschreibung                                         | Precondition            |
-| ------- | ---------------------------------------------------- | ----------------------- |
-| KDS-011 | Klick auf Order öffnet Detail-Modal                  | Order existiert         |
-| KDS-012 | "Complete Order" ändert Status und entfernt aus Grid | Order in Modal geöffnet |
-| KDS-013 | "Cancel Order" zeigt Bestätigungs-Dialog             | Order in Modal geöffnet |
-| KDS-014 | Cancel-Bestätigung setzt Status auf CANCELLED        | Dialog bestätigt        |
-| KDS-015 | Cancel-Abbrechen schliesst Dialog ohne Änderung      | Dialog abgebrochen      |
-
----
-
-## 3️⃣ Orders Management Tests (`orders.cy.ts`)
-
-### Order List
-
-| Test ID | Beschreibung                                        | Precondition              |
-| ------- | --------------------------------------------------- | ------------------------- |
-| ORD-001 | Orders-Seite zeigt alle Orders in Tabelle           | Orders existieren         |
-| ORD-002 | Suche filtert Orders nach Nummer/Kunde              | Orders existieren         |
-| ORD-003 | Status-Filter zeigt nur Orders mit gewähltem Status | Orders mit versch. Status |
-| ORD-004 | Datum-Filter zeigt nur Orders vom gewählten Tag     | Orders mit versch. Daten  |
-
-### Order Creation
-
-| Test ID | Beschreibung                                    | Precondition           |
-| ------- | ----------------------------------------------- | ---------------------- |
-| ORD-005 | "New Order" Button öffnet Erstellungs-Modal     | -                      |
-| ORD-006 | Order-Typ kann gewählt werden (Pickup/Delivery) | Modal offen            |
-| ORD-007 | Kunde kann ausgewählt werden                    | Modal offen            |
-| ORD-008 | Items können hinzugefügt werden                 | Products existieren    |
-| ORD-009 | Order-Erstellung speichert und zeigt neue Order | Alle Felder ausgefüllt |
-
-### Order Details
-
-| Test ID | Beschreibung                               | Precondition       |
-| ------- | ------------------------------------------ | ------------------ |
-| ORD-010 | Klick auf Order öffnet Detail-Ansicht      | Order existiert    |
-| ORD-011 | Status kann geändert werden                | Order-Detail offen |
-| ORD-012 | Order kann gelöscht werden mit Bestätigung | Order-Detail offen |
-
----
-
-## 4️⃣ Products & Categories Tests (`products.cy.ts`)
-
-### Categories
-
-| Test ID  | Beschreibung                               | Precondition          |
-| -------- | ------------------------------------------ | --------------------- |
-| PROD-001 | Categories-Tab zeigt alle Kategorien       | Categories existieren |
-| PROD-002 | Neue Kategorie kann erstellt werden        | -                     |
-| PROD-003 | Kategorie kann bearbeitet werden           | Kategorie existiert   |
-| PROD-004 | Kategorie-Aktivierung/Deaktivierung toggle | Kategorie existiert   |
-
-### Products
-
-| Test ID  | Beschreibung                                    | Precondition          |
-| -------- | ----------------------------------------------- | --------------------- |
-| PROD-005 | Products-Tab zeigt alle Produkte                | Products existieren   |
-| PROD-006 | Produkte können nach Kategorie gefiltert werden | Products & Categories |
-| PROD-007 | Neues Produkt kann erstellt werden              | Category existiert    |
-| PROD-008 | Produkt kann bearbeitet werden                  | Product existiert     |
-| PROD-009 | Produkt-Verfügbarkeit kann getoggelt werden     | Product existiert     |
-| PROD-010 | Produkt kann gelöscht werden                    | Product existiert     |
-
----
-
-## 5️⃣ Receipts Tests (`receipts.cy.ts`)
-
-### Receipt List
-
-| Test ID | Beschreibung                                   | Precondition               |
-| ------- | ---------------------------------------------- | -------------------------- |
-| RCP-001 | Receipts-Seite zeigt alle Receipts             | Receipts existieren        |
-| RCP-002 | Suche filtert Receipts nach Nummer/Kunde       | Receipts existieren        |
-| RCP-003 | Datum-Filter funktioniert (Today, Week, Month) | Receipts mit versch. Daten |
-| RCP-004 | Custom-Datum-Filter funktioniert               | Receipts existieren        |
-
-### Receipt Details & Download
-
-| Test ID | Beschreibung                                 | Precondition             |
-| ------- | -------------------------------------------- | ------------------------ |
-| RCP-005 | Klick auf Receipt öffnet Detail-Modal        | Receipt existiert        |
-| RCP-006 | Detail-Modal zeigt alle Receipt-Infos        | Modal offen              |
-| RCP-007 | PDF-Download startet und zeigt Success-Toast | Receipt existiert        |
-| RCP-008 | PDF-Download-Fehler zeigt Error-Toast        | Backend nicht erreichbar |
-
----
-
-## 6️⃣ Statistics Tests (`statistics.cy.ts`)
-
-### Dashboard
-
-| Test ID  | Beschreibung                              | Precondition       |
-| -------- | ----------------------------------------- | ------------------ |
-| STAT-001 | Statistics-Seite zeigt alle Stat-Cards    | Orders existieren  |
-| STAT-002 | "Total Orders" zeigt korrekte Anzahl      | Orders existieren  |
-| STAT-003 | "Revenue" zeigt korrekte Summe            | Orders mit Preisen |
-| STAT-004 | "Avg Completion Time" zeigt korrekte Zeit | Completed Orders   |
-
-### Charts
-
-| Test ID  | Beschreibung                            | Precondition      |
-| -------- | --------------------------------------- | ----------------- |
-| STAT-005 | "Orders by Hour" Chart wird angezeigt   | Orders existieren |
-| STAT-006 | "Orders by Status" Chart wird angezeigt | Orders mit Status |
-
----
-
-## 7️⃣ Settings Tests (`settings.cy.ts`)
-
-### General Settings
-
-| Test ID | Beschreibung                            | Precondition    |
-| ------- | --------------------------------------- | --------------- |
-| SET-001 | Settings-Seite zeigt alle Tabs          | User eingeloggt |
-| SET-002 | Restaurant-Name kann geändert werden    | -               |
-| SET-003 | Restaurant-Adresse kann geändert werden | -               |
-
-### Email Settings
-
-| Test ID | Beschreibung                                | Precondition      |
-| ------- | ------------------------------------------- | ----------------- |
-| SET-004 | Email-Settings-Tab zeigt SMTP-Konfiguration | -                 |
-| SET-005 | SMTP-Host kann geändert werden              | -                 |
-| SET-006 | Test-Email kann gesendet werden             | SMTP konfiguriert |
-
-### Developer Tools
-
-| Test ID | Beschreibung                                            | Precondition   |
-| ------- | ------------------------------------------------------- | -------------- |
-| SET-007 | Developer-Tab zeigt "Populate Demo Data" Button         | -              |
-| SET-008 | Checkboxen für Categories/Products/Orders funktionieren | -              |
-| SET-009 | "Populate Demo Data" erstellt Demo-Daten                | Backend läuft  |
-| SET-010 | Progress-Bar zeigt Fortschritt an                       | Populate läuft |
-
----
-
-## 8️⃣ Navigation & Layout Tests (`navigation.cy.ts`)
-
-### Sidebar Navigation
-
-| Test ID | Beschreibung                                | Precondition         |
-| ------- | ------------------------------------------- | -------------------- |
-| NAV-001 | Sidebar zeigt alle Menüpunkte               | User eingeloggt      |
-| NAV-002 | Klick auf "KDS" navigiert zu /kds           | User eingeloggt      |
-| NAV-003 | Klick auf "Orders" navigiert zu /orders     | User eingeloggt      |
-| NAV-004 | Klick auf "Products" navigiert zu /products | User eingeloggt      |
-| NAV-005 | Aktiver Menüpunkt ist hervorgehoben         | User auf einer Seite |
-
----
-
-## 🔧 Test-Infrastruktur
-
-### Fixtures (Test-Daten)
+## Test Structure
 
 ```
-cypress/fixtures/
-├── users.json          # Test-User für Login
-├── orders.json         # Sample Orders
-├── products.json       # Sample Products
-├── categories.json     # Sample Categories
-├── receipts.json       # Sample Receipts
-└── settings.json       # Sample Settings
+cypress/e2e/
+├── auth.cy.ts              # Login page tests (24 tests)
+├── security.cy.ts          # Security vulnerability tests (15 tests)
+└── real-e2e/               # Real user journey tests
+    ├── full-user-journey.cy.ts    # Complete workflow test
+    ├── order-flow.cy.ts           # Order creation & tracking
+    ├── product-management.cy.ts   # Product CRUD operations
+    └── settings-demo-data.cy.ts   # Settings & demo data
 ```
 
-### Custom Commands
+## Running Tests
 
-```typescript
-// cypress/support/commands.ts
-Cypress.Commands.add('login', (username, password) => {...})
-Cypress.Commands.add('createOrder', (orderData) => {...})
-Cypress.Commands.add('createProduct', (productData) => {...})
-Cypress.Commands.add('populateDemoData', () => {...})
-Cypress.Commands.add('clearAllData', () => {...})
-Cypress.Commands.add('waitForApi', (alias) => {...})
-```
-
-### API Interception
-
-```typescript
-// Intercept Backend-Calls
-cy.intercept("GET", "/api/orders").as("getOrders");
-cy.intercept("POST", "/api/orders").as("createOrder");
-cy.intercept("GET", "/api/products").as("getProducts");
-cy.intercept("GET", "/api/receipts").as("getReceipts");
-cy.intercept("GET", "/api/receipts/*/pdf").as("downloadPdf");
-```
-
----
-
-## 📁 Dateistruktur
-
-```
-cypress/
-├── e2e/
-│   ├── auth.cy.ts           # Authentication Tests
-│   ├── kds.cy.ts            # KDS Tests
-│   ├── orders.cy.ts         # Orders Tests
-│   ├── products.cy.ts       # Products & Categories Tests
-│   ├── receipts.cy.ts       # Receipts Tests
-│   ├── statistics.cy.ts     # Statistics Tests
-│   ├── settings.cy.ts       # Settings Tests
-│   └── navigation.cy.ts     # Navigation Tests
-├── fixtures/
-│   ├── users.json
-│   ├── orders.json
-│   ├── products.json
-│   ├── categories.json
-│   └── receipts.json
-├── support/
-│   ├── commands.ts          # Custom Commands
-│   ├── e2e.ts               # E2E Support
-│   └── index.d.ts           # TypeScript Definitions
-└── E2E_TEST_PLAN.md         # Diese Datei
-```
-
----
-
-## 🚀 Ausführung
+### Full Test Suite (Recommended)
 
 ```bash
-# Interaktiver Modus (mit Browser)
-npm run cypress:open
+# From project root - starts everything and runs all tests
+./start.sh --test
+```
 
-# Headless (CI/CD)
-npm run cypress:run
+This will:
 
-# Nur bestimmte Tests
-npm run cypress:run -- --spec "cypress/e2e/kds.cy.ts"
+1. Run backend unit tests
+2. Start backend services (MySQL, Redis, Kafka, microservices)
+3. Start frontend dev server
+4. Run ALL E2E tests:
+   - Authentication tests (24 tests)
+   - Security tests (15 tests)
+   - Real E2E user journey tests
+5. Clean up and report results
 
-# Mit spezifischem Browser
-npm run cypress:run -- --browser chrome
+### Individual Test Suites
+
+```bash
+cd client
+
+# Auth tests only (no backend needed)
+npm run test:e2e:auth
+
+# Security tests only
+npm run test:e2e:security
+
+# Real E2E tests (requires running backend)
+npm run test:e2e:real
+
+# Interactive mode
+npm run test:e2e:real:open
 ```
 
 ---
 
-## ✅ Akzeptanzkriterien
+## Test Categories
 
-- [ ] Alle 74 Tests sind implementiert
-- [ ] Tests laufen in < 5 Minuten
-- [ ] Tests sind unabhängig voneinander
-- [ ] Tests räumen nach sich auf (Cleanup)
-- [ ] Tests funktionieren headless (CI/CD)
-- [ ] Code Coverage > 80%
+### 1. Authentication Tests (`auth.cy.ts`) - 24 Tests
+
+Tests the login page and authentication flow:
+
+| Test ID  | Description                                  |
+| -------- | -------------------------------------------- |
+| AUTH-001 | Login page renders correctly                 |
+| AUTH-002 | Login form has required fields               |
+| AUTH-003 | Login form submission with valid credentials |
+| AUTH-004 | Invalid credentials show error message       |
+| AUTH-005 | Empty email validation                       |
+| AUTH-006 | Empty password validation                    |
+| AUTH-007 | Invalid email format validation              |
+| AUTH-008 | Wrong password shows error                   |
+| AUTH-009 | Non-existent user shows error                |
+| AUTH-010 | Password field is type password              |
+| AUTH-011 | Tab navigation works                         |
+| AUTH-012 | Enter key submits form                       |
+| AUTH-013 | Remember me checkbox                         |
+| AUTH-014 | Token storage after login                    |
+| AUTH-015 | Session persistence                          |
+| AUTH-016 | Logout clears session                        |
+| AUTH-017 | Protected route redirects                    |
+| AUTH-018 | Password not visible in URL                  |
+| AUTH-019 | Max length validation                        |
+| AUTH-020 | XSS prevention in fields                     |
+| AUTH-021 | SQL injection prevention                     |
+| AUTH-022 | Rate limiting                                |
+| AUTH-023 | HTTPS redirect                               |
+| AUTH-024 | Session timeout                              |
+
+### 2. Security Tests (`security.cy.ts`) - 15 Tests
+
+Tests security vulnerabilities at API level:
+
+| Test ID | Description                       |
+| ------- | --------------------------------- |
+| SEC-001 | SQL injection in login            |
+| SEC-002 | SQL injection in product search   |
+| SEC-003 | SQL injection in order creation   |
+| SEC-004 | XSS in product name               |
+| SEC-005 | XSS in customer name              |
+| SEC-006 | XSS in review comments            |
+| SEC-007 | Token manipulation detection      |
+| SEC-008 | Expired token rejection           |
+| SEC-009 | Protected routes without token    |
+| SEC-010 | Password not in URL params        |
+| SEC-011 | HTML injection prevention         |
+| SEC-012 | Script tag sanitization           |
+| SEC-013 | Mass assignment protection        |
+| SEC-014 | JSON injection prevention         |
+| SEC-015 | Information disclosure prevention |
+
+### 3. Real E2E User Journey Tests (`real-e2e/`)
+
+These tests validate **actual user workflows** against the running system.
+
+#### Full User Journey (`full-user-journey.cy.ts`)
+
+Complete workflow: Login → Create Order → Track → Complete → View Receipt
+
+```
+1. Login with admin credentials
+2. Verify products exist (populate demo data if empty)
+3. Create new order with customer name
+4. Track order status in KDS
+5. Update order: PENDING → PREPARING → READY → COMPLETED
+6. Verify order appears in receipts
+7. Test navigation between all pages
+8. Test logout functionality
+```
+
+#### Order Flow (`order-flow.cy.ts`)
+
+| Test           | Description                                     |
+| -------------- | ----------------------------------------------- |
+| Order Creation | Login → KDS → New Order → Fill details → Submit |
+| Order Tracking | Verify order appears in KDS with correct status |
+| Status Updates | Move order through PENDING → PREPARING → READY  |
+| Order History  | Verify completed orders appear in receipts      |
+
+#### Product Management (`product-management.cy.ts`)
+
+| Test                | Description                                |
+| ------------------- | ------------------------------------------ |
+| View Products       | Login → Navigate to products page          |
+| Create Product      | Add new product with name, price, category |
+| Search Products     | Use search functionality                   |
+| Toggle Availability | Enable/disable product availability        |
+
+#### Settings & Demo Data (`settings-demo-data.cy.ts`)
+
+| Test               | Description                                 |
+| ------------------ | ------------------------------------------- |
+| View Settings      | Navigate to settings page                   |
+| Populate Demo Data | Use developer section to populate test data |
+| Update Settings    | Modify and save restaurant settings         |
 
 ---
 
-_Erstellt: 06.12.2025_
+## Prerequisites
+
+### For Full Test Suite
+
+```bash
+# Ensure you have:
+- Docker & Docker Compose (for MySQL, Redis, Kafka)
+- Java 17+ (for Spring Boot services)
+- Node.js 18+ (for frontend)
+- Chrome browser (for Cypress)
+```
+
+### Test Credentials
+
+```
+Admin User:
+- Email: admin@restaurant.com
+- Password: admin123
+
+Staff User:
+- Email: staff@restaurant.com
+- Password: staff123
+```
+
+---
+
+## CI/CD Integration
+
+The `./start.sh --test` command is designed for CI/CD pipelines:
+
+```yaml
+# GitHub Actions example
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run Full Test Suite
+        run: ./start.sh --test
+```
+
+Exit codes:
+
+- `0` - All tests passed
+- `1` - One or more tests failed
+
+---
+
+## Test Data
+
+Tests use real data from the running system. The test suite:
+
+1. Logs in with real credentials
+2. Creates real orders with unique customer names
+3. Interacts with actual API endpoints
+4. Verifies data persistence in the database
+
+No mocking - tests validate the **actual system behavior**.
+
+---
+
+## Troubleshooting
+
+### Tests fail with "Backend not ready"
+
+```bash
+# Ensure backend services are healthy
+curl http://localhost:8080/actuator/health
+curl http://localhost:8761  # Eureka dashboard
+```
+
+### Tests fail with blank page
+
+```bash
+# Ensure frontend is running
+curl http://localhost:1420
+```
+
+### Tests fail with authentication errors
+
+```bash
+# Verify default user exists
+# The DataLoader creates admin@restaurant.com on startup
+./start.sh --full  # Full reset with fresh database
+```
+
+---
+
+## Adding New Tests
+
+1. **User journey tests**: Add to `cypress/e2e/real-e2e/`
+2. **Security tests**: Add to `cypress/e2e/security.cy.ts`
+3. **Auth tests**: Add to `cypress/e2e/auth.cy.ts`
+
+Follow the existing patterns:
+
+- Use real credentials (no mocking)
+- Generate unique test data (use `Date.now()` for names)
+- Add proper assertions
+- Include logging (`cy.log()`) for debugging

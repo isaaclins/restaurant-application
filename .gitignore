@@ -65,3 +65,4 @@ docker-compose.override.yml
 *.temp
 coverage/
 .nyc_output/
+client/cypress/screenshots

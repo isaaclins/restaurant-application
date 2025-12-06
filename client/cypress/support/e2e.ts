@@ -16,28 +16,14 @@ if (app && !app.document.head.querySelector('[data-hide-command-log-request]')) 
   app.document.head.appendChild(style);
 }
 
-// Global before each hook
-beforeEach(() => {
-  // Intercept common API calls
-  cy.intercept('GET', '**/api/orders*').as('getOrders');
-  cy.intercept('POST', '**/api/orders*').as('createOrder');
-  cy.intercept('PUT', '**/api/orders/**').as('updateOrder');
-  cy.intercept('DELETE', '**/api/orders/**').as('deleteOrder');
-  
-  cy.intercept('GET', '**/api/products*').as('getProducts');
-  cy.intercept('POST', '**/api/products*').as('createProduct');
-  cy.intercept('PUT', '**/api/products/**').as('updateProduct');
-  cy.intercept('DELETE', '**/api/products/**').as('deleteProduct');
-  
-  cy.intercept('GET', '**/api/categories*').as('getCategories');
-  cy.intercept('POST', '**/api/categories*').as('createCategory');
-  cy.intercept('PUT', '**/api/categories/**').as('updateCategory');
-  cy.intercept('DELETE', '**/api/categories/**').as('deleteCategory');
-  
-  cy.intercept('GET', '**/api/receipts*').as('getReceipts');
-  cy.intercept('GET', '**/api/receipts/*/pdf').as('downloadPdf');
-  cy.intercept('GET', '**/api/receipts/report*').as('getDailyReport');
-  
-  cy.intercept('GET', '**/api/settings*').as('getSettings');
-  cy.intercept('PUT', '**/api/settings*').as('updateSettings');
+// Handle uncaught exceptions
+Cypress.on('uncaught:exception', (err, runnable) => {
+  // Returning false prevents Cypress from failing the test on uncaught exceptions
+  // Common errors to ignore
+  if (err.message.includes('ResizeObserver') || 
+      err.message.includes('Script error') ||
+      err.message.includes('Non-Error promise rejection')) {
+    return false;
+  }
+  return true;
 });
