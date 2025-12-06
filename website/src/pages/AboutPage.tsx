@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { settingsApi } from '../api/settings';
 import type { RestaurantSettings } from '../types/settings';
 
+const DAY_LABELS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
 /**
  * AboutPage - Displays restaurant info, opening hours, and delivery areas from settings-service.
  * Minimal/unstyled template for AI restyling.
@@ -77,8 +79,8 @@ export default function AboutPage() {
           <ul>
             {openingHours.map((oh, idx) => (
               <li key={idx}>
-                <strong>{oh.day}:</strong>{' '}
-                {oh.closed
+                <strong>{oh.dayName || oh.day || DAY_LABELS[idx] || `Day ${idx + 1}`}:</strong>{' '}
+                {oh.isClosed
                   ? 'Closed'
                   : `${oh.openTime || '--'} - ${oh.closeTime || '--'}`}
               </li>

@@ -555,8 +555,8 @@ function StatisticsPage() {
                 {orderStats.ordersByHour.map((data, index) => {
                   const maxCount = Math.max(...orderStats.ordersByHour.map(d => d.count), 1);
                   const heightPercent = maxCount > 0 ? (data.count / maxCount) * 100 : 0;
-                  // Convert percentage to actual pixels (h-48 = 192px)
-                  const heightPx = Math.max((heightPercent / 100) * 180, data.count > 0 ? 8 : 2);
+                  // Convert percentage to actual pixels (h-48 = 192px); give zero-count bars a visible baseline
+                  const heightPx = Math.max((heightPercent / 100) * 180, data.count > 0 ? 12 : 8);
                   return (
                     <div key={index} className="flex-1 flex flex-col items-center justify-end h-full">
                       <div

@@ -1,8 +1,11 @@
 export interface OpeningHoursEntry {
-  day: string;
-  openTime: string | null;
-  closeTime: string | null;
-  closed: boolean;
+  id?: number;
+  day?: string; // legacy fallback
+  dayName?: string;
+  dayOfWeek?: string;
+  openTime?: string | null;
+  closeTime?: string | null;
+  isClosed?: boolean;
 }
 
 export interface DeliveryArea {
