@@ -585,7 +585,7 @@ jobs:
           if not os.path.isdir(metrics_dir):
               print("No test metrics found.")
               exit(0)
-          
+
           suites = defaultdict(lambda: {"tests": 0, "failures": 0, "errors": 0, "skipped": 0})
 
           # JUnit XML (backend)
@@ -625,7 +625,7 @@ jobs:
           if not suites:
               print("No parsed test suites.")
               exit(0)
-          
+
           total_tests = total_failed = total_skipped = 0
           lines = []
           for name, vals in sorted(suites.items()):
@@ -637,7 +637,7 @@ jobs:
               total_failed += failed
               total_skipped += skipped
               lines.append(f"| {name} | {tests} | {passed} | {failed} | {skipped} |")
-          
+
           summary = []
           summary.append("## Test Counts")
           summary.append("")
@@ -649,7 +649,7 @@ jobs:
           summary.append("| Suite | Tests | Passed | Failed | Skipped |")
           summary.append("| --- | --- | --- | --- | --- |")
           summary.extend(lines)
-          
+
           with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as fh:
               fh.write("\n".join(summary) + "\n")
           PY
