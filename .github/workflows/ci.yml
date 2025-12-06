@@ -518,46 +518,6 @@ jobs:
       contents: read
 
     steps:
-      - name: Generate aggregated CI summary
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          RUN_ID: ${{ github.run_id }}
-          REPO: ${{ github.repository }}
-        run: |
-          set -euo pipefail
-
-          api="https://api.github.com/repos/$REPO/actions/runs/$RUN_ID/jobs?per_page=100"
-          data=$(curl -sS -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" "$api")
-
-          total=$(echo "$data" | jq '.jobs | length')
-          success=$(echo "$data" | jq '[.jobs[] | select(.conclusion=="success")] | length')
-          failure=$(echo "$data" | jq '[.jobs[] | select(.conclusion=="failure")] | length')
-          cancelled=$(echo "$data" | jq '[.jobs[] | select(.conclusion=="cancelled")] | length')
-          timed_out=$(echo "$data" | jq '[.jobs[] | select(.conclusion=="timed_out")] | length')
-          skipped=$(echo "$data" | jq '[.jobs[] | select(.conclusion=="skipped")] | length')
-
-          {
-            echo "## CI Test Summary"
-            echo
-            echo "- Total jobs: $total"
-            echo "- Success: $success • Failure: $failure • Cancelled: $cancelled • Timed out: $timed_out • Skipped: $skipped"
-            echo
-            echo "| Job | Status | Conclusion | Duration (s) | URL |"
-            echo "| --- | --- | --- | --- | --- |"
-          } >> "$GITHUB_STEP_SUMMARY"
-
-          echo "$data" | jq -r '
-            .jobs[] |
-            {
-              name: .name,
-              status: .status,
-              conclusion: (if .conclusion then .conclusion else "in_progress" end),
-              duration: (if .started_at and .completed_at then ((.completed_at | fromdateiso8601) - (.started_at | fromdateiso8601)) | tostring else "-" end),
-              url: .html_url
-            } |
-            "| \(.name) | \(.status) | \(.conclusion) | \(.duration) | [link](\(.url)) |"
-          ' >> "$GITHUB_STEP_SUMMARY"
-
       - name: Download test metrics artifacts
         if: always()
         uses: actions/download-artifact@v4
