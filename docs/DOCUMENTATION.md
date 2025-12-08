@@ -23,30 +23,6 @@
 
 ## 🎯 Projekt-Tagebuch
 
-### 06.12.2025 | Kunden-Website stabilisiert, E2E ergänzt
-
-#### ✅ Erfolge
-
-- Kunden-Website: Profile/Adressen auf `/api/customers/profile` umgestellt; `X-User-ID` Header hinzugefügt.
-- Adresse speichern repariert (`/api/customers/addresses`), Checkout kann gespeicherte Adresse per Button übernehmen.
-- Warenkorb/Checkout stabil: fehlende Endpoints abgefedert, Polling/Fehler reduziert.
-- Neue Cypress E2E für Kunden:
-  - Gast: mehrere Produkte, eins entfernen, Pickup-Checkout.
-  - Registrierter Nutzer: Account anlegen, Adresse speichern, Liefer-Checkout mit gespeicherter Adresse.
-- Frontend Build Fix: ungenutzten `get`-Parameter im Zustand entfernt (TS6133).
-
-#### ❌ Herausforderungen
-
-- API-Gaps (z. B. `/customers/me/orders`) → Fallbacks eingebaut, bis dedizierter Endpoint existiert.
-- Mehrere Backend-/Frontend-Endpunkt-Mismatches (Profile, Addresses, Auth) mussten harmonisiert werden.
-
-#### 🔍 Erkenntnisse
-
-- `X-User-ID` muss clientseitig gesendet werden, sonst 400 bei Kundenendpunkten.
-- E2E hilft früh API/Frontend-Verträge aufzudecken; Fallbacks verhindern UX-Abbruch.
-
----
-
 ### 04.12.2025 | Projektstart & Architektur-Pivot
 
 #### ✅ Erfolge
@@ -1553,6 +1529,13 @@ const handleDownload = async (receipt: Receipt) => {
 
 ---
 
+### 08.12.2025 | KDS manuelle Orders: UX & Payload Fix
+
+- Create-Order-Modal verbreitert (2-Spalten: links Produktauswahl, rechts Sticky Summary).
+- Produktauswahl: große Kacheln, Kategorienfilter, Preise prominent; Reset bei Schließen/Cancel.
+- Order-Summary: +/–, Total, Notes, Alert bei API-Fehler, “Creating…” während Submit.
+- Manuelle Orders gehen jetzt an `/api/orders` mit Pflichtfeldern: `customerName`, `orderType`, Items (`productId`, `productName`, `quantity`, `unitPrice`, `totalPrice`), `totalPrice`.
+
 ## 🛠️ Technische Entscheidungen
 
 ### Entscheidung 1: Datenbank-Strategie
@@ -1741,27 +1724,29 @@ docs/requests/
 
 ## 🐛 Probleme & Lösungen
 
-### Problem 1: [TITEL]
+### Problem: KDS Delete-Button ohne Wirkung
 
-**Datum**: [DATUM]
+**Datum**: 07.12.2025
 
 **Beschreibung**:
-[Was war das Problem?]
+Im KDS (Tauri Client) führte der DELETE-Button in der Detailansicht keine Aktion aus. Bestellungen blieben nach Klick sichtbar und wurden nicht entfernt.
 
 **Fehlermeldung/Symptome**:
 
 ```
-[Fehlermeldung falls vorhanden]
+Keine Fehlermeldung; UI reagierte nicht sichtbar.
 ```
 
 **Ursache**:
-[Root Cause]
+Die Handler-Logik setzte nur den Status auf `CANCELLED` über `updateStatusMutation` und rief die eigentliche Delete-API nicht auf. Dadurch wurden Bestellungen nicht wirklich gelöscht; zudem gab es nur einen generischen Confirm-Dialog.
 
 **Lösung**:
-[Wie wurde es gelöst?]
+- Neue `deleteOrderMutation` mit `ordersApi.deleteOrder` ergänzt.
+- Delete-Handler zeigt jetzt einen klaren Confirm-Dialog mit Ticket-Nummer und ruft die Delete-API auf; lokale Item-Checks werden vorher entfernt und der Query-Cache invalidiert, Auswahl wird geleert.
 
 **Prävention**:
-[Wie kann das in Zukunft vermieden werden?]
+- Für destruktive Aktionen immer dedizierte Delete-Endpoints nutzen (nicht über Status-Workarounds).
+- UI-E2E-Test für den Delete-Flow im KDS ergänzen, sobald Test-Setup stabil ist.
 
 ---
 
@@ -1949,209 +1934,6 @@ style={{ height: `${heightPx}px` }}
 
 ---
 
-### 06.12.2025 | Real E2E Tests, Silent Mode & CI/CD Pipeline (Nachmittag)
-
-#### ✅ Erfolge
-
-- [x] **Real E2E Tests**: Komplette User-Journey Tests mit echtem Backend (kein Mocking)
-- [x] **Silent Mode**: `./start.sh -s` für minimale Ausgabe in CI/CD
-- [x] **CI/CD E2E Job**: Cypress-Tests in GitHub Actions Pipeline integriert
-- [x] **Test-Struktur bereinigt**: Mock-basierte Tests entfernt, nur Real E2E behalten
-
-#### 🧪 E2E Test-Architektur
-
-**Neue Test-Struktur:**
-
-```
-client/cypress/e2e/
-├── auth.cy.ts              # 24 Tests - Login Page (Frontend-only)
-├── security.cy.ts          # 15 Tests - SQL Injection, XSS, Token (API-Level)
-└── real-e2e/               # Real User Journeys (Backend required)
-    ├── full-user-journey.cy.ts    # Complete workflow test
-    ├── order-flow.cy.ts           # Order creation & tracking
-    ├── product-management.cy.ts   # Product CRUD operations
-    └── settings-demo-data.cy.ts   # Settings & demo data
-```
-
-**Test-Philosophie:**
-
-| Vorher (Mock-basiert)               | Nachher (Real E2E)                      |
-| ----------------------------------- | --------------------------------------- |
-| `cy.intercept()` für alle API-Calls | Echte API-Calls gegen laufendes Backend |
-| Fake Tokens in localStorage         | Echter Login mit `admin@restaurant.com` |
-| Simulierte Responses                | Tatsächliche Datenbankänderungen        |
-| Tests liefen ohne Backend           | Tests erfordern `./start.sh --backend`  |
-
-**Full User Journey Test:**
-
-```
-PHASE 1: Login → admin@restaurant.com / admin123
-PHASE 2: Verify Products exist (populate demo data if empty)
-PHASE 3: Create Order → Fill customer name → Submit
-PHASE 4: Track Order in KDS
-PHASE 5: Update Status: PENDING → PREPARING → READY → COMPLETED
-PHASE 6: Verify Order in Receipts
-```
-
-#### 🔇 Silent Mode (`-s` / `--silent`)
-
-**Neue start.sh Option:**
-
-```bash
-./start.sh --test -s       # Silent testing
-./start.sh --full -s       # Silent full reset
-./start.sh --backend -s    # Silent backend start
-```
-
-**Was wird unterdrückt:**
-
-| Output Type              | Silent?         |
-| ------------------------ | --------------- |
-| Spring Boot Startup Logs | ✅ Hidden       |
-| Maven Test Output        | ✅ Hidden       |
-| Docker Compose Output    | ✅ Hidden       |
-| npm install Output       | ✅ Hidden       |
-| Cypress Verbose Output   | ✅ Hidden       |
-| Progress Messages        | ✅ Hidden       |
-| Service Endpoints Box    | ✅ Hidden       |
-| **Errors**               | ❌ Always shown |
-| **Final Results**        | ❌ Always shown |
-
-**Silent Test Output:**
-
-```
-═══════════════════════════════════════════════════════════
-  📊 Test Results Summary
-═══════════════════════════════════════════════════════════
-
-  ✓ Authentication Tests
-  ✓ Security Tests
-  ✗ Real E2E Tests
-
-╔════════════════════════════════════════════════════════════╗
-║              ❌ SOME TESTS FAILED                          ║
-╚════════════════════════════════════════════════════════════╝
-```
-
-#### 🔄 CI/CD Pipeline Update
-
-**Neuer `e2e-tests` Job in `.github/workflows/ci.yml`:**
-
-```yaml
-e2e-tests:
-  name: E2E Tests (Cypress)
-  runs-on: ubuntu-latest
-  needs: [backend-build]
-
-  services:
-    mysql: ...
-    redis: ...
-
-  steps:
-    - Start Eureka Server
-    - Start Auth Service
-    - Start API Gateway
-    - Install Client Dependencies
-    - Start Frontend (npm run dev)
-    - Run Cypress Auth Tests
-    - Run Cypress Security Tests
-    - Run Cypress E2E Tests
-    - Upload Screenshots/Videos on failure
-```
-
-**Pipeline Flow:**
-
-```
-backend-build ─────┬──→ e2e-tests (NEW)
-                   ├──→ integration-tests
-                   ├──→ docker-build ──→ deploy
-                   └──→ security-scan
-
-website-build ─────────→ security-scan
-
-client-build (parallel on mac/linux/windows)
-```
-
-#### 📁 Geänderte Dateien
-
-| Datei                                 | Änderung                                            |
-| ------------------------------------- | --------------------------------------------------- |
-| `start.sh`                            | Silent mode (`-s`), Backend test output suppression |
-| `.github/workflows/ci.yml`            | Neuer `e2e-tests` Job mit Cypress                   |
-| `client/package.json`                 | Neue npm scripts (`test:e2e:real`, etc.)            |
-| `client/cypress.config.ts`            | Chrome→Electron, Component testing config           |
-| `client/cypress/e2e/real-e2e/*.cy.ts` | 4 neue Real E2E Test-Dateien                        |
-| `client/cypress/E2E_TEST_PLAN.md`     | Aktualisierter Test-Plan                            |
-
-#### 🐛 Probleme & Lösungen
-
-**Problem 1: Authenticated Pages blank in Cypress**
-
-```
-cy.visit('/products') → Blank page (React not mounting)
-```
-
-**Ursache:** localStorage injection + API mocks funktionierten nicht zuverlässig
-
-**Lösung:** Echte E2E Tests mit laufendem Backend statt Mocking
-
----
-
-**Problem 2: Modal overlay blocking clicks**
-
-```
-CypressError: element is being covered by another element
-```
-
-**Lösung:** `cy.get('.fixed.inset-0').within(() => { ... })` für Modal-Interaktion
-
----
-
-**Problem 3: "Kitchen Display" vs "Restaurant KDS"**
-
-```
-AssertionError: Expected to find content: 'Kitchen Display' but never did
-```
-
-**Lösung:** Selektoren an tatsächliche UI-Texte angepasst (`Restaurant KDS`, `CREATE NEW ORDER`)
-
----
-
-**Problem 4: Silent mode still showing Spring Boot logs**
-
-```
-./start.sh --test -s → Still showing INFO logs
-```
-
-**Lösung:** `> /dev/null 2>&1` für Maven und alle Service-Starts
-
-#### 📝 npm Scripts
-
-```json
-{
-  "test:e2e:real": "cypress run --spec 'cypress/e2e/real-e2e/**/*.cy.ts'",
-  "test:e2e:real:open": "cypress open --spec 'cypress/e2e/real-e2e/**/*.cy.ts'",
-  "test:e2e:auth": "cypress run --spec 'cypress/e2e/auth.cy.ts'",
-  "test:e2e:security": "cypress run --spec 'cypress/e2e/security.cy.ts'"
-}
-```
-
-#### 🔍 Erkenntnisse
-
-- **Mock-basierte E2E Tests sind fragil** – React Query + Zustand + Vite HMR machen localStorage-Injection unzuverlässig
-- **Real E2E > Mocked E2E** – Testen gegen echtes Backend findet mehr Bugs
-- **Silent mode ist essentiell für CI** – Logs von 9 Services + Cypress sind unlesbar
-- **Cypress mit Electron ist stabiler** als Chrome für headless Testing
-- **`continue-on-error: true`** in CI erlaubt Pipeline-Fortsetzung während Tests noch instabil sind
-
-#### 📌 Nächste Schritte
-
-- [ ] Backend starten und Real E2E Tests lokal ausführen
-- [ ] CI/CD Pipeline E2E Tests stabilisieren (Services müssen healthy sein)
-- [ ] Test-Coverage erhöhen (mehr Edge Cases)
-
----
-
 ## 🔗 Referenzen & Ressourcen
 
 ### Dokumentation
@@ -2174,4 +1956,4 @@ AssertionError: Expected to find content: 'Kitchen Display' but never did
 
 ---
 
-_Letzte Aktualisierung: 06.12.2025 (Nachmittag)_
+_Letzte Aktualisierung: 06.12.2025_
