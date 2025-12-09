@@ -48,7 +48,7 @@ jobs:
   backend-build:
     name: Backend Build & Test
     needs: [select-runner]
-    runs-on: ${{ fromJson(needs.select-runner.outputs.runner) }}
+    runs-on: ${{ fromJson(needs.select-runner.outputs.runner || '["ubuntu-latest"]') }}
 
     services:
       mysql:
@@ -152,7 +152,7 @@ jobs:
   website-build:
     name: Website Build & Test
     needs: [select-runner]
-    runs-on: ${{ fromJson(needs.select-runner.outputs.runner) }}
+    runs-on: ${{ fromJson(needs.select-runner.outputs.runner || '["ubuntu-latest"]') }}
 
     steps:
       - name: Checkout code
@@ -236,7 +236,7 @@ jobs:
   # ============================================================================
   docker-build:
     name: Build Docker Images
-    runs-on: ${{ fromJson(needs.select-runner.outputs.runner) }}
+    runs-on: ${{ fromJson(needs.select-runner.outputs.runner || '["ubuntu-latest"]') }}
     needs: [select-runner, backend-build]
     if: github.ref == 'refs/heads/main'
 
@@ -289,7 +289,7 @@ jobs:
   # ============================================================================
   e2e-tests:
     name: E2E Tests (Cypress)
-    runs-on: ${{ fromJson(needs.select-runner.outputs.runner) }}
+    runs-on: ${{ fromJson(needs.select-runner.outputs.runner || '["ubuntu-latest"]') }}
     needs: [select-runner, backend-build]
 
     env:
@@ -465,7 +465,7 @@ jobs:
   # ============================================================================
   integration-tests:
     name: Integration Tests
-    runs-on: ${{ fromJson(needs.select-runner.outputs.runner) }}
+    runs-on: ${{ fromJson(needs.select-runner.outputs.runner || '["ubuntu-latest"]') }}
     needs: [select-runner, backend-build]
 
     env:
@@ -512,7 +512,7 @@ jobs:
   # ============================================================================
   deploy:
     name: Deploy to Cloud
-    runs-on: ${{ fromJson(needs.select-runner.outputs.runner) }}
+    runs-on: ${{ fromJson(needs.select-runner.outputs.runner || '["ubuntu-latest"]') }}
     needs: [select-runner, docker-build, integration-tests]
     if: github.ref == 'refs/heads/main'
     environment: production
@@ -551,7 +551,7 @@ jobs:
         deploy,
       ]
     if: ${{ always() }}
-    runs-on: ${{ fromJson(needs.select-runner.outputs.runner) }}
+    runs-on: ${{ fromJson(needs.select-runner.outputs.runner || '["ubuntu-latest"]') }}
     permissions:
       actions: read
       contents: read
