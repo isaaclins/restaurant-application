@@ -236,8 +236,8 @@ jobs:
   # ============================================================================
   docker-build:
     name: Build Docker Images
-    runs-on: ubuntu-latest
-    needs: [backend-build]
+    runs-on: ${{ fromJson(needs.select-runner.outputs.runner) }}
+    needs: [select-runner, backend-build]
     if: github.ref == 'refs/heads/main'
 
     strategy:
@@ -289,8 +289,8 @@ jobs:
   # ============================================================================
   e2e-tests:
     name: E2E Tests (Cypress)
-    runs-on: ubuntu-latest
-    needs: [backend-build]
+    runs-on: ${{ fromJson(needs.select-runner.outputs.runner) }}
+    needs: [select-runner, backend-build]
 
     env:
       MYSQL_ROOT_PASSWORD: rootpassword
@@ -465,8 +465,8 @@ jobs:
   # ============================================================================
   integration-tests:
     name: Integration Tests
-    runs-on: ubuntu-latest
-    needs: [backend-build]
+    runs-on: ${{ fromJson(needs.select-runner.outputs.runner) }}
+    needs: [select-runner, backend-build]
 
     env:
       MYSQL_ROOT_PASSWORD: rootpassword
@@ -512,8 +512,8 @@ jobs:
   # ============================================================================
   deploy:
     name: Deploy to Cloud
-    runs-on: ubuntu-latest
-    needs: [docker-build, integration-tests]
+    runs-on: ${{ fromJson(needs.select-runner.outputs.runner) }}
+    needs: [select-runner, docker-build, integration-tests]
     if: github.ref == 'refs/heads/main'
     environment: production
 
@@ -541,6 +541,7 @@ jobs:
     name: CI Summary
     needs:
       [
+        select-runner,
         backend-build,
         website-build,
         client-build,
@@ -550,7 +551,7 @@ jobs:
         deploy,
       ]
     if: ${{ always() }}
-    runs-on: ubuntu-latest
+    runs-on: ${{ fromJson(needs.select-runner.outputs.runner) }}
     permissions:
       actions: read
       contents: read
