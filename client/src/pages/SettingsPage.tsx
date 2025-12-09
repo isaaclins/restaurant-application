@@ -401,7 +401,7 @@ function DeliveryAreaSettings() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [newArea, setNewArea] = useState({
     postalCode: '',
-    cityName: '',
+    city: '',
     deliveryFee: '',
     minimumOrderValue: '',
   });
@@ -414,7 +414,7 @@ function DeliveryAreaSettings() {
   const addMutation = useMutation({
     mutationFn: () => settingsApi.addDeliveryArea({
       postalCode: newArea.postalCode,
-      cityName: newArea.cityName,
+      city: newArea.city,
       deliveryFee: parseFloat(newArea.deliveryFee),
       minimumOrderValue: parseFloat(newArea.minimumOrderValue),
       isActive: true,
@@ -422,7 +422,7 @@ function DeliveryAreaSettings() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['deliveryAreas'] });
       setShowAddForm(false);
-      setNewArea({ postalCode: '', cityName: '', deliveryFee: '', minimumOrderValue: '' });
+      setNewArea({ postalCode: '', city: '', deliveryFee: '', minimumOrderValue: '' });
     },
   });
 
@@ -457,8 +457,8 @@ function DeliveryAreaSettings() {
             <input
               type="text"
               placeholder="City"
-              value={newArea.cityName}
-              onChange={(e) => setNewArea({ ...newArea, cityName: e.target.value })}
+              value={newArea.city}
+              onChange={(e) => setNewArea({ ...newArea, city: e.target.value })}
               className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 outline-none"
             />
             <input
@@ -508,7 +508,7 @@ function DeliveryAreaSettings() {
             {areas.map((area: DeliveryArea) => (
               <tr key={area.id}>
                 <td className="px-4 py-3 font-medium text-gray-800">{area.postalCode}</td>
-                <td className="px-4 py-3 text-gray-600">{area.cityName}</td>
+                <td className="px-4 py-3 text-gray-600">{area.city || area.cityName || ''}</td>
                 <td className="px-4 py-3 text-gray-600">CHF {area.deliveryFee.toFixed(2)}</td>
                 <td className="px-4 py-3 text-gray-600">CHF {area.minimumOrderValue.toFixed(2)}</td>
                 <td className="px-4 py-3 text-right">

@@ -10,7 +10,7 @@ export interface DeliveryAddress {
 }
 
 export interface OrderItem {
-  id: number;
+  id?: number;
   productId: number;
   productName: string;
   quantity: number;
@@ -157,6 +157,7 @@ export interface DeliveryArea {
   id: number;
   postalCode: string;
   city: string;
+  cityName?: string;
   deliveryFee: number;
   minimumOrderValue: number;
   isActive: boolean;
