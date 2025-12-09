@@ -37,7 +37,7 @@ jobs:
               return labels.includes('self-hosted') && labels.includes('linux') && labels.includes('arm64');
             });
             const labels = online
-              ? '["self-hosted","linux","ARM64"]'
+              ? '["self-hosted","linux","arm64"]'
               : '["ubuntu-latest"]';
             core.info(`Selected runner labels: ${labels}`);
             core.setOutput('runner', labels);
