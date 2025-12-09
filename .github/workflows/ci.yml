@@ -12,43 +12,11 @@ env:
 
 jobs:
   # ============================================================================
-  # Select Runner (prefers self-hosted linux ARM64, fallback to ubuntu-latest)
-  # ============================================================================
-  select-runner:
-    name: Select Runner
-    runs-on: ubuntu-latest
-    outputs:
-      runner: ${{ steps.pick.outputs.runner }}
-    steps:
-      - name: Pick available runner
-        id: pick
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const { owner, repo } = context.repo;
-            const res = await github.request('GET /repos/{owner}/{repo}/actions/runners', {
-              owner,
-              repo,
-              per_page: 100,
-            });
-            const online = res.data.runners.find((r) => {
-              if (r.status !== 'online') return false;
-              const labels = r.labels.map((l) => l.name.toLowerCase());
-              return labels.includes('self-hosted') && labels.includes('linux') && labels.includes('arm64');
-            });
-            const labels = online
-              ? '["self-hosted","linux","arm64"]'
-              : '["ubuntu-latest"]';
-            core.info(`Selected runner labels: ${labels}`);
-            core.setOutput('runner', labels);
-
-  # ============================================================================
   # Backend - Build & Test
   # ============================================================================
   backend-build:
     name: Backend Build & Test
-    needs: [select-runner]
-    runs-on: ${{ fromJson(needs.select-runner.outputs.runner || '["ubuntu-latest"]') }}
+    runs-on: ["self-hosted", "linux", "arm64"]
 
     services:
       mysql:
@@ -151,8 +119,7 @@ jobs:
   # ============================================================================
   website-build:
     name: Website Build & Test
-    needs: [select-runner]
-    runs-on: ${{ fromJson(needs.select-runner.outputs.runner || '["ubuntu-latest"]') }}
+    runs-on: ["self-hosted", "linux", "arm64"]
 
     steps:
       - name: Checkout code
@@ -193,12 +160,7 @@ jobs:
   # ============================================================================
   client-build:
     name: Client Build (Tauri)
-    runs-on: ${{ matrix.platform }}
-
-    strategy:
-      fail-fast: false
-      matrix:
-        platform: [macos-latest, ubuntu-22.04, windows-latest]
+    runs-on: ["self-hosted", "linux", "arm64"]
 
     steps:
       - name: Checkout code
@@ -236,8 +198,8 @@ jobs:
   # ============================================================================
   docker-build:
     name: Build Docker Images
-    runs-on: ${{ fromJson(needs.select-runner.outputs.runner || '["ubuntu-latest"]') }}
-    needs: [select-runner, backend-build]
+    runs-on: ["self-hosted", "linux", "arm64"]
+    needs: [backend-build]
     if: github.ref == 'refs/heads/main'
 
     strategy:
@@ -289,8 +251,8 @@ jobs:
   # ============================================================================
   e2e-tests:
     name: E2E Tests (Cypress)
-    runs-on: ${{ fromJson(needs.select-runner.outputs.runner || '["ubuntu-latest"]') }}
-    needs: [select-runner, backend-build]
+    runs-on: ["self-hosted", "linux", "arm64"]
+    needs: [backend-build]
 
     env:
       MYSQL_ROOT_PASSWORD: rootpassword
@@ -465,8 +427,8 @@ jobs:
   # ============================================================================
   integration-tests:
     name: Integration Tests
-    runs-on: ${{ fromJson(needs.select-runner.outputs.runner || '["ubuntu-latest"]') }}
-    needs: [select-runner, backend-build]
+    runs-on: ["self-hosted", "linux", "arm64"]
+    needs: [backend-build]
 
     env:
       MYSQL_ROOT_PASSWORD: rootpassword
@@ -512,8 +474,8 @@ jobs:
   # ============================================================================
   deploy:
     name: Deploy to Cloud
-    runs-on: ${{ fromJson(needs.select-runner.outputs.runner || '["ubuntu-latest"]') }}
-    needs: [select-runner, docker-build, integration-tests]
+    runs-on: ["self-hosted", "linux", "arm64"]
+    needs: [docker-build, integration-tests]
     if: github.ref == 'refs/heads/main'
     environment: production
 
@@ -541,7 +503,6 @@ jobs:
     name: CI Summary
     needs:
       [
-        select-runner,
         backend-build,
         website-build,
         client-build,
@@ -551,7 +512,7 @@ jobs:
         deploy,
       ]
     if: ${{ always() }}
-    runs-on: ${{ fromJson(needs.select-runner.outputs.runner || '["ubuntu-latest"]') }}
+    runs-on: ["self-hosted", "linux", "arm64"]
     permissions:
       actions: read
       contents: read
