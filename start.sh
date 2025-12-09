@@ -13,15 +13,14 @@
 #   --full      Full reset: stop all, delete DB volumes, restart everything
 #   --test      Run tests as if in CI/CD pipeline
 #   --stop      Stop all running services
-#   -s, --silent  Silent mode: minimal output, only show final results
 #   --help      Show this help message
 #
 # Examples:
 #   ./start.sh --backend --website
 #   ./start.sh --client
 #   ./start.sh --all
-#   ./start.sh --test -s        # Silent testing
-#   ./start.sh --full -s        # Silent full reset
+#   ./start.sh --infra
+#   ./start.sh --test
 #   ./start.sh --stop
 
 set -e
@@ -46,20 +45,25 @@ load_env() {
     if [ -f "$env_file" ]; then
         print_info "Loading environment variables from .env..."
         
-        # Source the .env file directly (simpler and more reliable)
+        # Export all variables from .env file (ignore comments and empty lines)
         set -a
-        source "$env_file"
+        while IFS='=' read -r key value; do
+            # Skip comments and empty lines
+            if [[ ! "$key" =~ ^# && -n "$key" ]]; then
+                # Remove leading/trailing whitespace and quotes
+                key=$(echo "$key" | xargs)
+                value=$(echo "$value" | xargs)
+                # Remove surrounding quotes if present
+                value="${value%\"}"
+                value="${value#\"}"
+                value="${value%\'}"
+                value="${value#\'}"
+                export "$key=$value"
+            fi
+        done < <(grep -v '^#' "$env_file" | grep -v '^$' | grep '=')
         set +a
         
         print_success "Environment variables loaded"
-        
-        # Verify critical variables are set
-        if [ -z "$JWT_SECRET" ]; then
-            print_warning "JWT_SECRET is not set!"
-        fi
-        if [ -z "$MYSQL_PASSWORD" ]; then
-            print_warning "MYSQL_PASSWORD is not set!"
-        fi
     else
         print_warning ".env file not found at $env_file"
         print_info "Copy .env.example to .env and configure your settings"
@@ -73,16 +77,13 @@ START_WEBSITE=false
 START_INFRA=false
 STOP_ALL=false
 RUN_TESTS=false
-RUN_QUICK_TESTS=false
 FULL_RESET=false
-SILENT=false
 
 # ============================================================================
 # Helper Functions
 # ============================================================================
 
 print_header() {
-    [ "$SILENT" = true ] && return
     echo ""
     echo -e "${BLUE}════════════════════════════════════════════════════════════${NC}"
     echo -e "${BLUE}  $1${NC}"
@@ -91,28 +92,19 @@ print_header() {
 }
 
 print_success() {
-    [ "$SILENT" = true ] && return
     echo -e "${GREEN}✓ $1${NC}"
 }
 
 print_warning() {
-    [ "$SILENT" = true ] && return
     echo -e "${YELLOW}⚠ $1${NC}"
 }
 
 print_error() {
-    # Always show errors, even in silent mode
     echo -e "${RED}✗ $1${NC}"
 }
 
 print_info() {
-    [ "$SILENT" = true ] && return
     echo -e "${BLUE}→ $1${NC}"
-}
-
-# Print final results (always shown, even in silent mode)
-print_final() {
-    echo -e "$1"
 }
 
 show_help() {
@@ -121,24 +113,21 @@ show_help() {
     echo "Usage: ./start.sh [OPTIONS]"
     echo ""
     echo "Options:"
-    echo "  --backend     Start all backend microservices (Docker + Spring Boot)"
-    echo "  --client      Start the Tauri desktop client"
-    echo "  --website     Start the React website dev server"
-    echo "  --infra       Start only infrastructure (Docker: MySQL, Redis, Kafka)"
-    echo "  --all         Start everything"
-    echo "  --full        Full reset: stop all, delete DB volumes, restart everything"
-    echo "  --test        Run FULL tests (backend unit + E2E) - slow (~5 min)"
-    echo "  --quick-test  Run QUICK E2E tests only (no backend unit tests) - fast (~1 min)"
-    echo "  --stop        Stop all running services"
-    echo "  -s, --silent  Silent mode: minimal output, only errors and final results"
-    echo "  --help        Show this help message"
+    echo "  --backend   Start all backend microservices (Docker + Spring Boot)"
+    echo "  --client    Start the Tauri desktop client"
+    echo "  --website   Start the React website dev server"
+    echo "  --infra     Start only infrastructure (Docker: MySQL, Redis, Kafka)"
+    echo "  --all       Start everything"
+    echo "  --full      Full reset: stop all, delete DB volumes, restart everything"
+    echo "  --test      Run tests as if in CI/CD pipeline"
+    echo "  --stop      Stop all running services"
+    echo "  --help      Show this help message"
     echo ""
     echo "Examples:"
     echo "  ./start.sh --backend --website"
     echo "  ./start.sh --client"
     echo "  ./start.sh --all"
-    echo "  ./start.sh --quick-test    # Fast E2E tests"
-    echo "  ./start.sh --test -s       # Full silent testing"
+    echo "  ./start.sh --test"
     echo "  ./start.sh --stop"
 }
 
@@ -196,7 +185,7 @@ check_requirements() {
         exit 1
     fi
     
-    [ "$SILENT" = false ] && echo ""
+    echo ""
 }
 
 # ============================================================================
@@ -210,24 +199,19 @@ start_infrastructure() {
     
     if [ -f "docker-compose.yml" ]; then
         print_info "Starting Docker containers..."
-        if [ "$SILENT" = true ]; then
-            docker compose up -d --quiet-pull 2>/dev/null
-        else
-            docker compose up -d
-        fi
+        docker compose up -d
         
         print_info "Waiting for services to be ready..."
         sleep 5
         
         print_success "Infrastructure started"
-        if [ "$SILENT" = false ]; then
-            echo ""
-            echo "  Services:"
-            echo "  • MySQL:     localhost:3306"
-            echo "  • Redis:     localhost:6379"
-            echo "  • Kafka:     localhost:9092"
-            echo "  • Zookeeper: localhost:2181"
-        fi
+        echo ""
+        echo "  Services:"
+        echo "  • MySQL:     localhost:3306"
+        echo "  • Redis:     localhost:6379"
+        echo "  • Kafka:     localhost:9092"
+        echo "  • Zookeeper: localhost:2181"
+        echo "  • Kafka UI:  localhost:8090"
     else
         print_warning "docker-compose.yml not found. Creating basic infrastructure..."
         print_info "Run './start.sh --infra' again after docker-compose.yml is created"
@@ -239,11 +223,7 @@ stop_infrastructure() {
     cd "$PROJECT_ROOT"
     
     if [ -f "docker-compose.yml" ]; then
-        if [ "$SILENT" = true ]; then
-            docker compose down 2>/dev/null
-        else
-            docker compose down
-        fi
+        docker compose down
         print_success "Infrastructure stopped"
     fi
 }
@@ -267,8 +247,8 @@ wait_for_service() {
             return 1
         fi
         sleep 1
-        # Show progress every 10 seconds (only in non-silent mode)
-        if [ "$SILENT" = false ] && [ $((attempt % 10)) -eq 0 ]; then
+        # Show progress every 10 seconds
+        if [ $((attempt % 10)) -eq 0 ]; then
             print_info "  Still waiting for $service_name... ($attempt/$max_attempts)"
         fi
     done
@@ -286,35 +266,15 @@ start_service() {
         print_info "Starting $service_name..."
         cd "$PROJECT_ROOT/backend/$service_name"
         
-        # Export all environment variables to ensure they're available to child processes
-        export JWT_SECRET MYSQL_USER MYSQL_PASSWORD MYSQL_HOST MYSQL_PORT
-        export REDIS_HOST REDIS_PORT EUREKA_HOST EUREKA_PORT
-        export KAFKA_BOOTSTRAP_SERVERS
-        
-        if [ "$SILENT" = true ]; then
-            # Silent mode: redirect all output to /dev/null
-            if [ -f "mvnw" ]; then
-                ./mvnw spring-boot:run -q > /dev/null 2>&1 &
-            elif [ -f "gradlew" ]; then
-                ./gradlew bootRun -q > /dev/null 2>&1 &
-            elif [ -f "pom.xml" ]; then
-                mvn spring-boot:run -q > /dev/null 2>&1 &
-            else
-                print_warning "$service_name: No build file found, skipping..."
-                return 1
-            fi
+        if [ -f "mvnw" ]; then
+            ./mvnw spring-boot:run &
+        elif [ -f "gradlew" ]; then
+            ./gradlew bootRun &
+        elif [ -f "pom.xml" ]; then
+            mvn spring-boot:run &
         else
-            # Normal mode: show output
-            if [ -f "mvnw" ]; then
-                ./mvnw spring-boot:run &
-            elif [ -f "gradlew" ]; then
-                ./gradlew bootRun &
-            elif [ -f "pom.xml" ]; then
-                mvn spring-boot:run &
-            else
-                print_warning "$service_name: No build file found, skipping..."
-                return 1
-            fi
+            print_warning "$service_name: No build file found, skipping..."
+            return 1
         fi
         
         if [ "$wait_for_ready" = true ] && [ -n "$port" ]; then
@@ -389,6 +349,7 @@ start_backend() {
         "auth-service:8085"
         "receipt-service:8086"
         "settings-service:8087"
+        "notification-service:8088"
     )
     
     for service_port in "${service_ports[@]}"; do
@@ -402,31 +363,29 @@ start_backend() {
         fi
     done
     
-    if [ "$SILENT" = false ]; then
-        echo ""
-        if [ "$all_ready" = true ]; then
-            print_success "All backend services are ready!"
-        else
-            print_warning "Some services are still starting. They should be ready shortly."
-        fi
-        
-        echo ""
-        echo "  ┌─────────────────────────────────────────────────────────┐"
-        echo "  │                    SERVICE ENDPOINTS                    │"
-        echo "  ├─────────────────────────────────────────────────────────┤"
-        echo "  │  Eureka Dashboard:    http://localhost:8761             │"
-        echo "  │  API Gateway:         http://localhost:8080             │"
-        echo "  ├─────────────────────────────────────────────────────────┤"
-        echo "  │  Products API:        http://localhost:8080/api/products│"
-        echo "  │  Cart API:            http://localhost:8080/api/cart    │"
-        echo "  │  Orders API:          http://localhost:8080/api/orders  │"
-        echo "  │  Payments API:        http://localhost:8080/api/payments│"
-        echo "  │  Auth API:            http://localhost:8080/api/auth    │"
-        echo "  │  Receipts API:        http://localhost:8080/api/receipts│"
-        echo "  │  Settings API:        http://localhost:8080/api/settings│"
-        echo "  └─────────────────────────────────────────────────────────┘"
-        echo ""
+    echo ""
+    if [ "$all_ready" = true ]; then
+        print_success "All backend services are ready!"
+    else
+        print_warning "Some services are still starting. They should be ready shortly."
     fi
+    
+    echo ""
+    echo "  ┌─────────────────────────────────────────────────────────┐"
+    echo "  │                    SERVICE ENDPOINTS                    │"
+    echo "  ├─────────────────────────────────────────────────────────┤"
+    echo "  │  Eureka Dashboard:    http://localhost:8761             │"
+    echo "  │  API Gateway:         http://localhost:8080             │"
+    echo "  ├─────────────────────────────────────────────────────────┤"
+    echo "  │  Products API:        http://localhost:8080/api/products│"
+    echo "  │  Cart API:            http://localhost:8080/api/cart    │"
+    echo "  │  Orders API:          http://localhost:8080/api/orders  │"
+    echo "  │  Payments API:        http://localhost:8080/api/payments│"
+    echo "  │  Auth API:            http://localhost:8080/api/auth    │"
+    echo "  │  Receipts API:        http://localhost:8080/api/receipts│"
+    echo "  │  Settings API:        http://localhost:8080/api/settings│"
+    echo "  └─────────────────────────────────────────────────────────┘"
+    echo ""
 }
 
 stop_backend() {
@@ -462,26 +421,16 @@ start_website() {
     # Install dependencies if needed
     if [ ! -d "node_modules" ]; then
         print_info "Installing dependencies..."
-        if [ "$SILENT" = true ]; then
-            npm install --silent 2>/dev/null
-        else
-            npm install
-        fi
+        npm install
     fi
     
     print_info "Starting development server..."
-    if [ "$SILENT" = true ]; then
-        npm run dev > /dev/null 2>&1 &
-    else
-        npm run dev &
-    fi
+    npm run dev &
     
     sleep 3
     print_success "Website started"
-    if [ "$SILENT" = false ]; then
-        echo ""
-        echo "  URL: http://localhost:3000"
-    fi
+    echo ""
+    echo "  URL: http://localhost:5173"
 }
 
 stop_website() {
@@ -516,25 +465,15 @@ start_client() {
     # Install dependencies if needed
     if [ ! -d "node_modules" ]; then
         print_info "Installing dependencies..."
-        if [ "$SILENT" = true ]; then
-            npm install --silent 2>/dev/null
-        else
-            npm install
-        fi
+        npm install
     fi
     
     print_info "Starting Tauri development mode..."
-    if [ "$SILENT" = true ]; then
-        npm run tauri dev > /dev/null 2>&1 &
-    else
-        npm run tauri dev &
-    fi
+    npm run tauri dev &
     
     print_success "Client starting..."
-    if [ "$SILENT" = false ]; then
-        echo ""
-        echo "  Tauri app will open automatically"
-    fi
+    echo ""
+    echo "  Tauri app will open automatically"
 }
 
 stop_client() {
@@ -551,22 +490,14 @@ stop_client() {
 # ============================================================================
 
 run_tests() {
-    print_header "🧪 Running FULL Test Suite (CI/CD Pipeline Mode)"
-    
-    # Load environment variables first
-    load_env
+    print_header "Running Tests (CI/CD Pipeline Mode)"
     
     local test_failed=false
-    local started_backend=false
-    local started_frontend=false
-    local frontend_pid=""
     
-    # ============================================================================
-    # PHASE 1: Backend Unit Tests
-    # ============================================================================
-    print_header "Phase 1: Backend Unit Tests"
-    
+    # Backend tests
     if [ -d "$PROJECT_ROOT/backend" ]; then
+        print_info "Running backend tests..."
+        
         local services=("eureka-server" "api-gateway" "product-service" "cart-service" "order-service" "payment-service" "auth-service" "settings-service" "receipt-service")
         
         for service in "${services[@]}"; do
@@ -574,364 +505,166 @@ run_tests() {
                 print_info "Testing $service..."
                 cd "$PROJECT_ROOT/backend/$service"
                 
-                if [ "$SILENT" = true ]; then
-                    # Silent mode: redirect ALL output to /dev/null
-                    if [ -f "mvnw" ]; then
-                        if ./mvnw test -q > /dev/null 2>&1; then
-                            : # success, do nothing (silent)
-                        else
-                            print_error "$service tests failed"
-                            test_failed=true
-                        fi
-                    elif [ -f "pom.xml" ]; then
-                        if mvn test -q > /dev/null 2>&1; then
-                            : # success, do nothing (silent)
-                        else
-                            print_error "$service tests failed"
-                            test_failed=true
-                        fi
+                if [ -f "mvnw" ]; then
+                    if ./mvnw test; then
+                        print_success "$service tests passed"
+                    else
+                        print_error "$service tests failed"
+                        test_failed=true
+                    fi
+                elif [ -f "pom.xml" ]; then
+                    if mvn test; then
+                        print_success "$service tests passed"
+                    else
+                        print_error "$service tests failed"
+                        test_failed=true
                     fi
                 else
-                    # Normal mode: show output
-                    if [ -f "mvnw" ]; then
-                        if ./mvnw test -q; then
-                            print_success "$service tests passed"
-                        else
-                            print_error "$service tests failed"
-                            test_failed=true
-                        fi
-                    elif [ -f "pom.xml" ]; then
-                        if mvn test -q; then
-                            print_success "$service tests passed"
-                        else
-                            print_error "$service tests failed"
-                            test_failed=true
-                        fi
-                    else
-                        print_warning "$service: No test configuration found, skipping..."
-                    fi
+                    print_warning "$service: No test configuration found, skipping..."
                 fi
             fi
         done
-    else
-        print_warning "Backend directory not found, skipping backend tests..."
     fi
     
-    # ============================================================================
-    # PHASE 2: Start Infrastructure & Services for E2E Tests
-    # ============================================================================
-    print_header "Phase 2: Starting Services for E2E Tests"
-    
-    # Check if backend is already running
-    if ! nc -z localhost 8080 2>/dev/null; then
-        print_info "Starting backend services..."
-        cd "$PROJECT_ROOT"
-        start_backend
-        started_backend=true
-        
-        # Wait for backend to be fully ready
-        print_info "Waiting for backend to be fully ready..."
-        local attempts=0
-        while ! curl -s "http://localhost:8080/actuator/health" > /dev/null 2>&1; do
-            attempts=$((attempts + 1))
-            if [ $attempts -ge 120 ]; then
-                print_error "Backend failed to start within 2 minutes"
-                test_failed=true
-                break
-            fi
-            sleep 1
-            if [ $((attempts % 15)) -eq 0 ]; then
-                print_info "  Still waiting for backend... ($attempts/120)"
-            fi
-        done
-        
-        if [ $attempts -lt 120 ]; then
-            print_success "Backend is ready!"
-        fi
-    else
-        print_success "Backend already running on port 8080"
-    fi
-    
-    # Check if frontend is already running
-    if ! nc -z localhost 1420 2>/dev/null; then
-        print_info "Starting frontend dev server..."
+    # Client tests
+    if [ -d "$PROJECT_ROOT/client" ]; then
+        print_info "Running client tests..."
         cd "$PROJECT_ROOT/client"
         
-        # Install dependencies if needed
-        if [ ! -d "node_modules" ]; then
-            print_info "Installing client dependencies..."
-            if [ "$SILENT" = true ]; then
-                npm install --silent 2>/dev/null
-            else
+        if [ -f "package.json" ]; then
+            # Install dependencies if needed
+            if [ ! -d "node_modules" ]; then
+                print_info "Installing client dependencies..."
                 npm install
             fi
-        fi
-        
-        if [ "$SILENT" = true ]; then
-            npm run dev > /dev/null 2>&1 &
-        else
-            npm run dev &
-        fi
-        frontend_pid=$!
-        started_frontend=true
-        
-        # Wait for frontend to be ready
-        print_info "Waiting for frontend to be ready..."
-        local attempts=0
-        while ! nc -z localhost 1420 2>/dev/null; do
-            attempts=$((attempts + 1))
-            if [ $attempts -gt 60 ]; then
-                print_error "Frontend failed to start within 60 seconds"
-                test_failed=true
-                break
+            
+            # Check if test script exists
+            if grep -q '"test":' package.json; then
+                if npm run test -- --passWithNoTests || npm test -- --passWithNoTests; then
+                    print_success "Client tests passed"
+                else
+                    print_error "Client tests failed"
+                    test_failed=true
+                fi
+            else
+                print_warning "No 'test' script found in client, skipping..."
             fi
-            sleep 1
-        done
+        fi
+    fi
+    
+    # Website tests
+    if [ -d "$PROJECT_ROOT/website" ]; then
+        print_info "Running website tests..."
+        cd "$PROJECT_ROOT/website"
         
-        if [ $attempts -le 60 ]; then
-            print_success "Frontend is ready on port 1420!"
-        fi
-    else
-        print_success "Frontend already running on port 1420"
-    fi
-    
-    # ============================================================================
-    # PHASE 3: Run E2E Tests
-    # ============================================================================
-    print_header "Phase 3: Running E2E Tests"
-    
-    cd "$PROJECT_ROOT/client"
-    
-    # Install Cypress dependencies if needed
-    if [ ! -d "node_modules" ]; then
-        print_info "Installing client dependencies..."
-        if [ "$SILENT" = true ]; then
-            npm install --silent 2>/dev/null
-        else
-            npm install
+        if [ -f "package.json" ]; then
+            # Install dependencies if needed
+            if [ ! -d "node_modules" ]; then
+                print_info "Installing website dependencies..."
+                npm install
+            fi
+            
+            # Check if test script exists
+            if grep -q '"test":' package.json; then
+                if npm run test -- --passWithNoTests || npm test -- --passWithNoTests; then
+                    print_success "Website tests passed"
+                else
+                    print_error "Website tests failed"
+                    test_failed=true
+                fi
+            else
+                print_warning "No 'test' script found in website, skipping..."
+            fi
         fi
     fi
-    
-    # Test result tracking
-    local auth_passed=false
-    local security_passed=false
-    local e2e_passed=false
-    
-    # 3a. Auth Tests (Login page tests - always run)
-    print_info "Running Authentication Tests..."
-    if [ "$SILENT" = true ]; then
-        if npx cypress run --spec "cypress/e2e/auth.cy.ts" --headless --quiet 2>/dev/null; then
-            auth_passed=true
-        else
-            test_failed=true
-        fi
-    else
-        if npx cypress run --spec "cypress/e2e/auth.cy.ts" --headless; then
-            auth_passed=true
-            print_success "✅ Authentication tests passed"
-        else
-            print_error "❌ Authentication tests failed"
-            test_failed=true
-        fi
-    fi
-    
-    # 3b. Security Tests (SQL injection, XSS, etc.)
-    print_info "Running Security Tests..."
-    if [ "$SILENT" = true ]; then
-        if npx cypress run --spec "cypress/e2e/security.cy.ts" --headless --quiet 2>/dev/null; then
-            security_passed=true
-        else
-            test_failed=true
-        fi
-    else
-        if npx cypress run --spec "cypress/e2e/security.cy.ts" --headless; then
-            security_passed=true
-            print_success "✅ Security tests passed"
-        else
-            print_error "❌ Security tests failed"
-            test_failed=true
-        fi
-    fi
-    
-    # 3c. Real E2E Tests (Full user journeys - requires backend)
-    print_info "Running Real E2E User Journey Tests..."
-    if [ "$SILENT" = true ]; then
-        if npx cypress run --spec "cypress/e2e/real-e2e/**/*.cy.ts" --headless --quiet 2>/dev/null; then
-            e2e_passed=true
-        else
-            test_failed=true
-        fi
-    else
-        if npx cypress run --spec "cypress/e2e/real-e2e/**/*.cy.ts" --headless; then
-            e2e_passed=true
-            print_success "✅ Real E2E tests passed"
-        else
-            print_error "❌ Real E2E tests failed"
-            test_failed=true
-        fi
-    fi
-    
-    # ============================================================================
-    # PHASE 4: Cleanup
-    # ============================================================================
-    print_header "Phase 4: Cleanup"
-    
-    if [ "$started_frontend" = true ] && [ -n "$frontend_pid" ]; then
-        print_info "Stopping frontend dev server..."
-        kill $frontend_pid 2>/dev/null || true
-        # Also kill any vite processes
-        pkill -f "vite" 2>/dev/null || true
-        print_success "Frontend stopped"
-    fi
-    
-    if [ "$started_backend" = true ]; then
-        print_info "Stopping backend services..."
-        stop_backend
-        stop_infrastructure
-        print_success "Backend stopped"
-    fi
-    
-    # ============================================================================
-    # FINAL REPORT (Always shown, even in silent mode)
-    # ============================================================================
-    echo ""
-    echo -e "${BLUE}═══════════════════════════════════════════════════════════${NC}"
-    echo -e "${BLUE}  📊 Test Results Summary${NC}"
-    echo -e "${BLUE}═══════════════════════════════════════════════════════════${NC}"
-    echo ""
-    
-    # Show individual test results
-    if [ "$auth_passed" = true ]; then
-        echo -e "  ${GREEN}✓${NC} Authentication Tests"
-    else
-        echo -e "  ${RED}✗${NC} Authentication Tests"
-    fi
-    
-    if [ "$security_passed" = true ]; then
-        echo -e "  ${GREEN}✓${NC} Security Tests"
-    else
-        echo -e "  ${RED}✗${NC} Security Tests"
-    fi
-    
-    if [ "$e2e_passed" = true ]; then
-        echo -e "  ${GREEN}✓${NC} Real E2E Tests"
-    else
-        echo -e "  ${RED}✗${NC} Real E2E Tests"
-    fi
-    
-    echo ""
-    
-    if [ "$test_failed" = true ]; then
-        echo -e "${RED}╔════════════════════════════════════════════════════════════╗${NC}"
-        echo -e "${RED}║              ❌ SOME TESTS FAILED                          ║${NC}"
-        echo -e "${RED}╚════════════════════════════════════════════════════════════╝${NC}"
-        if [ "$SILENT" = false ]; then
-            echo ""
-            echo -e "${YELLOW}Run without -s flag to see detailed output.${NC}"
-        fi
-        exit 1
-    else
-        echo -e "${GREEN}╔════════════════════════════════════════════════════════════╗${NC}"
-        echo -e "${GREEN}║              ✅ ALL TESTS PASSED!                          ║${NC}"
-        echo -e "${GREEN}╚════════════════════════════════════════════════════════════╝${NC}"
-        echo ""
-        echo -e "${GREEN}Your application is ready for deployment!${NC}"
-    fi
-}
 
-# ============================================================================
-# Quick Tests (E2E Only - No Backend Unit Tests)
-# ============================================================================
-
-run_quick_tests() {
-    print_header "⚡ Running QUICK E2E Tests (Frontend Only)"
-    
-    load_env
-    
-    local test_failed=false
-    local started_frontend=false
-    
-    # Check if frontend is running
-    if ! nc -z localhost 1420 2>/dev/null; then
-        print_info "Starting frontend dev server..."
+    # Client E2E tests
+    if [ -d "$PROJECT_ROOT/client" ]; then
+        print_info "Running client E2E tests..."
         cd "$PROJECT_ROOT/client"
         
-        if [ ! -d "node_modules" ]; then
-            print_info "Installing dependencies..."
-            npm install --silent 2>/dev/null
-        fi
-        
-        npm run dev > /dev/null 2>&1 &
-        started_frontend=true
-        
-        # Wait for frontend
-        local attempts=0
-        while ! nc -z localhost 1420 2>/dev/null; do
-            attempts=$((attempts + 1))
-            if [ $attempts -gt 30 ]; then
-                print_error "Frontend failed to start"
-                exit 1
+        if [ -f "package.json" ]; then
+            if grep -q '"test:e2e":' package.json; then
+                # Check if services are running
+                local backend_ready=false
+                local frontend_ready=false
+                local started_backend=false
+                local started_frontend=false
+                
+                if nc -z localhost 8080 2>/dev/null; then
+                    backend_ready=true
+                fi
+                
+                if nc -z localhost 1420 2>/dev/null; then
+                    frontend_ready=true
+                fi
+                
+                # Start Backend if needed
+                if [ "$backend_ready" = false ]; then
+                    print_info "Backend not running. Starting backend for E2E tests..."
+                    cd "$PROJECT_ROOT"
+                    start_backend
+                    started_backend=true
+                    backend_ready=true
+                fi
+                
+                # Start Frontend if needed
+                if [ "$frontend_ready" = false ]; then
+                    print_info "Frontend not running. Starting frontend for E2E tests..."
+                    cd "$PROJECT_ROOT/client"
+                    npm run dev &
+                    frontend_pid=$!
+                    started_frontend=true
+                    
+                    print_info "Waiting for frontend to be ready..."
+                    local attempts=0
+                    while ! nc -z localhost 1420 2>/dev/null; do
+                        attempts=$((attempts+1))
+                        if [ $attempts -gt 60 ]; then
+                            print_error "Frontend failed to start"
+                            if [ "$started_backend" = true ]; then stop_backend; fi
+                            if [ "$started_frontend" = true ]; then kill $frontend_pid 2>/dev/null || true; fi
+                            exit 1
+                        fi
+                        sleep 1
+                    done
+                    print_success "Frontend is ready"
+                    frontend_ready=true
+                fi
+                
+                if [ "$backend_ready" = true ] && [ "$frontend_ready" = true ]; then
+                    print_info "Backend and Frontend are running. Starting Cypress..."
+                    cd "$PROJECT_ROOT/client"
+                    if npm run test:e2e -- --headless; then
+                        print_success "Client E2E tests passed"
+                    else
+                        print_error "Client E2E tests failed"
+                        test_failed=true
+                    fi
+                fi
+                
+                # Cleanup
+                if [ "$started_frontend" = true ]; then
+                    print_info "Stopping frontend..."
+                    kill $frontend_pid 2>/dev/null || true
+                fi
+                
+                if [ "$started_backend" = true ]; then
+                    print_info "Stopping backend..."
+                    stop_backend
+                fi
+            else
+                 print_warning "No 'test:e2e' script found in client, skipping..."
             fi
-            sleep 1
-        done
-        print_success "Frontend ready!"
-    else
-        print_success "Frontend already running"
-    fi
-    
-    # Run only auth and security tests (no backend required)
-    cd "$PROJECT_ROOT/client"
-    
-    local auth_passed=false
-    local security_passed=false
-    
-    print_info "Running Authentication Tests..."
-    if npx cypress run --spec "cypress/e2e/auth.cy.ts" --headless --quiet 2>/dev/null; then
-        auth_passed=true
-    fi
-    
-    print_info "Running Security Tests..."
-    if npx cypress run --spec "cypress/e2e/security.cy.ts" --headless --quiet 2>/dev/null; then
-        security_passed=true
-    fi
-    
-    # Cleanup
-    if [ "$started_frontend" = true ]; then
-        pkill -f "vite" 2>/dev/null || true
-    fi
-    
-    # Results
-    echo ""
-    echo -e "${BLUE}═══════════════════════════════════════════════════════════${NC}"
-    echo -e "${BLUE}  📊 Quick Test Results${NC}"
-    echo -e "${BLUE}═══════════════════════════════════════════════════════════${NC}"
-    echo ""
-    
-    if [ "$auth_passed" = true ]; then
-        echo -e "  ${GREEN}✓${NC} Authentication Tests"
-    else
-        echo -e "  ${RED}✗${NC} Authentication Tests"
-        test_failed=true
-    fi
-    
-    if [ "$security_passed" = true ]; then
-        echo -e "  ${GREEN}✓${NC} Security Tests"
-    else
-        echo -e "  ${RED}✗${NC} Security Tests"
-        test_failed=true
+        fi
     fi
     
     echo ""
-    
     if [ "$test_failed" = true ]; then
-        echo -e "${RED}╔════════════════════════════════════════════════════════════╗${NC}"
-        echo -e "${RED}║              ❌ SOME TESTS FAILED                          ║${NC}"
-        echo -e "${RED}╚════════════════════════════════════════════════════════════╝${NC}"
+        print_error "Some tests failed!"
         exit 1
     else
-        echo -e "${GREEN}╔════════════════════════════════════════════════════════════╗${NC}"
-        echo -e "${GREEN}║              ✅ QUICK TESTS PASSED!                        ║${NC}"
-        echo -e "${GREEN}╚════════════════════════════════════════════════════════════╝${NC}"
+        print_success "All tests passed!"
     fi
 }
 
@@ -966,11 +699,7 @@ full_reset() {
     # Stop infrastructure and delete volumes
     print_info "Stopping infrastructure and deleting database volumes..."
     cd "$PROJECT_ROOT"
-    if [ "$SILENT" = true ]; then
-        docker-compose down -v > /dev/null 2>&1 || docker compose down -v > /dev/null 2>&1 || true
-    else
-        docker-compose down -v 2>/dev/null || docker compose down -v 2>/dev/null || true
-    fi
+    docker-compose down -v 2>/dev/null || docker compose down -v 2>/dev/null || true
     
     print_success "All data volumes deleted (database reset)"
     
@@ -989,23 +718,19 @@ full_reset() {
     # Start backend
     start_backend
     
-    # Start website
-    start_website
-    
     # Start client
     start_client
     
-    if [ "$SILENT" = true ]; then
-        echo -e "${GREEN}✓ Full Reset Complete${NC}"
-    else
-        print_header "✅ Full Reset Complete"
-        echo "All services are running with a fresh database."
-        echo ""
-        echo "  Default admin login:"
-        echo "  • Email:    admin@restaurant.com"
-        echo "  • Password: admin123"
-        echo ""
-    fi
+    # Start website
+    start_website
+    
+    print_header "✅ Full Reset Complete"
+    echo "All services are running with a fresh database."
+    echo ""
+    echo "  Default admin login:"
+    echo "  • Email:    admin@restaurant.com"
+    echo "  • Password: admin123"
+    echo ""
 }
 
 # ============================================================================
@@ -1045,20 +770,12 @@ while [[ $# -gt 0 ]]; do
             RUN_TESTS=true
             shift
             ;;
-        --quick-test|-q)
-            RUN_QUICK_TESTS=true
-            shift
-            ;;
         --full)
             FULL_RESET=true
             shift
             ;;
         --stop)
             STOP_ALL=true
-            shift
-            ;;
-        -s|--silent)
-            SILENT=true
             shift
             ;;
         --help|-h)
@@ -1095,11 +812,6 @@ if [ "$RUN_TESTS" = true ]; then
     exit 0
 fi
 
-if [ "$RUN_QUICK_TESTS" = true ]; then
-    run_quick_tests
-    exit 0
-fi
-
 check_requirements
 
 # Load environment variables from .env file
@@ -1121,11 +833,7 @@ if [ "$START_CLIENT" = true ]; then
     start_client
 fi
 
-if [ "$SILENT" = true ]; then
-    echo -e "${GREEN}✓ Startup Complete${NC}"
-else
-    print_header "🚀 Startup Complete"
-    echo "Use './start.sh --stop' to stop all services"
-    echo ""
-fi
+print_header "🚀 Startup Complete"
+echo "Use './start.sh --stop' to stop all services"
+echo "" 
 

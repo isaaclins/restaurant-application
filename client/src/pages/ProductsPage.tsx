@@ -22,6 +22,7 @@ function ProductsPage() {
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [isCreating, setIsCreating] = useState(false);
+  const [togglingId, setTogglingId] = useState<number | null>(null);
 
   const { data: products = [], isLoading: productsLoading } = useQuery({
     queryKey: ['products'],
@@ -34,8 +35,34 @@ function ProductsPage() {
   });
 
   const toggleAvailabilityMutation = useMutation({
-    mutationFn: (id: number) => productsApi.toggleAvailability(id),
-    onSuccess: () => {
+    mutationFn: ({ id, available }: { id: number; available: boolean }) =>
+      productsApi.toggleAvailability(id, available),
+    onMutate: async ({ id, available }) => {
+      setTogglingId(id);
+      await queryClient.cancelQueries({ queryKey: ['products'] });
+      const previousProducts = queryClient.getQueryData<Product[]>(['products']);
+      if (previousProducts) {
+        queryClient.setQueryData<Product[]>(['products'], (old) =>
+          old?.map((p) =>
+            p.id === id
+              ? {
+                  ...p,
+                  available,
+                  isAvailable: available,
+                }
+              : p
+          ) || old
+        );
+      }
+      return { previousProducts };
+    },
+    onError: (_err, _id, context) => {
+      if (context?.previousProducts) {
+        queryClient.setQueryData(['products'], context.previousProducts);
+      }
+    },
+    onSettled: () => {
+      setTogglingId(null);
       queryClient.invalidateQueries({ queryKey: ['products'] });
     },
   });
@@ -140,7 +167,13 @@ function ProductsPage() {
               product={product}
               onEdit={() => setEditingProduct(product)}
               onDelete={() => handleDelete(product)}
-              onToggleAvailability={() => toggleAvailabilityMutation.mutate(product.id)}
+              isToggling={togglingId === product.id}
+              onToggleAvailability={() =>
+                toggleAvailabilityMutation.mutate({
+                  id: product.id,
+                  available: !(product.available ?? product.isAvailable ?? true),
+                })
+              }
             />
           ))}
         </div>
@@ -172,14 +205,17 @@ function ProductCard({
   onEdit,
   onDelete,
   onToggleAvailability,
+  isToggling = false,
 }: {
   product: Product;
   onEdit: () => void;
   onDelete: () => void;
   onToggleAvailability: () => void;
+  isToggling?: boolean;
 }) {
+  const isAvailable = product.available ?? product.isAvailable ?? true;
   return (
-    <div className={`bg-white rounded-lg shadow overflow-hidden ${!product.isAvailable ? 'opacity-60' : ''}`}>
+    <div className={`bg-white rounded-lg shadow overflow-hidden ${!isAvailable ? 'opacity-60' : ''}`}>
       {/* Image */}
       {product.imageUrl ? (
         <img
@@ -210,14 +246,18 @@ function ProductCard({
         {/* Status & Actions */}
         <div className="flex items-center justify-between pt-3 border-t border-gray-100">
           <button
+            type="button"
             onClick={onToggleAvailability}
-            className={`flex items-center px-2 py-1 rounded-full text-xs font-medium transition-all ${
-              product.isAvailable 
-                ? 'bg-green-100 text-green-700 hover:bg-green-200' 
+            disabled={isToggling}
+            className={`flex items-center px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
+              isAvailable
+                ? 'bg-green-100 text-green-700 hover:bg-green-200'
                 : 'bg-red-100 text-red-700 hover:bg-red-200'
-            }`}
+            } ${isToggling ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'}`}
+            aria-pressed={isAvailable}
+            aria-label={isAvailable ? 'Mark product unavailable' : 'Mark product available'}
           >
-            {product.isAvailable ? (
+            {isAvailable ? (
               <>
                 <Eye className="w-3 h-3 mr-1" /> Available
               </>

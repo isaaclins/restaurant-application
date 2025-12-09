@@ -184,7 +184,7 @@ function StatisticsPage() {
   const productStats = useMemo(() => {
     if (!productsData) return null;
     const totalProducts = productsData.length;
-    const activeProducts = productsData.filter((p) => p.isAvailable).length;
+    const activeProducts = productsData.filter((p) => p.available ?? p.isAvailable).length;
     const unavailableProducts = totalProducts - activeProducts;
     
     const byCategory: Record<string, number> = {};

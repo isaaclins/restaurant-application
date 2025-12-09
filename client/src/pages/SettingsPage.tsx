@@ -343,12 +343,12 @@ function HoursRow({
   const [closeTime, setCloseTime] = useState(hour.closeTime);
   const [isClosed, setIsClosed] = useState(hour.isClosed);
 
-  const pushUpdate = (partial: Partial<OpeningHours>) => {
+  const handleSave = () => {
     onUpdate({
       dayOfWeek: hour.dayOfWeek,
-      openTime: partial.openTime ?? openTime,
-      closeTime: partial.closeTime ?? closeTime,
-      isClosed: partial.isClosed ?? isClosed,
+      openTime,
+      closeTime,
+      isClosed,
     });
   };
 
@@ -359,11 +359,7 @@ function HoursRow({
         <input
           type="time"
           value={openTime}
-          onChange={(e) => {
-            const val = e.target.value;
-            setOpenTime(val);
-            pushUpdate({ openTime: val });
-          }}
+          onChange={(e) => setOpenTime(e.target.value)}
           disabled={isClosed}
           className="px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-orange-500 outline-none disabled:bg-gray-100"
         />
@@ -372,11 +368,7 @@ function HoursRow({
         <input
           type="time"
           value={closeTime}
-          onChange={(e) => {
-            const val = e.target.value;
-            setCloseTime(val);
-            pushUpdate({ closeTime: val });
-          }}
+          onChange={(e) => setCloseTime(e.target.value)}
           disabled={isClosed}
           className="px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-orange-500 outline-none disabled:bg-gray-100"
         />
@@ -387,15 +379,17 @@ function HoursRow({
             <input
               type="checkbox"
               checked={isClosed}
-              onChange={(e) => {
-                const val = e.target.checked;
-                setIsClosed(val);
-                pushUpdate({ isClosed: val });
-              }}
+              onChange={(e) => setIsClosed(e.target.checked)}
               className="w-4 h-4 text-orange-500 border-gray-300 rounded focus:ring-orange-500"
             />
             <span className="ml-2 text-sm text-gray-600">Closed</span>
           </label>
+          <button
+            onClick={handleSave}
+            className="p-1 text-orange-500 hover:bg-orange-50 rounded"
+          >
+            <Save className="w-4 h-4" />
+          </button>
         </div>
       </td>
     </tr>

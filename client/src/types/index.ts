@@ -3,6 +3,12 @@
 export type OrderStatus = 'PENDING' | 'CONFIRMED' | 'IN_PROGRESS' | 'READY' | 'DELIVERED' | 'PICKED_UP' | 'CANCELLED';
 export type OrderType = 'PICKUP' | 'DELIVERY' | 'DINE_IN';
 
+export interface DeliveryAddress {
+  street: string;
+  city?: string;
+  postalCode?: string;
+}
+
 export interface OrderItem {
   id: number;
   productId: number;
@@ -20,6 +26,8 @@ export interface Order {
   customerName: string;
   customerEmail?: string;
   customerPhone?: string;
+  // Nested delivery address (as returned by backend)
+  deliveryAddress?: DeliveryAddress;
   // Delivery address fields
   deliveryStreet?: string;
   deliveryCity?: string;
@@ -59,8 +67,12 @@ export interface Product {
   categoryId: number;
   categoryName: string;
   imageUrl?: string;
-  isAvailable: boolean;
-  isActive: boolean;
+  // Backend fields
+  available: boolean;
+  active: boolean;
+  // Legacy aliases used in the UI
+  isAvailable?: boolean;
+  isActive?: boolean;
   allergens?: string[];
   preparationTime?: number;
   createdAt: string;
@@ -78,8 +90,8 @@ export interface CreateProductRequest {
 }
 
 export interface UpdateProductRequest extends CreateProductRequest {
-  isAvailable?: boolean;
-  isActive?: boolean;
+  available?: boolean;
+  active?: boolean;
 }
 
 // Receipt Types
@@ -144,7 +156,7 @@ export interface OpeningHours {
 export interface DeliveryArea {
   id: number;
   postalCode: string;
-  cityName: string;
+  city: string;
   deliveryFee: number;
   minimumOrderValue: number;
   isActive: boolean;

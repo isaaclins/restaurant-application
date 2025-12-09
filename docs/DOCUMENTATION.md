@@ -1529,13 +1529,6 @@ const handleDownload = async (receipt: Receipt) => {
 
 ---
 
-### 08.12.2025 | KDS manuelle Orders: UX & Payload Fix
-
-- Create-Order-Modal verbreitert (2-Spalten: links Produktauswahl, rechts Sticky Summary).
-- Produktauswahl: große Kacheln, Kategorienfilter, Preise prominent; Reset bei Schließen/Cancel.
-- Order-Summary: +/–, Total, Notes, Alert bei API-Fehler, “Creating…” während Submit.
-- Manuelle Orders gehen jetzt an `/api/orders` mit Pflichtfeldern: `customerName`, `orderType`, Items (`productId`, `productName`, `quantity`, `unitPrice`, `totalPrice`), `totalPrice`.
-
 ## 🛠️ Technische Entscheidungen
 
 ### Entscheidung 1: Datenbank-Strategie
@@ -1934,6 +1927,36 @@ style={{ height: `${heightPx}px` }}
 
 ---
 
+### 09.12.2025 | KDS/Products Alignment & Test Cleanup
+
+#### ✅ Erfolge
+
+- [x] KDS manuelle Bestellungen filtern nun aktiv/verfügbare Produkte, Sortierung umschaltbar (Zeit ↔ Items, asc/desc), PENDING Orders werden automatisch bestätigt; Orders ohne Items werden ausgeblendet.
+- [x] Product Page: Optimistisches Availability-Toggling mit Fallback auf `available`/`isAvailable`, besserer Button-State und Accessibility.
+- [x] Settings Page: Stunden-Zeilen speichern explizit per Save-Button statt sofortigem Autosave; Fehlermeldungen/Retry für fehlende Settings-Service.
+- [x] Website About Page lädt Restaurant-Daten, Öffnungszeiten und Liefergebiete direkt vom Settings-Service; neue Settings-Typen decken Legacy-Felder ab.
+
+#### 🐛 Fixes
+
+- Statistik-Karten zählen aktive Produkte korrekt über `available`/`isAvailable`.
+- Products API normalisiert Backend-Felder (`available`/`active`) für einheitliche UI.
+- Start-Script bereinigt (Silent/Quick-Test Optionen entfernt, robustere .env-Parse, Infrastructure-Output ergänzt Kafka UI).
+
+#### 🧪 Tests
+
+- Cypress Setup verschlankt: Login wird gestubbt, Fixtures aktualisiert, globale Intercepts in `support/e2e.ts`, Auth-Suite deckt UI/Validation ab ohne echtes Backend.
+- start.sh E2E Runner startet Backend/Frontend bei Bedarf automatisch vor Cypress Run.
+
+#### 📁 Neue/aktualisierte Dateien
+
+- `client/cypress/**` (Config, Auth-Spec, Commands, Fixtures, Support)
+- `client/src/pages/KDSPage.tsx`, `ProductsPage.tsx`, `SettingsPage.tsx`, `StatisticsPage.tsx`, `src/api/products.ts`, `src/types/index.ts`
+- `website/src/pages/AboutPage.tsx`, `website/src/types/settings.ts`
+- `start.sh`
+- `DEAL.md`, `PROMPT.md`
+
+---
+
 ## 🔗 Referenzen & Ressourcen
 
 ### Dokumentation
@@ -1956,4 +1979,4 @@ style={{ height: `${heightPx}px` }}
 
 ---
 
-_Letzte Aktualisierung: 06.12.2025_
+_Letzte Aktualisierung: 09.12.2025_

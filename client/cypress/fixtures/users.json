@@ -2,13 +2,13 @@
   "admin": {
     "username": "admin",
     "password": "admin123",
-    "email": "admin@restaurant.com",
+    "email": "admin@restaurant.local",
     "role": "ADMIN"
   },
   "staff": {
     "username": "staff",
     "password": "staff123",
-    "email": "staff@restaurant.com",
+    "email": "staff@restaurant.local",
     "role": "STAFF"
   },
   "invalid": {

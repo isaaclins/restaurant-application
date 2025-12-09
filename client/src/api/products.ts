@@ -14,40 +14,53 @@ export interface UpdateCategoryRequest {
 }
 
 export const productsApi = {
+  // Normalize backend product shape to frontend expectations
+  normalize(product: any): Product {
+    const available = product.available ?? product.isAvailable ?? true;
+    const active = product.active ?? product.isActive ?? true;
+    return {
+      ...product,
+      available,
+      active,
+      isAvailable: available,
+      isActive: active,
+    };
+  },
+
   // Get all products
   getProducts: async (): Promise<Product[]> => {
     const response = await api.get('/api/products');
-    return response.data;
+    return response.data.map(productsApi.normalize);
   },
 
   // Get products by category
   getProductsByCategory: async (categoryId: number): Promise<Product[]> => {
     const response = await api.get(`/api/products/category/${categoryId}`);
-    return response.data;
+    return response.data.map(productsApi.normalize);
   },
 
   // Get single product
   getProduct: async (id: number): Promise<Product> => {
     const response = await api.get(`/api/products/${id}`);
-    return response.data;
+    return productsApi.normalize(response.data);
   },
 
   // Create product
   createProduct: async (product: CreateProductRequest): Promise<Product> => {
     const response = await api.post('/api/products', product);
-    return response.data;
+    return productsApi.normalize(response.data);
   },
 
   // Update product
   updateProduct: async (id: number, product: UpdateProductRequest): Promise<Product> => {
     const response = await api.put(`/api/products/${id}`, product);
-    return response.data;
+    return productsApi.normalize(response.data);
   },
 
   // Toggle availability
-  toggleAvailability: async (id: number): Promise<Product> => {
-    const response = await api.put(`/api/products/${id}/availability`);
-    return response.data;
+  toggleAvailability: async (id: number, available: boolean): Promise<Product> => {
+    const response = await api.put(`/api/products/${id}/availability`, { available });
+    return productsApi.normalize(response.data);
   },
 
   // Delete product

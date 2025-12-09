@@ -10,7 +10,9 @@ import {
   MapPin,
   CreditCard,
   Check,
+  Minus,
   Plus,
+  Search,
   Settings,
   ArrowUpDown,
   RefreshCw,
@@ -759,126 +761,164 @@ interface CreateOrderModalProps {
   onClose: () => void;
   onSubmit: (order: Partial<Order>) => void;
   products: Product[];
-  isSubmitting: boolean;
 }
 
-function CreateOrderModal({ isOpen, onClose, onSubmit, products, isSubmitting }: CreateOrderModalProps) {
-  const [customerName, setCustomerName] = useState('Walk-in Guest');
+function CreateOrderModal({ isOpen, onClose, onSubmit, products }: CreateOrderModalProps) {
+  const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
   const [customerAddress, setCustomerAddress] = useState('');
   const [orderType, setOrderType] = useState<'PICKUP' | 'DELIVERY'>('PICKUP');
   const [notes, setNotes] = useState('');
-  const [searchTerm, setSearchTerm] = useState('');
+  const [productSearch, setProductSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string>('All');
-  const [itemQuantities, setItemQuantities] = useState<Record<number, number>>({});
+  const [selectedItems, setSelectedItems] = useState<Record<number, number>>({});
 
-  const categories = useMemo(() => {
-    const unique = Array.from(new Set(products.map((p) => p.categoryName || 'Other')));
-    return ['All', ...unique];
-  }, [products]);
-
-  const filteredProducts = useMemo(() => {
-    return products.filter((product) => {
-      const categoryName = product.categoryName ?? '';
-      const matchesCategory = categoryFilter === 'All' || product.categoryName === categoryFilter;
-      const matchesSearch =
-        !searchTerm ||
-        product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        categoryName.toLowerCase().includes(searchTerm.toLowerCase());
-      const isAvailable = product.available ?? product.isAvailable ?? true;
-      return matchesCategory && matchesSearch && isAvailable;
-    });
-  }, [products, categoryFilter, searchTerm]);
-
-  const selectedItems = useMemo(() => {
-    return Object.entries(itemQuantities)
-      .map(([productId, quantity]) => {
-        const product = products.find((p) => p.id === Number(productId));
-        if (!product || quantity <= 0) return null;
-        return { product, quantity };
-      })
-      .filter((item): item is { product: Product; quantity: number } => Boolean(item));
-  }, [itemQuantities, products]);
-
-  const totalPrice = useMemo(
-    () =>
-      selectedItems.reduce((sum, item) => sum + item.product.price * item.quantity, 0),
-    [selectedItems],
+  const categories = useMemo(
+    () => ['All', ...Array.from(new Set(products.map((p) => p.categoryName || 'Other')))],
+    [products]
   );
 
-  const adjustQuantity = (productId: number, delta: number) => {
-    setItemQuantities((prev) => {
-      const nextQty = Math.max(0, (prev[productId] ?? 0) + delta);
-      if (nextQty === 0) {
-        const { [productId]: _removed, ...rest } = prev;
-        return rest;
+  const filteredProducts = useMemo(() => {
+    const availableProducts = products.filter(
+      (product) => (product.active ?? true) && (product.available ?? product.isAvailable ?? true)
+    );
+
+    const search = productSearch.trim().toLowerCase();
+
+    return availableProducts.filter((product) => {
+      const matchesCategory =
+        categoryFilter === 'All' || (product.categoryName || 'Other') === categoryFilter;
+      const matchesSearch =
+        search.length === 0 ||
+        product.name.toLowerCase().includes(search) ||
+        (product.description || '').toLowerCase().includes(search);
+
+      return matchesCategory && matchesSearch;
+    });
+  }, [products, categoryFilter, productSearch]);
+
+  const selectedProducts = useMemo(
+    () => products.filter((product) => selectedItems[product.id]),
+    [products, selectedItems]
+  );
+
+  const totalPrice = useMemo(() => {
+    return selectedProducts.reduce((sum, product) => {
+      const qty = selectedItems[product.id] || 0;
+      const price = typeof product.price === 'number' ? product.price : 0;
+      return sum + qty * price;
+    }, 0);
+  }, [selectedProducts, selectedItems]);
+
+  const handleQuantityChange = (productId: number, delta: number) => {
+    setSelectedItems((prev) => {
+      const next = { ...prev };
+      const newQty = (prev[productId] || 0) + delta;
+
+      if (newQty <= 0) {
+        delete next[productId];
+      } else {
+        next[productId] = newQty;
       }
-      return { ...prev, [productId]: nextQty };
+
+      return next;
     });
   };
 
   const resetForm = () => {
-    setCustomerName('Walk-in Guest');
+    setCustomerName('');
     setCustomerPhone('');
     setCustomerAddress('');
     setOrderType('PICKUP');
     setNotes('');
-    setSearchTerm('');
+    setProductSearch('');
     setCategoryFilter('All');
-    setItemQuantities({});
+    setSelectedItems({});
   };
 
-  useEffect(() => {
-    if (!isOpen) {
-      resetForm();
-    }
-  }, [isOpen]);
+  const handleClose = () => {
+    resetForm();
+    onClose();
+  };
 
   if (!isOpen) return null;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (selectedItems.length === 0) {
-      alert('Add at least one product to the order.');
+
+    if (!customerName.trim()) {
+      alert('Customer name is required');
       return;
     }
 
-    const resolvedCustomerName = customerName.trim() || 'Walk-in Guest';
-    const resolvedPhone = customerPhone.trim() || undefined;
-    const resolvedAddress = customerAddress.trim() || undefined;
+    if (orderType === 'DELIVERY' && !customerAddress.trim()) {
+      alert('Delivery address is required for delivery orders');
+      return;
+    }
 
-    const payload = {
-      customerName: resolvedCustomerName,
-      customerPhone: resolvedPhone,
-      customerAddress: orderType === 'DELIVERY' ? resolvedAddress : undefined,
-      orderType,
-      notes: notes.trim() || undefined,
-      items: selectedItems.map(({ product, quantity }) => ({
+    if (selectedProducts.length === 0) {
+      alert('Select at least one product for the order');
+      return;
+    }
+
+    const items = selectedProducts.map((product) => {
+      const quantity = selectedItems[product.id] || 0;
+      const price = typeof product.price === 'number' ? product.price : 0;
+      const itemTotal = Number((price * quantity).toFixed(2));
+
+      return {
         productId: product.id,
         productName: product.name,
         quantity,
-        unitPrice: product.price,
-        totalPrice: Number((product.price * quantity).toFixed(2)),
-      })),
+        unitPrice: price,
+        totalPrice: itemTotal,
+      };
+    });
+
+    const orderPayload: Partial<Order> = {
+      customerName: customerName.trim(),
+      customerPhone: customerPhone || undefined,
+      customerAddress: orderType === 'DELIVERY' ? customerAddress.trim() : undefined,
+      orderType,
+      notes: notes.trim() || undefined,
+      items,
       totalPrice: Number(totalPrice.toFixed(2)),
     };
 
-    onSubmit(payload as any);
+    if (orderType === 'DELIVERY') {
+      orderPayload.deliveryAddress = {
+        street: customerAddress.trim(),
+      };
+    }
+
+    onSubmit(orderPayload);
+    handleClose();
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-6xl max-h-[88vh] overflow-hidden flex flex-col">
-        <div className="p-4 border-b border-gray-200">
-          <h2 className="text-lg font-bold">Create New Order</h2>
+    <div className="fixed inset-0 bg-black/60 z-50 flex">
+      <div className="bg-white w-full h-full max-w-none lg:max-w-6xl mx-auto rounded-none lg:rounded-2xl shadow-2xl flex flex-col overflow-hidden">
+        <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+          <div>
+            <div className="text-xl font-bold text-gray-900">Create New Order</div>
+            <div className="text-sm text-gray-500">Full-screen quick entry for counter staff</div>
+          </div>
+          <button
+            type="button"
+            onClick={handleClose}
+            className="px-4 py-2 text-gray-600 hover:text-gray-900 text-lg"
+          >
+            Close
+          </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4 p-4 h-full max-h-[calc(88vh-64px)]">
-          <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 items-start flex-1 min-h-0 overflow-hidden">
-            <div className="xl:col-span-2 space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <form onSubmit={handleSubmit} className="flex-1 flex flex-col overflow-hidden">
+          <div className="flex-1 overflow-hidden px-6 pb-6 pt-4">
+            <div className="h-full flex flex-col lg:flex-row gap-6">
+              {/* Customer & order info */}
+              <div className="bg-gray-50 border border-gray-200 rounded-2xl p-4 space-y-4 w-full lg:max-w-sm">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-base font-semibold text-gray-800 mb-1">
                     Customer Name *
                   </label>
                   <input
@@ -886,240 +926,253 @@ function CreateOrderModal({ isOpen, onClose, onSubmit, products, isSubmitting }:
                     value={customerName}
                     onChange={(e) => setCustomerName(e.target.value)}
                     required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-3 text-lg border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
+
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-base font-semibold text-gray-800 mb-1">
                     Phone
                   </label>
                   <input
                     type="tel"
                     value={customerPhone}
                     onChange={(e) => setCustomerPhone(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-3 text-lg border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
-              </div>
 
-              <div className="flex flex-wrap items-center gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-base font-semibold text-gray-800 mb-2">
                     Order Type
                   </label>
-                  <div className="flex space-x-4">
-                    <label className="flex items-center">
-                      <input
-                        type="radio"
-                        checked={orderType === 'PICKUP'}
-                        onChange={() => setOrderType('PICKUP')}
-                        className="mr-2"
-                      />
-                      Pickup
-                    </label>
-                    <label className="flex items-center">
-                      <input
-                        type="radio"
-                        checked={orderType === 'DELIVERY'}
-                        onChange={() => setOrderType('DELIVERY')}
-                        className="mr-2"
-                      />
-                      Delivery
-                    </label>
-                  </div>
-                </div>
-              </div>
-
-              {orderType === 'DELIVERY' && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Delivery Address *
-                  </label>
-                  <input
-                    type="text"
-                    value={customerAddress}
-                    onChange={(e) => setCustomerAddress(e.target.value)}
-                    required={orderType === 'DELIVERY'}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-              )}
-
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <div className="h-5" />
-                  {selectedItems.length > 0 && (
+                  <div className="grid grid-cols-2 gap-3">
                     <button
                       type="button"
-                      onClick={() => setItemQuantities({})}
-                      className="text-xs text-blue-600 hover:text-blue-700 font-medium"
-                    >
-                      Clear
-                    </button>
-                  )}
-                </div>
-
-                <div className="flex flex-wrap gap-2">
-                  {categories.map((cat) => (
-                    <button
-                      key={cat}
-                      type="button"
-                      onClick={() => setCategoryFilter(cat)}
-                      className={`px-3 py-1 rounded-full text-sm border transition ${
-                        categoryFilter === cat
-                          ? 'bg-blue-600 text-white border-blue-600'
-                          : 'bg-gray-100 text-gray-700 border-gray-200 hover:border-gray-300'
+                      onClick={() => setOrderType('PICKUP')}
+                      className={`py-3 rounded-xl border text-lg font-semibold transition ${
+                        orderType === 'PICKUP'
+                          ? 'border-blue-500 bg-blue-50 text-blue-700'
+                          : 'border-gray-300 text-gray-700 hover:border-blue-300'
                       }`}
                     >
-                      {cat}
+                      Pickup
                     </button>
-                  ))}
+                    <button
+                      type="button"
+                      onClick={() => setOrderType('DELIVERY')}
+                      className={`py-3 rounded-xl border text-lg font-semibold transition ${
+                        orderType === 'DELIVERY'
+                          ? 'border-blue-500 bg-blue-50 text-blue-700'
+                          : 'border-gray-300 text-gray-700 hover:border-blue-300'
+                      }`}
+                    >
+                      Delivery
+                    </button>
+                  </div>
                 </div>
 
-                <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 max-h-[48vh] overflow-y-auto pr-2 pb-6">
-                  {filteredProducts.map((product) => {
-                    const qty = itemQuantities[product.id] ?? 0;
-                    return (
-                      <div
-                        key={product.id}
-                        role="button"
-                        tabIndex={0}
-                        onClick={() => adjustQuantity(product.id, 1)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' || e.key === ' ') adjustQuantity(product.id, 1);
-                        }}
-                        className={`relative rounded-lg border p-3.5 shadow-sm cursor-pointer transition min-h-[180px] overflow-visible ${
-                          qty > 0 ? 'border-blue-500 bg-blue-50' : 'border-gray-200 bg-white hover:border-blue-200'
-                        }`}
-                      >
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="space-y-1">
-                            <div className="text-sm font-semibold text-gray-900 leading-tight">{product.name}</div>
-                            <div className="text-xs text-gray-500">{product.categoryName}</div>
-                            {product.description && (
-                              <div className="text-[11px] text-gray-400 line-clamp-2">{product.description}</div>
-                            )}
-                          </div>
-                        </div>
-                        <div className="mt-4 flex items-center justify-center">
-                          <div className="px-4 py-2 rounded-lg bg-blue-50 text-blue-700 font-semibold text-sm border border-blue-100">
-                            CHF {product.price.toFixed(2)}
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
+                {orderType === 'DELIVERY' && (
+                  <div>
+                    <label className="block text-base font-semibold text-gray-800 mb-1">
+                      Delivery Address *
+                    </label>
+                    <input
+                      type="text"
+                      value={customerAddress}
+                      onChange={(e) => setCustomerAddress(e.target.value)}
+                      required={orderType === 'DELIVERY'}
+                      className="w-full px-4 py-3 text-lg border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+                )}
 
-                  {filteredProducts.length === 0 && (
-                    <div className="col-span-2 md:col-span-3 xl:col-span-4 text-center text-sm text-gray-500 py-4 border border-dashed border-gray-200 rounded-lg">
-                      No products found. Clear filters to see everything.
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-3 bg-blue-50/60 border border-blue-100 rounded-lg p-4 xl:sticky xl:top-4 max-h-[calc(88vh-140px)] overflow-y-auto">
-              <div className="flex items-start justify-between">
                 <div>
-                  <div className="text-sm font-semibold text-gray-900">Order summary</div>
-                  <div className="text-xs text-gray-600">Quick + / - for greasy hands.</div>
+                  <label className="block text-base font-semibold text-gray-800 mb-1">
+                    Notes
+                  </label>
+                  <textarea
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    rows={4}
+                    className="w-full px-4 py-3 text-lg border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
                 </div>
-                {selectedItems.length > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => setItemQuantities({})}
-                    className="text-xs text-blue-600 hover:text-blue-700 font-medium"
-                  >
-                    Clear all
-                  </button>
-                )}
               </div>
 
-              <div className="flex items-center justify-between text-base font-semibold text-gray-900">
-                <span>Total</span>
-                <span>CHF {totalPrice.toFixed(2)}</span>
-              </div>
-
-              <div className="bg-white border border-blue-100 rounded-md p-2 max-h-[60vh] overflow-y-auto space-y-2">
-                {selectedItems.length === 0 && (
-                  <div className="text-sm text-gray-500 text-center py-6">
-                    Tap a product to add it. It will appear here.
+              {/* Products */}
+              <div className="flex-1 flex flex-col bg-gray-50 border border-gray-200 rounded-2xl p-4 overflow-hidden">
+                <div className="flex flex-col md:flex-row md:items-center md:space-x-3 space-y-3 md:space-y-0 mb-3">
+                  <div className="relative flex-1">
+                    <Search className="w-5 h-5 text-gray-400 absolute left-4 top-3.5" />
+                    <input
+                      type="text"
+                      value={productSearch}
+                      onChange={(e) => setProductSearch(e.target.value)}
+                      placeholder="Search products by name or description"
+                      className="w-full pl-11 pr-4 py-3 text-lg border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
                   </div>
-                )}
-                {selectedItems.map(({ product, quantity }) => (
-                  <div
-                    key={product.id}
-                    className="flex items-center justify-between gap-3 rounded-md border border-gray-200 px-3 py-2 shadow-sm"
+                  <select
+                    value={categoryFilter}
+                    onChange={(e) => setCategoryFilter(e.target.value)}
+                    className="px-4 py-3 text-lg border border-gray-300 rounded-xl bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full md:w-52"
                   >
-                    <div className="flex-1 min-w-0">
-                      <div className="text-sm font-semibold text-gray-900 truncate">{product.name}</div>
-                      <div className="text-xs text-gray-500">
-                        CHF {product.price.toFixed(2)} · {product.categoryName}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => adjustQuantity(product.id, -1)}
-                        className="w-8 h-8 rounded-md border border-gray-300 text-gray-700 leading-none hover:bg-gray-50"
-                      >
-                        -
-                      </button>
-                      <div className="min-w-[32px] text-center text-sm font-semibold text-gray-900">
-                        x{quantity}
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => adjustQuantity(product.id, 1)}
-                        className="w-8 h-8 rounded-md bg-blue-600 text-white leading-none hover:bg-blue-700"
-                      >
-                        +
-                      </button>
-                    </div>
+                    {categories.map((category) => (
+                      <option key={category} value={category}>
+                        {category}
+                      </option>
+                    ))}
+                  </select>
+                  <div className="px-4 py-3 bg-white rounded-xl border border-gray-200 text-lg font-semibold text-gray-800">
+                    {selectedProducts.length} items
                   </div>
-                ))}
-              </div>
+                </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Notes
-                </label>
-                <textarea
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
+                <div className="flex-1 overflow-hidden flex flex-col gap-3">
+                  <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 overflow-auto pr-1">
+                    {filteredProducts.length === 0 ? (
+                      <div className="col-span-full text-center text-gray-400 text-lg py-6">
+                        No matching products
+                      </div>
+                    ) : (
+                      filteredProducts.map((product) => {
+                        const quantity = selectedItems[product.id] || 0;
+                        const price = typeof product.price === 'number' ? product.price : 0;
+                        return (
+                          <button
+                            key={product.id}
+                            type="button"
+                            onClick={() => handleQuantityChange(product.id, 1)}
+                            className={`text-left border rounded-2xl p-4 bg-white shadow-sm transition focus:outline-none ${
+                              quantity > 0 ? 'ring-2 ring-blue-300 border-blue-200' : 'border-gray-200 hover:border-blue-200'
+                            }`}
+                          >
+                            <div className="text-lg font-bold text-gray-900 line-clamp-1">
+                              {product.name}
+                            </div>
+                            <div className="text-sm text-gray-500 line-clamp-1">
+                              {product.categoryName || 'Other'}
+                            </div>
+                            <div className="text-lg text-orange-600 font-semibold mt-1">
+                              CHF {price.toFixed(2)}
+                            </div>
+                            <div className="flex items-center justify-between mt-3">
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleQuantityChange(product.id, -1);
+                                }}
+                                disabled={quantity === 0}
+                                className={`w-11 h-11 flex items-center justify-center rounded-xl border text-xl font-bold ${
+                                  quantity === 0
+                                    ? 'text-gray-300 border-gray-200'
+                                    : 'text-gray-700 border-gray-300 hover:border-gray-400'
+                                }`}
+                              >
+                                <Minus className="w-5 h-5" />
+                              </button>
+                              <span className="text-2xl font-semibold text-gray-900">{quantity}</span>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleQuantityChange(product.id, 1);
+                                }}
+                                className="w-11 h-11 flex items-center justify-center rounded-xl border border-blue-500 text-blue-600 hover:bg-blue-50 text-xl font-bold"
+                              >
+                                <Plus className="w-5 h-5" />
+                              </button>
+                            </div>
+                          </button>
+                        );
+                      })
+                    )}
+                  </div>
+
+                  <div className="bg-white border border-gray-200 rounded-2xl p-4 space-y-3 max-h-56 overflow-auto">
+                    {selectedProducts.length === 0 ? (
+                      <div className="text-lg text-gray-500 text-center">
+                        No products selected yet. Tap to add.
+                      </div>
+                    ) : (
+                      <>
+                        {selectedProducts.map((product) => {
+                          const quantity = selectedItems[product.id] || 0;
+                          const price = typeof product.price === 'number' ? product.price : 0;
+                          return (
+                            <div
+                              key={`selected-${product.id}`}
+                              className="flex items-center justify-between text-lg"
+                            >
+                              <div>
+                                <div className="font-semibold text-gray-900">{product.name}</div>
+                                <div className="text-sm text-gray-500">
+                                  {quantity} x CHF {price.toFixed(2)}
+                                </div>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <button
+                                  type="button"
+                                  onClick={() => handleQuantityChange(product.id, -1)}
+                                  className="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-300 text-gray-700 hover:border-gray-400 text-xl"
+                                >
+                                  <Minus className="w-5 h-5" />
+                                </button>
+                                <span className="font-semibold text-gray-900 w-8 text-center">
+                                  {quantity}
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => handleQuantityChange(product.id, 1)}
+                                  className="w-10 h-10 flex items-center justify-center rounded-lg border border-blue-500 text-blue-600 hover:bg-blue-50 text-xl"
+                                >
+                                  <Plus className="w-5 h-5" />
+                                </button>
+                                <div className="w-24 text-right font-semibold text-gray-900">
+                                  CHF {(price * quantity).toFixed(2)}
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                        <div className="flex items-center justify-between pt-2 border-t border-gray-200 text-xl font-bold">
+                          <span>Total</span>
+                          <span>CHF {totalPrice.toFixed(2)}</span>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
 
-          <div className="flex space-x-3 pt-2">
+          <div className="px-6 py-4 border-t border-gray-200 bg-white flex flex-col md:flex-row gap-3 md:items-center">
+            <div className="w-full md:w-1/3">
+              <div className="px-4 py-3 bg-blue-50 text-blue-800 rounded-xl text-lg font-bold flex items-center justify-between">
+                <span>Total</span>
+                <span>CHF {totalPrice.toFixed(2)}</span>
+              </div>
+            </div>
             <button
               type="button"
-              onClick={() => {
-                resetForm();
-                onClose();
-              }}
-              className="flex-1 py-3 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 transition"
+              onClick={handleClose}
+              className="w-full md:w-1/3 py-4 border border-gray-300 rounded-xl text-lg font-semibold text-gray-800 hover:bg-gray-50 transition"
             >
               Cancel
             </button>
             <button
               type="submit"
-              disabled={selectedItems.length === 0 || isSubmitting}
-              className={`flex-1 py-3 rounded-lg font-semibold transition ${
-                selectedItems.length === 0 || isSubmitting
-                  ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+              disabled={selectedProducts.length === 0}
+              className={`w-full md:flex-1 py-4 rounded-xl text-lg font-semibold transition ${
+                selectedProducts.length === 0
+                  ? 'bg-blue-200 text-white cursor-not-allowed'
                   : 'bg-blue-600 text-white hover:bg-blue-700'
               }`}
             >
-              {selectedItems.length === 0
-                ? 'Add items to continue'
-                : isSubmitting
-                  ? 'Creating...'
-                  : `Create Order (${selectedItems.length})`}
+              Create Order
             </button>
           </div>
         </form>
@@ -1196,14 +1249,6 @@ function KDSPage() {
     mutationFn: (order: Partial<Order>) => ordersApi.createManualOrder(order),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['orders'] });
-      setShowCreateModal(false);
-    },
-    onError: (error: any) => {
-      const message =
-        error?.response?.data?.error?.message ||
-        error?.message ||
-        'Could not create order. Please try again.';
-      alert(message);
     },
   });
 
@@ -1408,7 +1453,6 @@ function KDSPage() {
         onClose={() => setShowCreateModal(false)}
         onSubmit={handleCreateOrder}
         products={products}
-        isSubmitting={createOrderMutation.isPending}
       />
     </div>
   );

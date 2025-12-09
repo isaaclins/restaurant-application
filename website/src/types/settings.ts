@@ -11,9 +11,11 @@ export interface OpeningHoursEntry {
 export interface DeliveryArea {
   id: number;
   postalCode: string;
-  city: string;
-  deliveryFee: number;
-  minimumOrder: number;
+  city?: string;
+  cityName?: string; // legacy alias
+  deliveryFee?: number;
+  minimumOrderValue?: number;
+  minimumOrder?: number; // legacy alias
 }
 
 export interface RestaurantSettings {

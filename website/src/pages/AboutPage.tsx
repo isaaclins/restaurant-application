@@ -97,8 +97,9 @@ export default function AboutPage() {
           <ul>
             {deliveryAreas.map((area) => (
               <li key={area.id}>
-                {area.postalCode} {area.city} — Fee: {area.deliveryFee ?? 0} / Min:{' '}
-                {area.minimumOrder ?? 0}
+                {area.postalCode}{' '}
+                {area.city || area.cityName || ''} — Fee: {area.deliveryFee ?? 0} / Min:{' '}
+                {area.minimumOrderValue ?? area.minimumOrder ?? 0}
               </li>
             ))}
           </ul>
