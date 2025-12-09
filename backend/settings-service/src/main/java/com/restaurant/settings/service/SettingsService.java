@@ -207,7 +207,7 @@ public class SettingsService {
 
         DeliveryArea area = DeliveryArea.builder()
                 .postalCode(request.getPostalCode())
-                .areaName(request.getAreaName())
+                .areaName(request.getCity())
                 .deliveryFee(request.getDeliveryFee() != null ? request.getDeliveryFee() : BigDecimal.ZERO)
                 .minimumOrderValue(request.getMinimumOrderValue())
                 .estimatedDeliveryMinutes(request.getEstimatedDeliveryMinutes())
@@ -229,7 +229,7 @@ public class SettingsService {
                 .orElseThrow(() -> new SettingsNotFoundException("Delivery area not found: " + id));
 
         area.setPostalCode(request.getPostalCode());
-        area.setAreaName(request.getAreaName());
+        area.setAreaName(request.getCity());
         if (request.getDeliveryFee() != null)
             area.setDeliveryFee(request.getDeliveryFee());
         if (request.getMinimumOrderValue() != null)
@@ -384,7 +384,7 @@ public class SettingsService {
         return DeliveryAreaResponse.builder()
                 .id(area.getId())
                 .postalCode(area.getPostalCode())
-                .areaName(area.getAreaName())
+                .city(area.getAreaName())
                 .deliveryFee(area.getDeliveryFee())
                 .minimumOrderValue(area.getMinimumOrderValue())
                 .estimatedDeliveryMinutes(area.getEstimatedDeliveryMinutes())

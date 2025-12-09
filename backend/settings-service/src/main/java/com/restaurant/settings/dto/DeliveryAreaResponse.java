@@ -1,5 +1,6 @@
 package com.restaurant.settings.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -17,7 +18,8 @@ import java.math.BigDecimal;
 public class DeliveryAreaResponse {
     private Long id;
     private String postalCode;
-    private String areaName;
+    @JsonProperty("city")
+    private String city;
     private BigDecimal deliveryFee;
     private BigDecimal minimumOrderValue;
     private Integer estimatedDeliveryMinutes;

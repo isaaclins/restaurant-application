@@ -1,5 +1,7 @@
 package com.restaurant.settings.dto;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.AllArgsConstructor;
@@ -21,7 +23,9 @@ public class DeliveryAreaRequest {
     @NotBlank(message = "Postal code is required")
     private String postalCode;
 
-    private String areaName;
+    @JsonProperty("city")
+    @JsonAlias("areaName") // backward compatibility with older clients
+    private String city;
 
     @PositiveOrZero(message = "Delivery fee must be zero or positive")
     private BigDecimal deliveryFee;
