@@ -1734,10 +1734,12 @@ Keine Fehlermeldung; UI reagierte nicht sichtbar.
 Die Handler-Logik setzte nur den Status auf `CANCELLED` über `updateStatusMutation` und rief die eigentliche Delete-API nicht auf. Dadurch wurden Bestellungen nicht wirklich gelöscht; zudem gab es nur einen generischen Confirm-Dialog.
 
 **Lösung**:
+
 - Neue `deleteOrderMutation` mit `ordersApi.deleteOrder` ergänzt.
 - Delete-Handler zeigt jetzt einen klaren Confirm-Dialog mit Ticket-Nummer und ruft die Delete-API auf; lokale Item-Checks werden vorher entfernt und der Query-Cache invalidiert, Auswahl wird geleert.
 
 **Prävention**:
+
 - Für destruktive Aktionen immer dedizierte Delete-Endpoints nutzen (nicht über Status-Workarounds).
 - UI-E2E-Test für den Delete-Flow im KDS ergänzen, sobald Test-Setup stabil ist.
 

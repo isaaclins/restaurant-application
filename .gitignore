@@ -66,3 +66,4 @@ docker-compose.override.yml
 coverage/
 .nyc_output/
 client/cypress/screenshots
+actions-runner
