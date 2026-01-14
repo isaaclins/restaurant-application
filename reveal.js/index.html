@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+		<title>reveal.js</title>
+
+		<link rel="stylesheet" href="dist/reset.css">
+		<link rel="stylesheet" href="dist/reveal.css">
+		<link rel="stylesheet" href="dist/theme/black.css">
+
+		<!-- Theme used for syntax highlighted code -->
+		<link rel="stylesheet" href="plugin/highlight/monokai.css">
+	</head>
+	<body>
+		<div class="reveal">
+			<div class="slides" id="slides-container">
+				<!-- Slides will be loaded here dynamically -->
+			</div>
+		</div>
+
+		<script src="dist/reveal.js"></script>
+		<script src="plugin/notes/notes.js"></script>
+		<script src="plugin/markdown/markdown.js"></script>
+		<script src="plugin/highlight/highlight.js"></script>
+		<script>
+			// Load slides dynamically from the slides directory
+			const slidesContainer = document.getElementById('slides-container');
+
+			async function loadSlides() {
+				try {
+					// Fetch the list of slide files from the server
+					const response = await fetch('/api/slides');
+					const data = await response.json();
+					const slideFiles = data.slides;
+
+					// Load each slide file
+					for (const file of slideFiles) {
+						try {
+							const slideResponse = await fetch(`slides/${file}`);
+							const content = await slideResponse.text();
+							
+							// Check if content is a full <section> tag
+							if (content.trim().startsWith('<section')) {
+								// Parse the section tag to extract attributes
+								const parser = new DOMParser();
+								const doc = parser.parseFromString(content, 'text/html');
+								const sourceSection = doc.querySelector('section');
+								
+								if (sourceSection) {
+									// Create new section and copy attributes
+									const section = document.createElement('section');
+									
+									// Copy all attributes from source section
+									for (let attr of sourceSection.attributes) {
+										section.setAttribute(attr.name, attr.value);
+									}
+									
+									// Copy inner HTML
+									section.innerHTML = sourceSection.innerHTML;
+									slidesContainer.appendChild(section);
+								}
+							} else {
+								// Plain HTML content - wrap in section
+								const section = document.createElement('section');
+								section.innerHTML = content;
+								slidesContainer.appendChild(section);
+							}
+						} catch (error) {
+							console.error(`Failed to load ${file}:`, error);
+						}
+					}
+
+					// Initialize Reveal.js after slides are loaded
+					Reveal.initialize({
+						hash: true,
+						transition: 'slide',
+						transitionSpeed: 'default',
+						autoAnimate: true,
+						plugins: [RevealMarkdown, RevealHighlight, RevealNotes]
+					});
+				} catch (error) {
+					console.error('Failed to load slides:', error);
+				}
+			}
+
+			loadSlides();
+		</script>
+
+</html>

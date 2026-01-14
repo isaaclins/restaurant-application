@@ -67,3 +67,5 @@ coverage/
 .nyc_output/
 client/cypress/screenshots
 actions-runner.DS_Store
+**/node_modules/**
+reveal.js/dist/

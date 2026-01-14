@@ -417,12 +417,9 @@ start_website() {
         print_warning "Website package.json not found. Skipping..."
         return
     fi
-    
-    # Install dependencies if needed
-    if [ ! -d "node_modules" ]; then
-        print_info "Installing dependencies..."
-        npm install
-    fi
+    # Install dependencies 
+    print_info "Installing dependencies..."
+    npm i
     
     print_info "Starting development server..."
     npm run dev &
@@ -430,7 +427,19 @@ start_website() {
     sleep 3
     print_success "Website started"
     echo ""
-    echo "  URL: http://localhost:5173"
+    echo "  URL: http://localhost:3000"
+    
+    # Open website in default browser
+    if command -v open &> /dev/null; then
+        # macOS
+        open "http://localhost:3000" 2>/dev/null || true
+    elif command -v xdg-open &> /dev/null; then
+        # Linux
+        xdg-open "http://localhost:3000" 2>/dev/null || true
+    elif command -v start &> /dev/null; then
+        # Windows
+        start "http://localhost:3000" 2>/dev/null || true
+    fi
 }
 
 stop_website() {
@@ -715,21 +724,57 @@ full_reset() {
     # Start infrastructure (will recreate volumes)
     start_infrastructure
     
+    # Wait for MySQL to be ready (30-45 seconds)
+    print_info "Waiting for MySQL to be ready..."
+    local mysql_ready=false
+    local attempt=0
+    local max_attempts=90
+    
+    while [ "$mysql_ready" = false ] && [ $attempt -lt $max_attempts ]; do
+        if docker exec "$(docker compose ps -q mysql)" mysqladmin ping -h localhost &> /dev/null; then
+            mysql_ready=true
+            print_success "MySQL is ready!"
+        else
+            attempt=$((attempt + 1))
+            if [ $((attempt % 10)) -eq 0 ]; then
+                print_info "  Still waiting for MySQL... ($attempt/$max_attempts)"
+            fi
+            sleep 1
+        fi
+    done
+    
+    if [ "$mysql_ready" = false ]; then
+        print_error "MySQL failed to start within $max_attempts seconds"
+        exit 1
+    fi
+    
     # Start backend
+    print_header "🔧 Starting Backend Services"
     start_backend
     
-    # Start client
-    start_client
-    
     # Start website
+    print_header "🌐 Starting Website"
     start_website
     
+    # Start client
+    print_header "📱 Starting Desktop Client"
+    start_client
+    
     print_header "✅ Full Reset Complete"
-    echo "All services are running with a fresh database."
     echo ""
-    echo "  Default admin login:"
-    echo "  • Email:    admin@restaurant.com"
-    echo "  • Password: admin123"
+    echo "🎉 All services are running with a fresh database!"
+    echo ""
+    echo "📍 Access Points:"
+    echo "  • API Gateway:    http://localhost:8080"
+    echo "  • Eureka Server:  http://localhost:8761"
+    echo "  • Website:        http://localhost:3000"
+    echo "  • Desktop Client: Started in separate window"
+    echo ""
+    echo "👤 Demo Credentials:"
+    echo "  • Admin Email:    admin@restaurant.com"
+    echo "  • Admin Password: admin123"
+    echo ""
+    echo "💡 Tip: Click 'Generate Demo Data' button in the app to seed sample products and orders"
     echo ""
 }
 

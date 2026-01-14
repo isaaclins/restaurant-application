@@ -1959,6 +1959,27 @@ style={{ height: `${heightPx}px` }}
 
 ---
 
+### 14.01.2026 | Demo-Daten mit Produktbildern
+
+#### ✅ Erfolge
+
+- [x] Populate Demo Data fügt jetzt passende Food-Bilder pro Produkt/Kategorie hinzu (Burger → Burger-Bild, Salad → Salad-Bild usw.).
+- [x] Neue Demo-Produkte erhalten direkt eine `imageUrl`; bestehende Demo-Produkte ohne Bild werden nachgezogen.
+- [x] Fortschrittsanzeige bleibt stabil trotz zusätzlichem Bild-Schritt.
+
+#### 📝 Geänderte Dateien
+
+| Datei | Änderung |
+| --- | --- |
+| `client/src/pages/SettingsPage.tsx` | Bild-URLs für Demo-Produkte ergänzt und fehlende `imageUrl` Werte bei bestehenden Items im Populate-Flow gesetzt |
+
+#### 📌 Hinweise
+
+- Bildquellen: Statische Unsplash-Links, thematisch je Produkt/Kategorie gewählt.
+- Idempotent: Produkte werden nur angepasst, wenn noch kein `imageUrl` gesetzt ist.
+
+---
+
 ## 🔗 Referenzen & Ressourcen
 
 ### Dokumentation

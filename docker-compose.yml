@@ -10,6 +10,8 @@ services:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      # Increase startup timeout for SQL initialization
+      MYSQL_INITDB_SKIP_TZINFO: 1
     ports:
       - "${MYSQL_PORT:-3306}:3306"
     volumes:
@@ -18,10 +20,11 @@ services:
     networks:
       - restaurant-network
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "${MYSQL_USER}", "-p${MYSQL_PASSWORD}"]
+      interval: 5s
+      timeout: 10s
+      retries: 30
+      start_period: 30s
 
   redis:
     image: redis:7-alpine

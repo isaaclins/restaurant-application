@@ -28,3 +28,11 @@ GRANT ALL PRIVILEGES ON settings_db.* TO 'restaurant'@'localhost';
 GRANT ALL PRIVILEGES ON notification_db.* TO 'restaurant'@'localhost';
 
 FLUSH PRIVILEGES;
+
+-- ============================================================================
+-- NOTE: Demo data is intentionally NOT included here
+-- Use the "Generate Demo Data" button in the application to populate test data
+-- Keep database clean - users will generate demo data via the app button
+-- ====================================================================
+-- The application includes a "Generate Demo Data" feature
+-- Click the button in the app to populate sample products, categories, users, and orders
