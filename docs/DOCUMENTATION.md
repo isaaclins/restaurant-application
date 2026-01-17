@@ -2032,13 +2032,14 @@ style={{ height: `${heightPx}px` }}
 
 #### ✅ Lösung
 
-- Checkout in `e2e-tests` nutzt `clean: false`, damit die Runner-Workspace-Cleanup-Phase nicht an Root-owned Dateien scheitert.
+- InitDB-Volume-Mount entfernt (verhindert Root-owned Workspace-Verzeichnisse vor Checkout).
+- Init-SQL wird nach Checkout via `mysql-client` geladen.
 
 #### 📝 Geänderte Dateien
 
 | Datei                      | Änderung                                |
 | -------------------------- | --------------------------------------- |
-| `.github/workflows/ci.yml` | Checkout-Cleanup im E2E-Job deaktiviert |
+| `.github/workflows/ci.yml` | InitDB-Mount entfernt, SQL-Init per Step |
 
 ## 🔗 Referenzen & Ressourcen
 

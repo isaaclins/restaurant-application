@@ -279,7 +279,6 @@ jobs:
           --health-interval=10s
           --health-timeout=5s
           --health-retries=5
-          -v ${{ github.workspace }}/.github/initdb:/docker-entrypoint-initdb.d
 
       redis:
         image: redis:7-alpine
@@ -294,8 +293,21 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          clean: false
+
+      - name: Install MySQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y mysql-client
+
+      - name: Initialize MySQL schema
+        run: |
+          for attempt in {1..30}; do
+            if mysqladmin ping -h 127.0.0.1 -u root -p"$MYSQL_ROOT_PASSWORD" --silent; then
+              break
+            fi
+            sleep 2
+          done
+          mysql -h 127.0.0.1 -u root -p"$MYSQL_ROOT_PASSWORD" restaurant_db < .github/initdb/01-init.sql
 
       - name: Set up JDK ${{ env.JAVA_VERSION }}
         uses: actions/setup-java@v4
