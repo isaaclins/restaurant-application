@@ -2024,6 +2024,22 @@ style={{ height: `${heightPx}px` }}
 
 ---
 
+### 17.01.2026 | CI E2E Checkout Fix (InitDB Permissions)
+
+#### 🐛 Problem
+
+- E2E-Job scheiterte in `actions/checkout` mit `EACCES` beim Löschen von `.github/initdb`.
+
+#### ✅ Lösung
+
+- Checkout in `e2e-tests` nutzt `clean: false`, damit die Runner-Workspace-Cleanup-Phase nicht an Root-owned Dateien scheitert.
+
+#### 📝 Geänderte Dateien
+
+| Datei                      | Änderung                                |
+| -------------------------- | --------------------------------------- |
+| `.github/workflows/ci.yml` | Checkout-Cleanup im E2E-Job deaktiviert |
+
 ## 🔗 Referenzen & Ressourcen
 
 ### Dokumentation
