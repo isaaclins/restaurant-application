@@ -1717,6 +1717,31 @@ docs/requests/
 
 ## 🐛 Probleme & Lösungen
 
+### Problem: Tauri-Client Build schlägt fehl (TypeScript)
+
+**Datum**: 17.01.2026
+
+**Beschreibung**:
+Im CI/CD-Pipeline-Step „Build Tauri App“ schlug `npm run tauri build` beim Client-Build fehl.
+
+**Fehlermeldung/Symptome**:
+
+- `OrderItem` verlangt eine `id`, die beim manuellen Order-Payload fehlte
+- Typinkonsistenz bei `DeliveryArea`-Feld `city`/`cityName`
+
+**Ursache**:
+Striktere Typisierung im Build-Prozess führte zu Konflikten zwischen dem manuellen Order-Payload und den erwarteten `OrderItem`-Feldern sowie abweichenden City-Feldnamen bei Delivery-Areas.
+
+**Lösung**:
+
+- `id` wird beim Erstellen der Order-Items gesetzt
+- Konsistente City-Anzeige über `getAreaCityLabel()` mit Fallback auf `cityName`
+
+**Prävention**:
+
+- UI-Typen regelmäßig mit Backend-DTOs abgleichen
+- CI-Check für TypeScript-Typen beibehalten
+
 ### Problem: KDS Delete-Button ohne Wirkung
 
 **Datum**: 07.12.2025
@@ -1969,14 +1994,33 @@ style={{ height: `${heightPx}px` }}
 
 #### 📝 Geänderte Dateien
 
-| Datei | Änderung |
-| --- | --- |
+| Datei                               | Änderung                                                                                                         |
+| ----------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
 | `client/src/pages/SettingsPage.tsx` | Bild-URLs für Demo-Produkte ergänzt und fehlende `imageUrl` Werte bei bestehenden Items im Populate-Flow gesetzt |
 
 #### 📌 Hinweise
 
 - Bildquellen: Statische Unsplash-Links, thematisch je Produkt/Kategorie gewählt.
 - Idempotent: Produkte werden nur angepasst, wenn noch kein `imageUrl` gesetzt ist.
+
+---
+
+### 17.01.2026 | CI Runner Fix (GitHub-Hosted)
+
+#### 🐛 Problem
+
+- CI-Jobs hingen auf `self-hosted, linux, arm64` und warteten auf Runner.
+
+#### ✅ Lösung
+
+- Alle Jobs auf GitHub-Hosted Runner umgestellt (`ubuntu-22.04`).
+- Tauri Linux-Dependencies laufen jetzt zuverlässig über `runner.os == 'Linux'`.
+
+#### 📝 Geänderte Dateien
+
+| Datei                      | Änderung                                    |
+| -------------------------- | ------------------------------------------- |
+| `.github/workflows/ci.yml` | Runs-on auf GitHub-Hosted Runner umgestellt |
 
 ---
 
@@ -2002,4 +2046,4 @@ style={{ height: `${heightPx}px` }}
 
 ---
 
-_Letzte Aktualisierung: 09.12.2025_
+_Letzte Aktualisierung: 17.01.2026_
