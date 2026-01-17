@@ -867,6 +867,7 @@ function CreateOrderModal({ isOpen, onClose, onSubmit, products }: CreateOrderMo
       const itemTotal = Number((price * quantity).toFixed(2));
 
       return {
+        id: product.id,
         productId: product.id,
         productName: product.name,
         quantity,

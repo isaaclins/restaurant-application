@@ -519,6 +519,14 @@ function DeliveryAreaSettings() {
     },
   });
 
+  const getAreaCityLabel = (area: DeliveryArea) => {
+    const normalizedArea = area as DeliveryArea & {
+      city?: string;
+      cityName?: string;
+    };
+    return normalizedArea.city ?? normalizedArea.cityName ?? "";
+  };
+
   return (
     <div className="max-w-3xl">
       <div className="flex justify-end mb-4">
@@ -613,7 +621,7 @@ function DeliveryAreaSettings() {
                   {area.postalCode}
                 </td>
                 <td className="px-4 py-3 text-gray-600">
-                  {area.city || area.cityName || ""}
+                  {getAreaCityLabel(area)}
                 </td>
                 <td className="px-4 py-3 text-gray-600">
                   CHF {area.deliveryFee.toFixed(2)}
@@ -2042,9 +2050,9 @@ const DEMO_PRODUCT_IMAGES: Record<string, string> = {
   "Quattro Formaggi":
     "https://images.unsplash.com/photo-1604382354936-07c5d9983bd3?auto=format&fit=crop&w=900&q=80",
   Diavola:
-    "https://images.unsplash.com/photo-1548363199-2f550f71f7e8?auto=format&fit=crop&w=900&q=80",
+    "https://images.unsplash.com/photo-1534308983496-4fabb1a015ee?auto=format&fit=crop&w=900&q=80",
   "Prosciutto e Funghi":
-    "https://images.unsplash.com/photo-1604382354936-07c5d9983bd3?auto=format&fit=crop&w=900&q=80",
+    "https://plus.unsplash.com/premium_photo-1673439304183-8840bd0dc1bf?auto=format&fit=crop&w=900&q=80",
   Vegetariana:
     "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=900&q=80",
   "Spaghetti Carbonara":
