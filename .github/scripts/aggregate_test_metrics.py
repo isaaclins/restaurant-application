@@ -77,8 +77,12 @@ def main() -> None:
     summary.append("| --- | --- | --- | --- | --- |")
     summary.extend(lines)
 
-    with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as fh:
-        fh.write("\n".join(summary) + "\n")
+    step_summary = os.environ.get("GITHUB_STEP_SUMMARY")
+    if step_summary:
+        with open(step_summary, "a", encoding="utf-8") as fh:
+            fh.write("\n".join(summary) + "\n")
+    else:
+        print("\n".join(summary))
 
 
 if __name__ == "__main__":

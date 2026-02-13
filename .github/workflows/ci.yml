@@ -346,11 +346,11 @@ jobs:
           health=(
             ""                                        # eureka-server (no health check)
             "http://localhost:8080/actuator/health"   # api-gateway
-            "http://localhost:8081/actuator/health"   # auth-service
-            "http://localhost:8082/actuator/health"   # product-service
-            "http://localhost:8083/actuator/health"   # cart-service
-            "http://localhost:8084/actuator/health"   # order-service
-            "http://localhost:8085/actuator/health"   # payment-service
+            "http://localhost:8085/actuator/health"   # auth-service
+            "http://localhost:8081/actuator/health"   # product-service
+            "http://localhost:8082/actuator/health"   # cart-service
+            "http://localhost:8083/actuator/health"   # order-service
+            "http://localhost:8084/actuator/health"   # payment-service
           )
 
           echo "Starting all backend services in background..."
@@ -421,6 +421,7 @@ jobs:
           name: test-metrics-e2e
           path: client/cypress/results
           retention-days: 7
+          if-no-files-found: ignore
 
       - name: Upload Cypress Screenshots
         uses: actions/upload-artifact@v4
@@ -429,6 +430,7 @@ jobs:
           name: cypress-screenshots
           path: client/cypress/screenshots
           retention-days: 7
+          if-no-files-found: ignore
 
       - name: Upload Cypress Videos
         uses: actions/upload-artifact@v4
@@ -437,6 +439,7 @@ jobs:
           name: cypress-videos
           path: client/cypress/videos
           retention-days: 7
+          if-no-files-found: ignore
 
   # ============================================================================
   # Integration Tests
@@ -534,9 +537,13 @@ jobs:
       contents: read
 
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: Download test metrics artifacts
         if: always()
         uses: actions/download-artifact@v4
+        continue-on-error: true
         with:
           pattern: test-metrics-*
           path: test-metrics
@@ -546,4 +553,4 @@ jobs:
         if: always()
         run: |
           set -euo pipefail
-          python .github/scripts/aggregate_test_metrics.py
+          python3 .github/scripts/aggregate_test_metrics.py
