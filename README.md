@@ -3,6 +3,9 @@
 > Ein skalierbares Microservices-System für Restaurant-Online-Bestellungen – entwickelt als Schulprojekt
 
 ---
+> [!WARNING]
+> This is project is now deprecated, Pipeline does NOT work (failing E2E tests) and I am working on another similar solution.
+
 
 ## 📖 Was ist das?
 
